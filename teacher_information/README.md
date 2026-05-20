@@ -11,7 +11,7 @@
 | phone | VARCHAR(20) | - | 联系电话 |
 | email | VARCHAR(100) | - | 邮箱 |
 | title | VARCHAR(50) | - | 职称 |
-| class_id | INT | FK, UNIQUE | 所带班级 |
+| class_id | INT | FK | 所带班级 |
 | hire_date | DATE | - | 入职日期 |
 | created_time | DATETIME | DEFAULT NOW | 创建时间 |
 | updated_time | DATETIME | ON UPDATE NOW | 更新时间 |
