@@ -3,10 +3,6 @@ import enum
 from datetime import datetime
 from sqlalchemy import Column,Integer,String,Enum,DateTime
 
-class is_deleted(enum.Enum):
-    NO=0
-    YES=1
-
 class gender(enum.Enum):
     man=1
     woman=2
@@ -24,7 +20,7 @@ class Teacher(Base):
     hire_date=Column(DateTime,nullable=False,comment='入职日期')
     create_time=Column(DateTime,default=datetime.now(),comment='创建时间')
     update_time=Column(DateTime,onupdate=datetime.now(),comment='更新时间')
-    deleted_at=Column(Enum(is_deleted),default=is_deleted.NO,comment='逻辑删除')
+    is_deleted=Column(Integer,default=0,comment='逻辑删除:0未删除，1已删除')
 
 
 if __name__=="__main__":
