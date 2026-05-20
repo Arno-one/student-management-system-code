@@ -3,7 +3,7 @@ from sqlalchemy import Column, Integer, String,DateTime
 from datetime import datetime
 
 
-class class_management(Base):
+class Class(Base):
     __tablename__ = 'class_info'
     id = Column(Integer,primary_key=True,autoincrement=True)
     class_code = Column(String(50),nullable=False)

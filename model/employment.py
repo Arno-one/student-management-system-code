@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime,Date,func
-from database import Base
+from database import Base,engine
+
 class Employment(Base):
     __tablename__ = 'employment'
     id = Column(Integer, primary_key=True, autoincrement=True, comment="就业ID")
@@ -13,3 +14,5 @@ class Employment(Base):
     is_deleted = Column(Integer, default=0, comment="逻辑删除 0-未删 1-已删")
     create_time = Column(DateTime,comment="创建时间")
     update_time = Column(DateTime,comment="更新时间")
+
+Base.metadata.create_all(engine)
