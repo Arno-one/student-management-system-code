@@ -7,5 +7,3 @@
 | id | INT | PK | 主键 |
 | created_time | DATETIME | DEFAULT NOW | 创建时间 |
 | updated_time | DATETIME | ON UPDATE NOW | 更新时间 |
-
-test
