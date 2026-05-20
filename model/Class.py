@@ -5,7 +5,7 @@ from datetime import datetime
 
 class ClassCreateSchema(BaseModel):
     class_code: str
-    name: str
+    class_name: str
     start_time: datetime
     head_teacher_id: int
     lecturer_id: int
@@ -15,7 +15,7 @@ class Class(Base):
     __tablename__ = 'class_info'
     id = Column(Integer,primary_key=True,autoincrement=True,comment="班级ID")
     class_code = Column(String(50),nullable=False,comment="班级编号")
-    name = Column(String(50),nullable=False,comment="班级名称")
+    class_name = Column(String(50),nullable=False,comment="班级名称")
     start_time = Column(DateTime,nullable=False,comment="开班时间")
     head_teacher_id = Column(Integer,nullable=False,comment="班主任ID")
     lecturer_id = Column(Integer,nullable=False,comment="授课老师ID")
