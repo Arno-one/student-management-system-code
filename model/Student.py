@@ -21,7 +21,7 @@ class Student(Base):
     admission_time = Column(Date,default="",comment="入学时间")
     graduate_time = Column(Date,default="",comment="毕业时间")
     advisor_id = Column(Integer,default="",comment='顾问编号')
-    is_deleted = Column(Integer,nullable=False,default="0",comment='逻辑删除 0-未删 1-已删')
+    is_deleted = Column(Integer,nullable=False,default=0,comment='逻辑删除 0-未删 1-已删')
     create_time = Column(DateTime,default=datetime.now,comment="创建时间")
     update_time = Column(DateTime,default=datetime.now,onupdate=datetime.now,comment="更新时间")
 
