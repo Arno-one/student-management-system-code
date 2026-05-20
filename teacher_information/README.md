@@ -15,4 +15,4 @@
 | hire_date | DATE | - | 入职日期 |
 | created_time | DATETIME | DEFAULT NOW | 创建时间 |
 | updated_time | DATETIME | ON UPDATE NOW | 更新时间 |
-| deleted_at | DATETIME | - | 逻辑删除 |
+| deleted_at | ENUM | - | 逻辑删除 |
