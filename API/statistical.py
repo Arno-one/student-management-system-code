@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from typing import List
 from database import get_db
 from DAO import statistical
@@ -19,7 +19,7 @@ sta_router = APIRouter()
 @sta_router.get('/ge_stu',
                 description='查询年龄大于30的学⽣',
                 response_model=List[StudentGe30Response])
-def get_student_ge30(skip: int, limit: int, db=Depends(get_db)):
+def get_student_ge30(skip: int=Query(min=0), limit: int=Query(min=10), db=Depends(get_db)):
     result = statistical.get_student_ge30(db, skip, limit)
     return result
 
@@ -35,7 +35,7 @@ def get_student_count(db=Depends(get_db)):
 @sta_router.get('/score_ge80',
                 description='查询每次考试都在80分以上的学生信息',
                 response_model=List[ScoreGe80Response])
-def get_score_ge80(skip: int, limit: int, db=Depends(get_db)):
+def get_score_ge80(skip: int=Query(min=0), limit: int=Query(min=10), db=Depends(get_db)):
     result = statistical.get_score_ge80(db, skip, limit)
 
     return result
@@ -44,7 +44,7 @@ def get_score_ge80(skip: int, limit: int, db=Depends(get_db)):
 @sta_router.get('/score_le60',
                 description='查询2次以上不及格学生的信息',
                 response_model=List[ScoreLe60Response])
-def get_score_le60(skip: int, limit: int, db=Depends(get_db)):
+def get_score_le60(skip: int=Query(min=0), limit: int=Query(min=10), db=Depends(get_db)):
     result = statistical.get_score_le60(db, skip, limit)
 
     return result
@@ -71,7 +71,7 @@ def get_tall_sal(db=Depends(get_db)):
 @sta_router.get('/job_time',
                 description='查询每个学生的就业时长（offer下发时间-就业开放时间）',
                 response_model=List[JobTimeResponse])
-def get_job_time(skip: int, limit: int, db=Depends(get_db)):
+def get_job_time(skip: int=Query(min=0), limit: int=Query(min=10), db=Depends(get_db)):
     result = statistical.get_job_time(db, skip, limit)
 
     return result
@@ -80,7 +80,7 @@ def get_job_time(skip: int, limit: int, db=Depends(get_db)):
 @sta_router.get('/avg_class_job_time',
                 description='查询每个班级的平均就业时长',
                 response_model=List[AvgClassJobTimeResponse])
-def get_avg_class_job_time(skip: int, limit: int, db=Depends(get_db)):
+def get_avg_class_job_time(skip: int=Query(min=0), limit: int=Query(min=10), db=Depends(get_db)):
     result = statistical.avg_class_job_time(db, skip, limit)
 
     return result
