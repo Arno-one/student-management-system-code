@@ -14,9 +14,9 @@ class teacher_table_CRUD:
 
     def read(self,id=-1):
         if id==-1:
-            return self.db.query(Teacher.Teacher).all()
+            return self.db.query(Teacher.Teacher).filter(Teacher.Teacher.is_deleted==0).all()
         else:
-            return self.db.query(Teacher.Teacher).filter(Teacher.Teacher.id==id).first()
+            return self.db.query(Teacher.Teacher).filter(Teacher.Teacher.id==id and Teacher.Teacher.is_deleted==0).first()
         
     def update(self,id,update_data:dict):
         temp_Teacher=self.db.query(Teacher.Teacher).filter(Teacher.Teacher.id==id).first()
