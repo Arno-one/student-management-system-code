@@ -12,7 +12,6 @@ class ClassInfo(BaseModel):
     class_code: str
     class_name: str
     start_time: datetime
-    head_teacher_id: int
     is_deleted: int
     create_time: datetime
     update_time: datetime
