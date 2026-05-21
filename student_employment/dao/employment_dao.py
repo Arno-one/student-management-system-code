@@ -16,7 +16,7 @@ def create_employment(db: Session,data:EmploymentCreate):
 #根据id查询
 def get_employment_by_id(db: Session,emp_id:int):
     return db.query(Employment).filter(
-        Employment.id==emp_id,
+        Employment.id== emp_id,
         Employment.is_deleted == 0
     ).first()
 
@@ -39,14 +39,7 @@ def check_student_no(db: Session,emp_id:int,data):
             .filter(Employment.id != emp_id)).first()
 
 #分页查询
-def get_employment_list(
-        db: Session,
-        page:int=1,
-        size:int=5,
-        student_name:str=None,
-        class_id:int=None,
-        company_name:str=None
-):
+def get_employment_list(db: Session,page:int,size:int,student_name:str,class_id:int,company_name:str):
     skip = (page-1)*size
     query = db.query(Employment).filter(Employment.is_deleted == 0)
     if student_name:
