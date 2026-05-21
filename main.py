@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 import uvicorn
 from API.statistical import sta_router
+from API.class_api import class_router
 
 app = FastAPI()
 
@@ -11,7 +12,7 @@ app = FastAPI()
 # 学⽣就业管理模块
 
 # 班级管理模块
-
+app.include_router(class_router,prefix="",tags=["班级管理"])
 # ⽼师管理模块
 
 # 统计分析模块
