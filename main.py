@@ -7,7 +7,9 @@ from API.student_api import student_router
 from API.employment_api import employment_router
 from API.teacher_information_API_Router import teacher_information_router
 
-app = FastAPI()
+app = FastAPI(title='沃林学⽣信息管理系统',
+              description='逐光小组作品'
+              , version='0.1.0')
 
 # 学⽣基本信息管理模块
 app.include_router(student_router, prefix='/student', tags=['学⽣基本信息管理'])
