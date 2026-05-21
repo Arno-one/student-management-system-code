@@ -3,8 +3,8 @@ from typing import Optional, List, TypeVar, Generic
 from datetime import date, datetime
 
 
-# 年龄大于30的学生响应
-class StudentGe30Response(BaseModel):
+# 年龄大于xx的学生响应
+class StudentGeResponse(BaseModel):
     id: int = Field(..., description="学生ID")
     student_no: str
     student_name: str
@@ -28,8 +28,8 @@ class StudentCountResponse(BaseModel):
     女生人数: int
 
 
-# 每次考试都在80分以上的学生响应
-class ScoreGe80Response(BaseModel):
+# 每次考试都在xx分以上的学生响应
+class ScoreGeResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     student_no: str
     student_name: str
@@ -37,7 +37,7 @@ class ScoreGe80Response(BaseModel):
 
 
 # 2次以上不及格的学生响应
-class ScoreLe60Response(BaseModel):
+class ScoreFailsResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     student_no: str
     student_name: str
