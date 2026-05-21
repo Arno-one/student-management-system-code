@@ -25,6 +25,7 @@ class teacher_table_CRUD:
             for key,value in update_data.items():
                 if hasattr(temp_Teacher,key):
                     setattr(temp_Teacher,key,value)
+               
             setattr(temp_Teacher,'update_time',datetime.now())
             self.db.commit()
             self.db.refresh(temp_Teacher)
