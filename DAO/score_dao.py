@@ -1,8 +1,9 @@
 
 from sqlalchemy.orm import Session
 from model.Score import Score
+from model.Student import Student
 from decimal import Decimal
-from scheme.schema_score import List
+from typing import List
 
 
 #查询
@@ -12,14 +13,15 @@ def query_score(
     page_size: int = 10 ,   #每页的数量
     student_no: str | None = None,  #学生编号
     exam_order: int | None= None,  #考试次序
+    class_id : int | None = None,  #班级id
     min_score: Decimal |None = None,  #最低成绩
     max_score: Decimal | None= None,    #最高成绩
     sort_no : str | None = None,   #按学号排序
-    sort_score : str | None = None  #按成绩排序
+    sort_by_score : str | None = None  #按成绩排序
 
 ):
-    #先查全部数据
-    q = db.query(Score)
+    #先查全部数据,同时关联Student表
+    q = db.query(Score).join(Student, Score.student_no == Student.student_no)
     # 只查未删除的数据
     q = query_not_deleted(q)
     #按编号查询
@@ -30,10 +32,12 @@ def query_score(
     q = query_score_min(q,min_score)
     #范围查询--最高
     q = query_score_max(q,max_score)
+    #按班级筛选
+    q = query_class_id(q,class_id)
     #学号排序
-    q = sort_student_no(q, sort_no)
+    q = sort_student_no(q,sort_no)
     #分数排序
-    q = sort_student_no(q, sort_score)
+    q = sort_score(q,sort_by_score)
     #分页查询
     offset = (page - 1) * page_size
     data_list = q.offset(offset).limit(page_size).all()
@@ -50,6 +54,12 @@ def query_student_no(q,student_no):
     if student_no:
         q = q.filter(Score.student_no == student_no)
     return q
+#按班级筛选
+def query_class_id(q,class_id):
+    if class_id:
+        q = q.filter(Student.class_id == class_id)
+    return q
+
 
 #按考试次序筛选
 def query_exam_order(q,exam_order):
@@ -69,16 +79,16 @@ def query_score_max(q,max_score)  :
         q = q.filter(Score.score <= max_score)
     return q
 
-#按 是否修改过 筛选
-def query_modified_status(q,update):
-    if update is False:
-        q = q.filter(Score.create_time == Score.update_time)
-    elif update is True:
-        q = q.filter(Score.create_time != Score.update_time)
-    return q
+# #按 是否修改过 筛选
+# def query_modified_status(q,update):
+#     if update is False:
+#         q = q.filter(Score.create_time == Score.update_time)
+#     elif update is True:
+#         q = q.filter(Score.create_time != Score.update_time)
+#     return q
 
-
-def sort_student_no(q, sort_no):
+#学生编号排序
+def sort_student_no(q,sort_no):
     # 升序
     if sort_no == "asc":
         q = q.order_by(Score.student_no.asc())
@@ -87,13 +97,13 @@ def sort_student_no(q, sort_no):
         q = q.order_by(Score.student_no.desc())
 
     return q
-
-def sort_score(q,sort_score):
+#成绩排序
+def sort_score(q,score):
     # 升序
-    if sort_score == "asc":
+    if score == "asc":
         q = q.order_by(Score.score.asc())
     # 降序
-    elif sort_score == "desc":
+    elif score == "desc":
         q = q.order_by(Score.score.desc())
 
     return q
