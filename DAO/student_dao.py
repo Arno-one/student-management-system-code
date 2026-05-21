@@ -13,6 +13,16 @@ def create_from_dict(data: dict,db:Session) -> Student:
     return student
 
 # ==================== 查（READ）====================
+def get_all(skip: int, limit: int, db:Session):
+    """分页查询所有学生"""
+    return db.query(Student).filter(
+        Student.is_deleted == 0
+    ).offset(skip).limit(limit).all()
+
+def count(db:Session):
+    """统计未删除学生总数"""
+    return db.query(Student).filter(Student.is_deleted == 0).count()
+
 def get_by_id(student_id: int,db:Session) -> Optional[Student]:
     """根据学生ID查询"""
     return db.query(Student).filter(
@@ -88,4 +98,6 @@ def restore(student_id: int,db:Session) -> bool:
     student.is_deleted = 0
     db.commit()
     return True
+
+
 
