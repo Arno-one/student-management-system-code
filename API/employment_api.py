@@ -1,16 +1,16 @@
-from fastapi import Depends, HTTPException, APIRouter
+from fastapi import Depends, HTTPException, APIRouter, Query
 from sqlalchemy.orm import Session
 from database import get_db
-from student_employment.dao import employment_dao as dao
-from student_employment.scheme import employment_scheme as EMP
+from DAO import employment_dao as dao
+from scheme import employment_scheme as EMP
 
-router = APIRouter()
+employment_router = APIRouter()
 
 #创建就业信息
-@router.post("/employment_create",response_model=EMP.EmploymentResponse,summary="新建学生就业信息")
+@employment_router.post("/employment_create",response_model=EMP.EmploymentResponse,summary="新建学生就业信息")
 def employment_create(
         data:EMP.EmploymentCreate,
-        db: Session = Depends(get_db),
+        db: Session = Depends(get_db)
 ):
     emp = dao.get_employment_by_student_no(db,data.student_no)
     if emp:
@@ -18,7 +18,7 @@ def employment_create(
     return dao.create_employment(db,data)
 
 #根据id查询
-@router.get("/employment_get/{emp_id}",response_model=EMP.EmploymentResponse,summary="根据id查询")
+@employment_router.get("/employment_get/{emp_id}",response_model=EMP.EmploymentResponse,summary="根据id查询")
 def employment_get(emp_id:int,db: Session = Depends(get_db)):
     emp = dao.get_employment_by_id(db,emp_id)
     if not emp:
@@ -26,10 +26,10 @@ def employment_get(emp_id:int,db: Session = Depends(get_db)):
     return emp
 
 #分页查询列表
-@router.get("/employment_list",summary="分页查询")
+@employment_router.get("/employment_list",summary="分页查询")
 def get_employment_list(
-        page:int = 1,
-        size:int = 5,
+        page:int = Query(1, ge=1),
+        size:int = Query(10, le=100, ge=1),
         student_name:str=None,
         class_id:int=None,
         company_name:str=None,
@@ -38,7 +38,7 @@ def get_employment_list(
     return dao.get_employment_list(db,page,size,student_name,class_id,company_name)
 
 #修改就业信息
-@router.put("/employment_update/{emp_id}",response_model=EMP.EmploymentResponse,summary="修改就业信息")
+@employment_router.put("/employment_update/{emp_id}",response_model=EMP.EmploymentResponse,summary="修改就业信息")
 def employment_update(
         emp_id:int,
         data:EMP.EmploymentUpdate,
@@ -51,11 +51,11 @@ def employment_update(
     if data.student_no:#校验学生编号是否占用
         new_emp = dao.check_student_no(db,emp_id,data)
     if new_emp:
-        raise HTTPException(status_code=409, detail="学生编号已存在，请检查输入")
+        raise HTTPException(status_code=409, detail="学生编号已存在")
     return dao.update_employment(db,emp,data)
 
 #逻辑删除
-@router.delete("/employment_delete/{emp_id}",summary="逻辑删除")
+@employment_router.delete("/employment_delete/{emp_id}",summary="逻辑删除")
 def employment_delete(emp_id:int,db: Session = Depends(get_db)):
     emp = dao.get_employment_by_id(db,emp_id)
     if not emp:
@@ -63,7 +63,7 @@ def employment_delete(emp_id:int,db: Session = Depends(get_db)):
     return dao.delete_employment(db,emp)
 
 #逻辑恢复
-@router.put("/employment_recover/{emp_id}",summary="逻辑恢复")
+@employment_router.put("/employment_recover/{emp_id}",summary="逻辑恢复")
 def employment_recover(emp_id:int,db: Session = Depends(get_db)):
     emp = dao.get_employment_id_all(db,emp_id)
     if not emp:
@@ -73,7 +73,7 @@ def employment_recover(emp_id:int,db: Session = Depends(get_db)):
     return dao.recover_employment(db,emp)
 
 #物理删除
-@router.delete("/hard_employment/{emp_id}",summary="物理删除")
+@employment_router.delete("/employment_hard/{emp_id}",summary="物理删除")
 def employment_hard(emp_id:int,db: Session = Depends(get_db)):
     emp = dao.get_employment_id_all(db,emp_id)
     if not emp:

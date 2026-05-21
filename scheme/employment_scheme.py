@@ -1,4 +1,4 @@
-from pydantic import BaseModel,Field
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import date, datetime
 class EmploymentCreate(BaseModel):
@@ -33,3 +33,4 @@ class EmploymentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+

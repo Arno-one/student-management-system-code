@@ -49,11 +49,8 @@ def del_class(db,id):
 
 #查询所有班级数据
 def get_class(db,page,limit):
-    if page <= 0 or limit <= 0:
-        return "page或limit不能为0或负数"
-    else:
-        all_user = db.query(Class).filter(Class.is_deleted == 0).offset(page*limit).limit(limit).all()
-        return all_user
+    all_user = db.query(Class).filter(Class.is_deleted == 0).offset(page*limit).limit(limit).all()
+    return all_user
 
 #根据id查询数据
 def get_class_by_id(db,id):
