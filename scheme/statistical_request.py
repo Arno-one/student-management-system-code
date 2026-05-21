@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, List
+from typing import Optional, List, TypeVar, Generic
 from datetime import date, datetime
 
 
@@ -74,3 +74,13 @@ class AvgClassJobTimeResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     class_name: str
     avg_days: float
+
+
+# 通用分页响应
+T = TypeVar('T')
+
+class PageResponse(BaseModel, Generic[T]):
+    code: int = 200
+    data: List[T]
+    page: int
+    total: int
