@@ -30,6 +30,25 @@ def create_student(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"创建失败: {str(e)}")
 
+@student_router.get("/students", summary="查询所有学生信息")
+def get_all_students(
+        skip: int = Query(0, ge=0),
+        limit: int = Query(100, ge=1, le=100),
+        db: Session = Depends(get_db)
+):
+    """分页查询所有学生信息"""
+    students = student_dao.get_all(skip, limit, db)
+    page = skip // limit + 1 if limit > 0 else 1
+    total = student_dao.count(db)
+
+    return {
+        "code": 200,
+        "message": "success",
+        "data": students,
+        "page": page,
+        "total": total
+    }
+
 
 @student_router.get("/students/{student_id}",summary="根据ID查询学生")
 def get_student_by_id(

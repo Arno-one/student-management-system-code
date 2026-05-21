@@ -10,7 +10,7 @@ from DAO.student_dao import get_by_student_no
 router_score = APIRouter()
 
 #添加单个学生成绩
-@router_score.post("/add",summary="新增学生成绩")
+@router_score.post("/add",summary="新增单个学生成绩")
 def add_score_api(new_score:Addscore,db=Depends(get_db)):
     exist = get_by_student_no(new_score.student_no,db)
     #先判断在学生表中是否存在该学生
