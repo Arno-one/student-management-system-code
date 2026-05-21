@@ -19,19 +19,6 @@ class StudentCreate(BaseModel):
     graduate_time: Optional[date] = Field(None, description="毕业时间")
     advisor_id: Optional[int] = Field(0, description="顾问编号", json_schema_extra={"example": 1})
 
-    model_config = {
-        "json_schema_extra": {
-            "example": {
-                "student_no": "S2024001",
-                "class_id": 1,
-                "student_name": "张三",
-                "gender": "男",
-                "age": 20,
-                "major": "计算机科学"
-            }
-        }
-    }
-
 class StudentUpdate(BaseModel):
     """更新学生请求模型"""
     class_id: Optional[int] = Field(None, description="班级ID")
