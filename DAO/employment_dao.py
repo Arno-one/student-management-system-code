@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from student_employment.model.employment_model import Employment
-from student_employment.scheme.employment_scheme import EmploymentCreate,EmploymentUpdate
+from model.Employment import Employment
+from scheme.employment_scheme import EmploymentCreate,EmploymentUpdate
 from datetime import datetime
 
 #新建就业信息
