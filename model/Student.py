@@ -1,5 +1,6 @@
 from sqlalchemy import Column,Integer,String,Date,DateTime
 from datetime import datetime
+from sqlalchemy.orm import relationship
 from database import Base,engine
 
 # 定义学生类，继承Base基类，这个类对应数据库中的一张表
@@ -23,6 +24,6 @@ class Student(Base):
     is_deleted = Column(Integer,nullable=False,default="0",comment='逻辑删除 0-未删 1-已删')
     create_time = Column(DateTime,default=datetime.now,comment="创建时间")
     update_time = Column(DateTime,default=datetime.now,onupdate=datetime.now,comment="更新时间")
-
+    score_list = relationship("Score", back_populates="student")
 # 建表
 Base.metadata.create_all(engine)

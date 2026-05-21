@@ -8,7 +8,6 @@ class Class(Base):
     class_code = Column(String(50),unique=True,nullable=False,comment="班级编号")
     class_name = Column(String(50),nullable=False,comment="班级名称")
     start_time = Column(DateTime,nullable=False,comment="开班时间")
-    head_teacher_id = Column(Integer,nullable=False,comment="班主任ID")
     is_deleted = Column(Integer,default=0,comment="逻辑删除 0-未删 1-已删")
     create_time = Column(DateTime,default=datetime.now,comment="创建时间")
     update_time = Column(DateTime,default=datetime.now,comment="更新时间")

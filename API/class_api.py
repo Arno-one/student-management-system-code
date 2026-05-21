@@ -22,7 +22,7 @@ def del_class(id:int,db = Depends(get_db) ):
     "/get_class",
      description='分页查询所有数据'
     ,response_model=PageResponse[ClassInfo])
-def get_class(db = Depends(get_db),page:int=Query(default=1,min=1),limit:int=Query(default=1,min=1)):
+def get_class(db = Depends(get_db),page:int=Query(default=1,ge=1),limit:int=Query(default=1,ge=1)):
     info = class_dao.get_class(db=db, page=page - 1, limit=limit)
     return PageResponse(data=info,page=page,total=len(info))
 
