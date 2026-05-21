@@ -27,12 +27,12 @@ def get_by_student_no(student_no: str,db:Session) -> Optional[Student]:
         Student.is_deleted == 0
     ).first()
 
-def get_by_class(page: int, limit: int, class_id: int, db: Session):
+def get_by_class(skip: int, limit: int, class_id: int, db: Session):
     """根据班级ID查询"""
     result = (db.query(Student).filter(
         Student.class_id == class_id,
         Student.is_deleted == 0
-    ).offset(page).limit(limit).all())
+    ).offset(skip).limit(limit).all())
     return result
 
 def get_by_class_count(class_id: int, db: Session):
