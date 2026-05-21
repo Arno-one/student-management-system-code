@@ -5,7 +5,9 @@ from datetime import datetime
 
 #新建就业信息
 def create_employment(db: Session,data:EmploymentCreate):
-    emp = Employment(**data.model_dump())
+    emp = Employment(**data.model_dump(),
+    create_time = datetime.now(),
+    update_time = datetime.now())
     db.add(emp)
     db.commit()
     db.refresh(emp)

@@ -2,7 +2,6 @@ from fastapi import Depends, HTTPException, APIRouter
 from sqlalchemy.orm import Session
 from database import get_db
 from student_employment.dao import employment_dao as dao
-from student_employment.model.employment_model import Employment
 from student_employment.scheme import employment_scheme as EMP
 
 router = APIRouter()
