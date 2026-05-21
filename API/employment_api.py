@@ -1,10 +1,10 @@
 from fastapi import Depends, HTTPException, APIRouter, Query
 from sqlalchemy.orm import Session
 from database import get_db
-from student_employment.dao import employment_dao as dao
-from student_employment.scheme import employment_scheme as EMP
+from DAO import employment_dao as dao
+from scheme import employment_scheme as EMP
 
-router = APIRouter()
+employment_router = APIRouter()
 
 #创建就业信息
 @router.post("/employment_create",response_model=EMP.EmploymentResponse,summary="新建学生就业信息")
