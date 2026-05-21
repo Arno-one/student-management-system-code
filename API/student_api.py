@@ -1,11 +1,11 @@
 from fastapi import APIRouter,Depends,HTTPException,Path,Query
 from sqlalchemy.orm import Session
-from student_information.Dao import student_dao
+from DAO import student_dao
 
 # 获取数据库db连接
 from database import get_db
 # Pydantic 模型（请求体、响应体）
-from student_information.scheme.student_scheme import (StudentCreate,StudentUpdate)
+from scheme.student_scheme import (StudentCreate,StudentUpdate)
 
 # 创建路由器
 student_router = APIRouter(prefix="/students",tags=["学生管理"])

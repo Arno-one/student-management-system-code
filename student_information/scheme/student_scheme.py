@@ -1,6 +1,5 @@
 # 不操作数据库，只负责校验数据格式
 # 规定前端传什么数据给后端，后端返回什么数据给前端
-from fastapi import Query
 from pydantic import BaseModel, Field
 from pydantic import ConfigDict
 from typing import Optional, Any

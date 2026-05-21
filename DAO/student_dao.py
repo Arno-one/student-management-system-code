@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from student_information.model.student import Student
+from model.Student import Student
 from typing import Optional
 
 # ==================== 增（CREATE）====================
