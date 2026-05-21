@@ -18,7 +18,7 @@ sta_router = APIRouter()
 
 
 @sta_router.get('/ge_stu/plus',
-                description='查询年龄大于xx的学⽣',
+                summary='查询年龄大于xx的学⽣',
                 response_model=PageResponse[StudentGeResponse])
 def get_student_age(skip: int=Query(ge=0,default=0), limit: int=Query(ge=1,default=10), age :int =Query(default=30,min=0),db=Depends(get_db)):
     result = statistical.get_student_age(db, skip, age,limit)
@@ -31,14 +31,14 @@ def get_student_age(skip: int=Query(ge=0,default=0), limit: int=Query(ge=1,defau
 
 
 @sta_router.get('/stu_count',
-                description='统计学生人数',
+                summary='统计学生人数',
                 response_model=StudentCountResponse)
 def get_student_count(db=Depends(get_db)):
     result = statistical.get_student_count(db)
     return result
 
 @sta_router.get('/score_greater/plus',
-                description='查询每次考试都在xx分以上的学生信息',
+                summary='查询每次考试都在xx分以上的学生信息',
                 response_model=PageResponse[ScoreGeResponse])
 def get_score_grade(skip: int=Query(ge=0,default=0), limit: int=Query(ge=1,default=10), grade:int=Query(default=80,min=0),db=Depends(get_db)):
     result = statistical.get_score_grade(db, skip, grade,limit)
@@ -51,7 +51,7 @@ def get_score_grade(skip: int=Query(ge=0,default=0), limit: int=Query(ge=1,defau
 
 
 @sta_router.get('/score_fails',
-                description='查询2次以上不及格学生的信息',
+                summary='查询2次以上不及格学生的信息',
                 response_model=PageResponse[ScoreFailsResponse])
 def get_score_fails(skip: int=Query(ge=0,default=0), limit: int=Query(ge=1,default=10), db=Depends(get_db)):
     result = statistical.get_score_fails(db, skip, limit)
@@ -64,7 +64,7 @@ def get_score_fails(skip: int=Query(ge=0,default=0), limit: int=Query(ge=1,defau
 
 
 @sta_router.get('/class_avg',
-                description='查询每个班级的每次考试的平均分,从高到低排序',
+                summary='查询每个班级的每次考试的平均分,从高到低排序',
                 response_model=PageResponse[ClassAvgResponse])
 def get_class_avg(skip: int=Query(ge=0,default=0), limit: int=Query(ge=1,default=10),db=Depends(get_db)):
     result = statistical.get_class_avg(db,skip,limit)
@@ -77,7 +77,7 @@ def get_class_avg(skip: int=Query(ge=0,default=0), limit: int=Query(ge=1,default
 
 
 @sta_router.get('/tall_sal',
-                description='查询就业表中薪资最高的x个人的姓名，班级和就业时间，就业公司',
+                summary='查询就业表中薪资最高的x个人的姓名，班级和就业时间，就业公司',
                 response_model=PageResponse[TallSalResponse])
 def get_tall_sal(limit :int =Query(ge=5,default=5),db=Depends(get_db)):
     result = statistical.get_tall_sal(db,limit)
@@ -90,7 +90,7 @@ def get_tall_sal(limit :int =Query(ge=5,default=5),db=Depends(get_db)):
 
 
 @sta_router.get('/job_time',
-                description='查询每个学生的就业时长（offer下发时间-就业开放时间）',
+                summary='查询每个学生的就业时长（offer下发时间-就业开放时间）',
                 response_model=PageResponse[JobTimeResponse])
 def get_job_time(skip: int=Query(ge=0,default=0), limit: int=Query(ge=1,default=10), db=Depends(get_db)):
     result = statistical.get_job_time(db, skip, limit)
@@ -103,7 +103,7 @@ def get_job_time(skip: int=Query(ge=0,default=0), limit: int=Query(ge=1,default=
 
 
 @sta_router.get('/avg_class_job_time',
-                description='查询每个班级的平均就业时长',
+                summary='查询每个班级的平均就业时长',
                 response_model=PageResponse[AvgClassJobTimeResponse])
 def get_avg_class_job_time(skip: int=Query(ge=0,default=0), limit: int=Query(ge=1,default=10), db = Depends(get_db)):
     result = statistical.avg_class_job_time(db, skip, limit)
