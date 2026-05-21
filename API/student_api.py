@@ -8,10 +8,10 @@ from database import get_db
 from student_information.scheme.student_scheme import (StudentCreate,StudentUpdate)
 
 # 创建路由器
-router = APIRouter(prefix="/students",tags=["学生管理"])
+student_router = APIRouter(prefix="/students",tags=["学生管理"])
 
 # ==================== 新增学生 ====================
-@router.post("", response_model=StudentCreate, summary="创建学生")
+@student_router.post("", response_model=StudentCreate, summary="创建学生")
 
 def create_student(
         student_data: StudentCreate,  # 接收前端传的JSON，自动校验格式
@@ -41,7 +41,7 @@ def create_student(
 
 
 # ==================== 查询学生 ====================
-@router.get("/{student_id}",summary="根据ID查询学生")
+@student_router.get("/{student_id}",summary="根据ID查询学生")
 def get_student_by_id(
         student_id: int = Path(..., ge=1, le=999999),
         db: Session = Depends(get_db)
@@ -55,7 +55,7 @@ def get_student_by_id(
     return {"code":200,"message":"success","data":student}
 
 
-@router.get("/no/{student_no}", summary="根据学号查询学生")
+@student_router.get("/no/{student_no}", summary="根据学号查询学生")
 def get_student_by_no(
         student_no: str,
         db: Session = Depends(get_db)
@@ -68,7 +68,7 @@ def get_student_by_no(
 
     return {"code":200,"message":"success","data":student}
 
-@router.get("/class/{class_id}", summary="根据班级查询")
+@student_router.get("/class/{class_id}", summary="根据班级查询")
 def get_students_by_class(
         class_id: int = Path(..., ge=1),
         skip: int = Query(0, ge=0),
@@ -84,7 +84,7 @@ def get_students_by_class(
 
 
 # ==================== 更新学生 ====================
-@router.patch("/{student_id}", response_model=StudentUpdate,summary="更新学生信息（只改提供的字段）")
+@student_router.patch("/{student_id}", response_model=StudentUpdate,summary="更新学生信息（只改提供的字段）")
 def update_student(
         update_data: StudentUpdate,
         student_id: int = Path(..., ge=1, le=999999),
@@ -104,7 +104,7 @@ def update_student(
 
 
 # ==================== 逻辑删除 ====================
-@router.delete("/{student_id}", summary="逻辑删除学生")
+@student_router.delete("/{student_id}", summary="逻辑删除学生")
 def delete_student(
         student_id: int = Path(..., ge=1, le=999999),
         db: Session = Depends(get_db)
@@ -124,7 +124,7 @@ def delete_student(
         raise HTTPException(status_code=500, detail="删除失败")
 
 
-@router.post("/{student_id}/restore", summary="恢复已删除学生")
+@student_router.post("/{student_id}/restore", summary="恢复已删除学生")
 def restore_student(
         student_id: int = Path(..., ge=1, le=999999),
         db: Session = Depends(get_db)
