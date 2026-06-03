@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>沃林学生信息管理系统</title>
+  <!--
+    说明：本页面是一个纯静态的单文件前端（HTML + CSS + 原生 JS），
+    严格按照后端 openapi.json 中的路径、参数、请求体来生成对应的表单和请求。
+    后端默认运行在 http://localhost:8088，可在右上角"接口地址"输入框里随时修改。
+  -->
+  <style>
+    /* ===== 全局变量与基础样式 ===== */
+    :root {
+      --bg: #0f172a;            /* 主背景（深蓝） */
+      --bg-soft: #1e293b;       /* 卡片背景 */
+      --bg-soft2: #273449;      /* 次级背景 */
+      --line: #334155;          /* 边框线 */
+      --text: #e2e8f0;          /* 主文字 */
+      --text-dim: #94a3b8;      /* 次要文字 */
+      --primary: #6366f1;       /* 主题色（靛蓝） */
+      --primary-2: #818cf8;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --radius: 12px;
+      --shadow: 0 8px 24px rgba(0,0,0,.25);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: "Segoe UI", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+    }
+    a { color: var(--primary-2); }
+
+    /* ===== 左侧导航栏 ===== */
+    .sidebar {
+      width: 230px;
+      flex-shrink: 0;
+      background: linear-gradient(180deg, #111827 0%, #0b1220 100%);
+      border-right: 1px solid var(--line);
+      padding: 18px 12px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 10px 16px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 14px;
+    }
+    .brand .logo {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      display: grid; place-items: center;
+      font-weight: 700; font-size: 18px; color: #fff;
+    }
+    .brand h1 { font-size: 15px; margin: 0; line-height: 1.3; }
+    .brand p { font-size: 11px; color: var(--text-dim); margin: 2px 0 0; }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      color: var(--text-dim);
+      font-size: 14px;
+      margin-bottom: 4px;
+      transition: all .15s ease;
+      user-select: none;
+    }
+    .nav-item:hover { background: var(--bg-soft2); color: var(--text); }
+    .nav-item.active {
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+    .nav-item .ico { font-size: 16px; width: 20px; text-align: center; }
+
+    /* ===== 主内容区 ===== */
+    .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px;
+      padding: 14px 24px;
+      background: var(--bg-soft);
+      border-bottom: 1px solid var(--line);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .topbar .title { font-size: 18px; font-weight: 600; }
+    .topbar .api-box { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .topbar .api-box input {
+      width: 240px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+    }
+    .content { padding: 24px; overflow-y: auto; }
+
+    /* ===== 页面分区 ===== */
+    .page { display: none; animation: fade .25s ease; }
+    .page.active { display: block; }
+    @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+    /* ===== 卡片 ===== */
+    .card {
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow);
+    }
+    .card h3 { margin: 0 0 4px; font-size: 15px; }
+    .card .desc { color: var(--text-dim); font-size: 12px; margin: 0 0 14px; }
+    .card .method {
+      display: inline-block; font-size: 11px; font-weight: 700;
+      padding: 2px 8px; border-radius: 6px; margin-right: 8px; vertical-align: middle;
+    }
+    .m-get { background: #064e3b; color: #6ee7b7; }
+    .m-post { background: #1e3a8a; color: #93c5fd; }
+    .m-put { background: #78350f; color: #fcd34d; }
+    .m-patch { background: #5b21b6; color: #c4b5fd; }
+    .m-delete { background: #7f1d1d; color: #fca5a5; }
+
+    /* ===== 表单 ===== */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 12px; color: var(--text-dim); }
+    .field input, .field select, .field textarea {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 9px 11px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: inherit;
+      width: 100%;
+    }
+    .field textarea { resize: vertical; min-height: 70px; }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      outline: none; border-color: var(--primary);
+    }
+    .actions { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* ===== 按钮 ===== */
+    .btn {
+      border: none; cursor: pointer;
+      padding: 9px 18px; border-radius: 8px;
+      font-size: 13px; font-weight: 600; color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      transition: transform .1s ease, opacity .15s ease;
+    }
+    .btn:hover { opacity: .92; }
+    .btn:active { transform: scale(.97); }
+    .btn.secondary { background: var(--bg-soft2); border: 1px solid var(--line); }
+    .btn.danger { background: linear-gradient(135deg, #dc2626, #ef4444); }
+
+    /* ===== 结果展示 ===== */
+    .result {
+      margin-top: 14px;
+      background: #0b1220;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 12.5px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 460px;
+      overflow: auto;
+      color: #cbd5e1;
+    }
+    .result:empty::before { content: "（尚未请求）"; color: var(--text-dim); }
+    .badge {
+      display: inline-block; font-size: 11px; padding: 2px 8px;
+      border-radius: 999px; margin-bottom: 8px;
+    }
+    .badge.ok { background: #064e3b; color: #6ee7b7; }
+    .badge.err { background: #7f1d1d; color: #fca5a5; }
+
+    /* ===== 表格 ===== */
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12.5px; }
+    th, td { border: 1px solid var(--line); padding: 7px 9px; text-align: left; }
+    th { background: var(--bg-soft2); color: var(--text); position: sticky; top: 0; }
+    td { color: var(--text-dim); }
+    .table-wrap { overflow: auto; max-height: 460px; margin-top: 12px; border-radius: 8px; }
+
+    .section-title { font-size: 13px; color: var(--text-dim); margin: 22px 0 10px; letter-spacing: .5px; }
+    .img-preview img { max-width: 100%; border-radius: 8px; margin-top: 12px; border: 1px solid var(--line); }
+    .hint { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <!-- ===================== 左侧导航 ===================== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">沃</div>
+      <div>
+        <h1>沃林学生信息管理系统</h1>
+        <p>逐光小组作品 · v0.1.0</p>
+      </div>
+    </div>
+    <nav id="nav">
+      <div class="nav-item active" data-page="student"><span class="ico">🎓</span>学生信息管理</div>
+      <div class="nav-item" data-page="score"><span class="ico">📊</span>考核成绩管理</div>
+      <div class="nav-item" data-page="employment"><span class="ico">💼</span>就业信息管理</div>
+      <div class="nav-item" data-page="class"><span class="ico">🏫</span>班级管理</div>
+      <div class="nav-item" data-page="teacher"><span class="ico">👨‍🏫</span>教师管理</div>
+      <div class="nav-item" data-page="statistics"><span class="ico">📈</span>统计分析</div>
+      <div class="nav-item" data-page="work"><span class="ico">🤖</span>AI 作业模块</div>
+      <div class="nav-item" data-page="email"><span class="ico">✉️</span>邮件管理</div>
+    </nav>
+  </aside>
+
+  <!-- ===================== 主内容 ===================== -->
+  <div class="main">
+    <div class="topbar">
+      <div class="title" id="pageTitle">学生信息管理</div>
+      <div class="api-box">
+        <span>接口地址：</span>
+        <input id="baseUrl" value="http://localhost:8088" />
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- ============ 学生信息管理 ============ -->
+      <section class="page active" id="page-student">
+        <!-- 创建学生 -->
+        <div class="card">
+          <h3><span class="method m-post">POST</span>创建学生</h3>
+          <p class="desc">/student/students</p>
+          <div class="grid">
+            <div class="field"><label>学号 student_no *</label><input id="st_no" placeholder="S2024001" /></div>
+            <div class="field"><label>班级ID class_id *</label><input id="st_class" type="number" placeholder="1" /></div>
+            <div class="field"><label>姓名 student_name *</label><input id="st_name" placeholder="张三" /></div>
+            <div class="field"><label>性别 gender</label><input id="st_gender" placeholder="男" /></div>
+            <div class="field"><label>年龄 age</label><input id="st_age" type="number" placeholder="20" /></div>
+            <div class="field"><label>籍贯 native_place</label><input id="st_native" placeholder="北京市" /></div>
+            <div class="field"><label>毕业院校 graduate_school</label><input id="st_school" placeholder="北京一中" /></div>
+            <div class="field"><label>专业 major</label><input id="st_major" placeholder="计算机科学" /></div>
+            <div class="field"><label>学历 education</label><input id="st_edu" placeholder="本科" /></div>
+            <div class="field"><label>入学时间 admission_time</label><input id="st_admit" type="date" /></div>
+            <div class="field"><label>毕业时间 graduate_time</label><input id="st_grad" type="date" /></div>
+            <div class="field"><label>顾问编号 advisor_id</label><input id="st_advisor" type="number" placeholder="1" /></div>
+          </div>
+          <div class="actions"><button class="btn" onclick="createStudent()">创建</button></div>
+          <div class="result" id="r_st_create"></div>
+        </div>
+
+        <!-- 查询学生 -->
+        <div class="card">
+          <h3><span class="method m-get">GET</span>查询学生</h3>
+          <p class="desc">支持：全部分页 / 按ID / 按学号 / 按班级</p>
+          <div class="grid">
+            <div class="field"><label>skip（偏移）</label><input id="st_skip" type="number" value="0" /></div>
+            <div class="field"><label>limit（条数 1~100）</label><input id="st_limit" type="number" value="100" /></div>
+            <div class="field"><label>学生ID（按ID查）</label><input id="st_id" type="number" placeholder="1" /></div>
+            <div class="field"><label>学号（按学号查）</label><input id="st_no_q" placeholder="S2024001" /></div>
+            <div class="field"><label>班级ID（按班级查）</label><input id="st_class_q" type="number" placeholder="1" /></div>
+          </div>
+          <div class="actions">
+            <button class="btn" onclick="getAllStudents()">查全部</button>
+            <button class="btn secondary" onclick="getStudentById()">按ID查</button>
+            <button class="btn secondary" onclick="getStudentByNo()">按学号查</button>
+            <button class="btn secondary" onclick="getStudentByClass()">按班级查</button>
+          </div>
+          <div id="r_st_query_table"></div>
+          <div class="result" id="r_st_query"></div>
+        </div>
+
+        <!-- 更新/删除/恢复 -->
+        <div class="card">
+          <h3>更新 / 删除 / 恢复学生</h3>
+          <p class="desc">PATCH 更新只改填写的字段；DELETE 为逻辑删除；可恢复</p>
+          <div class="grid">
+            <div class="field"><label>学生ID *</label><input id="st_op_id" type="number" placeholder="1" /></div>
+            <div class="field"><label>班级ID</label><input id="st_up_class" type="number" /></div>
+            <div class="field"><label>姓名</label><input id="st_up_name" /></div>
+            <div class="field"><label>性别</label><input id="st_up_gender" /></div>
+            <div class="field"><label>年龄</label><input id="st_up_age" type="number" /></div>
+            <div class="field"><label>专业</label><input id="st_up_major" /></div>
+          </div>
+          <div class="actions">
+            <button class="btn" onclick="updateStudent()">更新(PATCH)</button>
+            <button class="btn danger" onclick="deleteStudent()">逻辑删除</button>
+            <button class="btn secondary" onclick="restoreStudent()">恢复</button>
+          </div>
+          <div class="result" id="r_st_op"></div>
+        </div>
+      </section>
+
+      <!-- ============ 成绩管理 ============ -->
+      <section class="page" id="page-score">
+        <div class="card">
+          <h3><span class="method m-post">POST</span>新增成绩</h3>
+          <p class="desc">/score/add</p>
+          <div class="grid">
+            <div class="field"><label>学号 *（如 S2025001）</label><input id="sc_no" placeholder="S2025001" /></div>
+            <div class="field"><label>考试次序 exam_order *</label><input id="sc_order" type="number" placeholder="1" /></div>
+            <div class="field"><label>成绩 score *（0~100）</label><input id="sc_score" type="number" placeholder="88" /></div>
+          </div>
+          <div class="actions"><button class="btn" onclick="addScore()">新增</button></div>
+          <div class="result" id="r_sc_add"></div>
+        </div>
+
+        <div class="card">
+          <h3><span class="method m-post">POST</span>批量新增成绩</h3>
+          <p class="desc">/score/batch_add —— 在下方填写 JSON 数组</p>
+          <div class="field">
+            <label>成绩列表 JSON</label>
+            <textarea id="sc_batch" rows="6">[
+  {"student_no": "S2025001", "exam_order": 1, "score": 90},
+  {"student_no": "S2025002", "exam_order": 1, "score": 75}
+]</textarea>
+          </div>
+          <div class="actions"><button class="btn" onclick="batchAddScore()">批量新增</button></div>
+          <div class="result" id="r_sc_batch"></div>
+        </div>
+
+        <div class="card">
+          <h3><span class="method m-put">PUT</span>修改成绩 &nbsp; <span class="method m-post">POST</span>删除成绩</h3>
+          <p class="desc">/score/update &amp; /score/is_delete</p>
+          <div class="grid">
+            <div class="field"><label>学号 *</label><input id="sc_up_no" placeholder="S2025001" /></div>
+            <div class="field"><label>考试次序 *</label><input id="sc_up_order" type="number" placeholder="1" /></div>
+            <div class="field"><label>新成绩（修改用）</label><input id="sc_up_score" type="number" placeholder="95" /></div>
+          </div>
+          <div class="actions">
+            <button class="btn" onclick="updateScore()">修改成绩</button>
+            <button class="btn danger" onclick="deleteScore()">删除成绩</button>
+          </div>
+          <div class="result" id="r_sc_op"></div>
+        </div>
+
+        <div class="card">
+          <h3><span class="method m-get">GET</span>查询成绩</h3>
+          <p class="desc">/score/query —— 支持多条件、分页、排序</p>
+          <div class="grid">
+            <div class="field"><label>page（页码）</label><input id="sc_page" type="number" value="1" /></div>
+            <div class="field"><label>page_size（每页 1~100）</label><input id="sc_psize" type="number" value="10" /></div>
+            <div class="field"><label>学号</label><input id="sc_q_no" placeholder="S2025001" /></div>
+            <div class="field"><label>考试次序</label><input id="sc_q_order" type="number" /></div>
+            <div class="field"><label>班级ID</label><input id="sc_q_class" type="number" /></div>
+            <div class="field"><label>最低分</label><input id="sc_q_min" type="number" /></div>
+            <div class="field"><label>最高分</label><input id="sc_q_max" type="number" /></div>
+            <div class="field"><label>按学号排序</label><select id="sc_q_sortno"><option value="">不排序</option><option value="asc">升序</option><option value="desc">降序</option></select></div>
+            <div class="field"><label>按成绩排序</label><select id="sc_q_sortsc"><option value="">不排序</option><option value="asc">升序</option><option value="desc">降序</option></select></div>
+          </div>
+          <div class="actions"><button class="btn" onclick="queryScore()">查询</button></div>
+          <div id="r_sc_query_table"></div>
+          <div class="result" id="r_sc_query"></div>
+        </div>
+      </section>
+
+      <!-- ============ 就业管理 ============ -->
+      <section class="page" id="page-employment">
+        <div class="card">
+          <h3><span class="method m-post">POST</span>新建就业信息</h3>
+          <p class="desc">/Employment/employment_create</p>
+          <div class="grid">
+            <div class="field"><label>学号 student_no *</label><input id="em_no" /></div>
+            <div class="field"><label>姓名 student_name *</label><input id="em_name" /></div>
+            <div class="field"><label>班级ID class_id *</label><input id="em_class" type="number" /></div>
+            <div class="field"><label>就业开放时间 job_open_time</label><input id="em_open" type="date" /></div>
+            <div class="field"><label>offer下发时间 offer_send_time</label><input id="em_offer" type="date" /></div>
+            <div class="field"><label>公司 company_name</label><input id="em_company" /></div>
+            <div class="field"><label>薪资 salary</label><input id="em_salary" type="number" /></div>
+          </div>
+          <div class="actions"><button class="btn" onclick="createEmployment()">新建</button></div>
+          <div class="result" id="r_em_create"></div>
+        </div>
+
+        <div class="card">
+          <h3><span class="method m-get">GET</span>查询就业信息</h3>
+          <p class="desc">分页查询 /employment_list，或按ID查 /employment_get/{id}</p>
+          <div class="grid">
+            <div class="field"><label>page</label><input id="em_page" type="number" value="1" /></div>
+            <div class="field"><label>size（1~100）</label><input id="em_size" type="number" value="10" /></div>
+            <div class="field"><label>学生姓名</label><input id="em_q_name" /></div>
+            <div class="field"><label>班级ID</label><input id="em_q_class" type="number" /></div>
+            <div class="field"><label>公司名</label><input id="em_q_company" /></div>
+            <div class="field"><label>按ID查（emp_id）</label><input id="em_id" type="number" /></div>
+          </div>
+          <div class="actions">
+            <button class="btn" onclick="listEmployment()">分页查询</button>
+            <button class="btn secondary" onclick="getEmployment()">按ID查</button>
+          </div>
+          <div id="r_em_query_table"></div>
+          <div class="result" id="r_em_query"></div>
+        </div>
+
+        <div class="card">
+          <h3>修改 / 删除 / 恢复就业信息</h3>
+          <p class="desc">PUT 修改、逻辑删除、逻辑恢复、物理删除</p>
+          <div class="grid">
+            <div class="field"><label>就业记录ID emp_id *</label><input id="em_op_id" type="number" /></div>
+            <div class="field"><label>公司（修改用）</label><input id="em_up_company" /></div>
+            <div class="field"><label>薪资（修改用）</label><input id="em_up_salary" type="number" /></div>
+            <div class="field"><label>offer时间（修改用）</label><input id="em_up_offer" type="date" /></div>
+          </div>
+          <div class="actions">
+            <button class="btn" onclick="updateEmployment()">修改(PUT)</button>
+            <button class="btn danger" onclick="deleteEmployment()">逻辑删除</button>
+            <button class="btn secondary" onclick="recoverEmployment()">逻辑恢复</button>
+            <button class="btn danger" onclick="hardDeleteEmployment()">物理删除</button>
+          </div>
+          <div class="result" id="r_em_op"></div>
+        </div>
+      </section>
+
+      <!-- ============ 班级管理 ============ -->
+      <section class="page" id="page-class">
+        <div class="card">
+          <h3><span class="method m-post">POST</span>新增 / 修改班级</h3>
+          <p class="desc">/class/create_or_update_class —— 传 id 则为修改，不传为新增</p>
+          <div class="grid">
+            <div class="field"><label>班级ID id（修改时填）</label><input id="cl_id" type="number" /></div>
+            <div class="field"><label>班级编号 class_code *</label><input id="cl_code" placeholder="C001" /></div>
+            <div class="field"><label>班级名称 class_name *</label><input id="cl_name" placeholder="计算机1班" /></div>
+            <div class="field"><label>开班时间 start_time *</label><input id="cl_start" type="datetime-local" /></div>
+          </div>
+          <div class="actions"><button class="btn" onclick="saveClass()">保存</button></div>
+          <div class="result" id="r_cl_save"></div>
+        </div>
+
+        <div class="card">
+          <h3><span class="method m-get">GET</span>查询班级 &nbsp; <span class="method m-delete">DELETE</span>删除班级</h3>
+          <p class="desc">分页查询 /class/get_class，按ID查 /class/get_class/{id}，删除 /class/del_class</p>
+          <div class="grid">
+            <div class="field"><label>page</label><input id="cl_page" type="number" value="1" /></div>
+            <div class="field"><label>limit</label><input id="cl_limit" type="number" value="10" /></div>
+            <div class="field"><label>班级ID（按ID查/删除）</label><input id="cl_q_id" type="number" /></div>
+          </div>
+          <div class="actions">
+            <button class="btn" onclick="getClasses()">分页查询</button>
+            <button class="btn secondary" onclick="getClassById()">按ID查</button>
+            <button class="btn danger" onclick="delClass()">删除班级</button>
+          </div>
+          <div id="r_cl_query_table"></div>
+          <div class="result" id="r_cl_query"></div>
+        </div>
+      </section>
+
+      <!-- ============ 教师管理 ============ -->
+      <section class="page" id="page-teacher">
+        <div class="card">
+          <h3><span class="method m-post">POST</span>批量新增教师</h3>
+          <p class="desc">/teachers —— 请求体是教师数组</p>
+          <div class="field">
+            <label>教师列表 JSON</label>
+            <textarea id="te_batch" rows="8">[
+  {
+    "name": "李老师",
+    "gender": "男",
+    "phone": "13800000000",
+    "title": "讲师",
+    "class_id": 1,
+    "hire_date": "2024-09-01T00:00:00",
+    "email": "li@example.com"
+  }
+]</textarea>
+          </div>
+          <div class="actions"><button class="btn" onclick="createTeachers()">新增</button></div>
+          <div class="result" id="r_te_create"></div>
+        </div>
+
+        <div class="card">
+          <h3><span class="method m-get">GET</span>查询教师</h3>
+          <p class="desc">/teachers —— 多条件过滤 + 排序 + 分页</p>
+          <div class="grid">
+            <div class="field"><label>姓名</label><input id="te_name" /></div>
+            <div class="field"><label>性别</label><select id="te_gender"><option value="">全部</option><option>男</option><option>女</option></select></div>
+            <div class="field"><label>职称 title</label><input id="te_title" /></div>
+            <div class="field"><label>班级ID</label><input id="te_class" type="number" /></div>
+            <div class="field"><label>手机号</label><input id="te_phone" /></div>
+            <div class="field"><label>邮箱</label><input id="te_email" /></div>
+            <div class="field"><label>入职起 hire_date_start</label><input id="te_hstart" type="datetime-local" /></div>
+            <div class="field"><label>入职止 hire_date_end</label><input id="te_hend" type="datetime-local" /></div>
+            <div class="field"><label>排序字段</label><select id="te_sortby"><option value="">默认</option><option value="id">id</option><option value="name">name</option><option value="hire_date">hire_date</option><option value="create_time">create_time</option><option value="class_id">class_id</option></select></div>
+            <div class="field"><label>排序方向</label><select id="te_sortorder"><option value="asc">升序</option><option value="desc">降序</option></select></div>
+            <div class="field"><label>page</label><input id="te_page" type="number" value="1" /></div>
+            <div class="field"><label>page_size</label><input id="te_psize" type="number" value="20" /></div>
+          </div>
+          <div class="actions"><button class="btn" onclick="getTeachers()">查询</button></div>
+          <div id="r_te_query_table"></div>
+          <div class="result" id="r_te_query"></div>
+        </div>
+
+        <div class="card">
+          <h3>按ID查 / 更新教师</h3>
+          <p class="desc">GET /teachers/{id} &amp; PUT /teachers/{id}（只改填写的字段）</p>
+          <div class="grid">
+            <div class="field"><label>教师ID *</label><input id="te_op_id" type="number" /></div>
+            <div class="field"><label>姓名</label><input id="te_up_name" /></div>
+            <div class="field"><label>性别</label><input id="te_up_gender" /></div>
+            <div class="field"><label>手机号</label><input id="te_up_phone" /></div>
+            <div class="field"><label>职称</label><input id="te_up_title" /></div>
+            <div class="field"><label>班级ID</label><input id="te_up_class" type="number" /></div>
+            <div class="field"><label>邮箱</label><input id="te_up_email" /></div>
+          </div>
+          <div class="actions">
+            <button class="btn secondary" onclick="getTeacherById()">按ID查</button>
+            <button class="btn" onclick="updateTeacher()">更新(PUT)</button>
+          </div>
+          <div class="result" id="r_te_op"></div>
+        </div>
+      </section>
+
+      <!-- ============ 统计分析 ============ -->
+      <section class="page" id="page-statistics">
+        <div class="card">
+          <h3><span class="method m-get">GET</span>统计查询</h3>
+          <p class="desc">点击下方按钮调用各类统计接口。skip/limit/age/grade 通用参数。</p>
+          <div class="grid">
+            <div class="field"><label>skip</label><input id="sta_skip" type="number" value="0" /></div>
+            <div class="field"><label>limit</label><input id="sta_limit" type="number" value="10" /></div>
+            <div class="field"><label>age（年龄阈值）</label><input id="sta_age" type="number" value="30" /></div>
+            <div class="field"><label>grade（分数阈值）</label><input id="sta_grade" type="number" value="80" /></div>
+            <div class="field"><label>tall_sal limit（≥5）</label><input id="sta_sal_limit" type="number" value="5" /></div>
+          </div>
+          <div class="actions" style="flex-wrap: wrap;">
+            <button class="btn secondary" onclick="staGeStu()">年龄大于xx</button>
+            <button class="btn secondary" onclick="staStuCount()">学生总数</button>
+            <button class="btn secondary" onclick="staScoreGreater()">每次≥xx分</button>
+            <button class="btn secondary" onclick="staScoreFails()">2次以上不及格</button>
+            <button class="btn secondary" onclick="staClassAvg()">班级平均分</button>
+            <button class="btn secondary" onclick="staTallSal()">最高薪资</button>
+            <button class="btn secondary" onclick="staJobTime()">就业时长</button>
+            <button class="btn secondary" onclick="staAvgClassJobTime()">班级平均就业时长</button>
+          </div>
+          <div id="r_sta_table"></div>
+          <div class="result" id="r_sta"></div>
+        </div>
+      </section>
+
+      <!-- ============ AI 作业模块 ============ -->
+      <section class="page" id="page-work">
+        <div class="card">
+          <h3><span class="method m-post">POST</span>学生评价（大模型生成）</h3>
+          <p class="desc">/work/evaluation —— 选择评价风格</p>
+          <div class="grid">
+            <div class="field"><label>学生ID student_id *</label><input id="wk_stuid" type="number" placeholder="1" /></div>
+            <div class="field"><label>风格 style *</label><select id="wk_style"><option>幽默</option><option>严肃</option><option>激励</option><option>批判</option></select></div>
+          </div>
+          <div class="actions"><button class="btn" onclick="workEvaluation()">生成评价</button></div>
+          <div class="result" id="r_wk_eval"></div>
+        </div>
+
+        <div class="card">
+          <h3><span class="method m-post">POST</span>文生图（通义万相）</h3>
+          <p class="desc">/work/image</p>
+          <div class="field"><label>提示词 prompt *</label><textarea id="wk_prompt" rows="3" placeholder="一只在草地上奔跑的柯基犬，阳光明媚"></textarea></div>
+          <div class="actions"><button class="btn" onclick="workImage()">生成图片</button></div>
+          <div class="img-preview" id="r_wk_img_preview"></div>
+          <div class="result" id="r_wk_img"></div>
+        </div>
+
+        <div class="card">
+          <h3><span class="method m-post">POST</span>多轮记忆对话</h3>
+          <p class="desc">/work/talks —— 同一 session_id 保持上下文；可清空记忆</p>
+          <div class="grid">
+            <div class="field"><label>会话ID session_id *</label><input id="wk_session" value="user-001" /></div>
+            <div class="field" style="grid-column: span 2;"><label>本轮输入 prompt *</label><input id="wk_talk" placeholder="你好，帮我介绍一下这个系统" /></div>
+          </div>
+          <div class="actions">
+            <button class="btn" onclick="workTalk()">发送</button>
+            <button class="btn danger" onclick="workClearTalk()">清空记忆</button>
+          </div>
+          <div class="result" id="r_wk_talk"></div>
+        </div>
+
+        <div class="card">
+          <h3><span class="method m-get">GET</span>天气查询 / 经纬度解析</h3>
+          <p class="desc">/work/weather（经纬度或行政编码二选一）&amp; /work/geocoder（地址转经纬度）</p>
+          <div class="section-title">天气查询</div>
+          <div class="grid">
+            <div class="field"><label>经纬度 location（纬度,经度）</label><input id="wk_location" placeholder="39.905023,116.724502" /></div>
+            <div class="field"><label>行政区划编码 adcode</label><input id="wk_adcode" placeholder="130681" /></div>
+            <div class="field"><label>天气类型 weather_type</label><select id="wk_wtype"><option value="now">now 实时</option><option value="future">future 多日</option><option value="hours">hours 逐时</option></select></div>
+            <div class="field"><label>附加字段 added_fields</label><input id="wk_added" placeholder="alarm,air" /></div>
+            <div class="field"><label>get_md（future 生效）</label><input id="wk_getmd" type="number" placeholder="0" /></div>
+          </div>
+          <div class="actions"><button class="btn" onclick="workWeather()">查天气</button></div>
+          <div class="result" id="r_wk_weather"></div>
+
+          <div class="section-title">地址解析为经纬度</div>
+          <div class="grid">
+            <div class="field" style="grid-column: span 2;"><label>地址 address *</label><input id="wk_address" placeholder="北京市海淀区彩和坊路海淀西大街74号" /></div>
+            <div class="field"><label>策略 policy</label><select id="wk_policy"><option value="0">0 标准</option><option value="1">1 宽松</option></select></div>
+          </div>
+          <div class="actions"><button class="btn" onclick="workGeocoder()">解析地址</button></div>
+          <div class="result" id="r_wk_geo"></div>
+        </div>
+      </section>
+
+      <!-- ============ 邮件管理 ============ -->
+      <section class="page" id="page-email">
+        <div class="card">
+          <h3><span class="method m-post">POST</span>大模型生成内容并发送邮件</h3>
+          <p class="desc">/email/send_email —— 一句话需求自动生成邮件并发送</p>
+          <div class="field"><label>需求描述 prompt *</label><textarea id="mail_prompt" rows="3" placeholder="给老师写一封请假邮件，请假两天"></textarea></div>
+          <div class="field"><label>收件邮箱 receiver</label><input id="mail_receiver" value="786453528@qq.com" /></div>
+          <div class="actions"><button class="btn" onclick="sendEmail()">生成并发送</button></div>
+          <div class="result" id="r_mail"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    /* ===================== 通用工具函数 ===================== */
+    // 取接口基地址（去掉结尾多余的斜杠）
+    function base() { return document.getElementById('baseUrl').value.replace(/\/+$/, ''); }
+
+    // 取输入框的值（trim 后），空字符串返回 null
+    function val(id) {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      const v = (el.value ?? '').toString().trim();
+      return v === '' ? null : v;
+    }
+    // 取数字，空则 null
+    function numVal(id) { const v = val(id); return v === null ? null : Number(v); }
+
+    // 把对象里值为 null/undefined 的键删掉（用于 PATCH/可选参数）
+    function clean(obj) {
+      const out = {};
+      for (const k in obj) if (obj[k] !== null && obj[k] !== undefined && obj[k] !== '') out[k] = obj[k];
+      return out;
+    }
+
+    // 把对象转成 query string（自动跳过 null）
+    function qs(params) {
+      const sp = new URLSearchParams();
+      for (const k in params) {
+        const v = params[k];
+        if (v !== null && v !== undefined && v !== '') sp.append(k, v);
+      }
+      const s = sp.toString();
+      return s ? ('?' + s) : '';
+    }
+
+    // 统一的请求方法：自动处理 JSON、错误、状态徽章
+    async function request(targetId, method, path, { body, isText } = {}) {
+      const box = document.getElementById(targetId);
+      box.textContent = '请求中...';
+      try {
+        const opts = { method, headers: {} };
+        if (body !== undefined) {
+          opts.headers['Content-Type'] = 'application/json';
+          opts.body = JSON.stringify(body);
+        }
+        const resp = await fetch(base() + path, opts);
+        const text = await resp.text();
+        let data;
+        try { data = JSON.parse(text); } catch { data = text; }
+        const badge = resp.ok
+          ? '<span class="badge ok">✓ ' + resp.status + '</span>\n'
+          : '<span class="badge err">✗ ' + resp.status + '</span>\n';
+        box.innerHTML = badge;
+        box.append(document.createTextNode(
+          typeof data === 'string' ? data : JSON.stringify(data, null, 2)
+        ));
+        return { ok: resp.ok, data };
+      } catch (e) {
+        box.innerHTML = '<span class="badge err">✗ 网络错误</span>\n';
+        box.append(document.createTextNode(
+          e.message + '\n\n提示：请确认后端已启动，且已开启 CORS 跨域允许。'
+        ));
+        return { ok: false, error: e };
+      }
+    }
+
+    // 把数组数据渲染成表格（自动取并集列）
+    function renderTable(targetId, rows) {
+      const wrap = document.getElementById(targetId);
+      if (!wrap) return;
+      if (!Array.isArray(rows) || rows.length === 0 || typeof rows[0] !== 'object') {
+        wrap.innerHTML = '';
+        return;
+      }
+      const cols = [...new Set(rows.flatMap(r => Object.keys(r)))];
+      let html = '<div class="table-wrap"><table><thead><tr>';
+      cols.forEach(c => html += '<th>' + c + '</th>');
+      html += '</tr></thead><tbody>';
+      rows.forEach(r => {
+        html += '<tr>';
+        cols.forEach(c => {
+          let v = r[c];
+          if (v === null || v === undefined) v = '';
+          else if (typeof v === 'object') v = JSON.stringify(v);
+          html += '<td>' + String(v).replace(/</g, '&lt;') + '</td>';
+        });
+        html += '</tr>';
+      });
+      html += '</tbody></table></div>';
+      wrap.innerHTML = html;
+    }
+
+    // 从各种返回结构里尽量提取出"列表"用于渲染表格
+    function pickList(data) {
+      if (Array.isArray(data)) return data;
+      if (data && typeof data === 'object') {
+        for (const key of ['data', 'items', 'list', 'records', 'result', 'rows']) {
+          if (Array.isArray(data[key])) return data[key];
+          if (data[key] && Array.isArray(data[key].items)) return data[key].items;
+        }
+      }
+      return null;
+    }
+
+    /* ===================== 导航切换 ===================== */
+    const titles = {
+      student: '学生信息管理', score: '考核成绩管理', employment: '就业信息管理',
+      class: '班级管理', teacher: '教师管理', statistics: '统计分析',
+      work: 'AI 作业模块', email: '邮件管理'
+    };
+    document.getElementById('nav').addEventListener('click', e => {
+      const item = e.target.closest('.nav-item');
+      if (!item) return;
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      item.classList.add('active');
+      const page = item.dataset.page;
+      document.getElementById('page-' + page).classList.add('active');
+      document.getElementById('pageTitle').textContent = titles[page];
+    });
+
+    /* ===================== 学生信息管理 ===================== */
+    function createStudent() {
+      const body = clean({
+        student_no: val('st_no'),
+        class_id: numVal('st_class'),
+        student_name: val('st_name'),
+        gender: val('st_gender'),
+        age: numVal('st_age'),
+        native_place: val('st_native'),
+        graduate_school: val('st_school'),
+        major: val('st_major'),
+        education: val('st_edu'),
+        admission_time: val('st_admit'),
+        graduate_time: val('st_grad'),
+        advisor_id: numVal('st_advisor')
+      });
+      request('r_st_create', 'POST', '/student/students', { body });
+    }
+    async function getAllStudents() {
+      const r = await request('r_st_query', 'GET', '/student/students' + qs({ skip: val('st_skip'), limit: val('st_limit') }));
+      renderTable('r_st_query_table', pickList(r.data));
+    }
+    async function getStudentById() {
+      if (!val('st_id')) return alert('请填写学生ID');
+      const r = await request('r_st_query', 'GET', '/student/students/' + val('st_id'));
+      renderTable('r_st_query_table', pickList(r.data) || (r.data && typeof r.data === 'object' ? [r.data] : null));
+    }
+    async function getStudentByNo() {
+      if (!val('st_no_q')) return alert('请填写学号');
+      const r = await request('r_st_query', 'GET', '/student/students/no/' + encodeURIComponent(val('st_no_q')));
+      renderTable('r_st_query_table', pickList(r.data) || (r.data && typeof r.data === 'object' ? [r.data] : null));
+    }
+    async function getStudentByClass() {
+      if (!val('st_class_q')) return alert('请填写班级ID');
+      const r = await request('r_st_query', 'GET', '/student/students/class/' + val('st_class_q') + qs({ skip: val('st_skip'), limit: val('st_limit') }));
+      renderTable('r_st_query_table', pickList(r.data));
+    }
+    function updateStudent() {
+      if (!val('st_op_id')) return alert('请填写学生ID');
+      const body = clean({
+        class_id: numVal('st_up_class'),
+        student_name: val('st_up_name'),
+        gender: val('st_up_gender'),
+        age: numVal('st_up_age'),
+        major: val('st_up_major')
+      });
+      request('r_st_op', 'PATCH', '/student/students/' + val('st_op_id'), { body });
+    }
+    function deleteStudent() {
+      if (!val('st_op_id')) return alert('请填写学生ID');
+      if (!confirm('确认逻辑删除该学生？')) return;
+      request('r_st_op', 'DELETE', '/student/students/' + val('st_op_id'));
+    }
+    function restoreStudent() {
+      if (!val('st_op_id')) return alert('请填写学生ID');
+      request('r_st_op', 'POST', '/student/students/' + val('st_op_id') + '/restore');
+    }
+
+    /* ===================== 成绩管理 ===================== */
+    function addScore() {
+      const body = {
+        student_no: val('sc_no'),
+        exam_order: numVal('sc_order'),
+        score: numVal('sc_score')
+      };
+      request('r_sc_add', 'POST', '/score/add', { body });
+    }
+    function batchAddScore() {
+      let arr;
+      try { arr = JSON.parse(val('sc_batch')); }
+      catch (e) { return alert('JSON 格式有误：' + e.message); }
+      request('r_sc_batch', 'POST', '/score/batch_add', { body: arr });
+    }
+    function updateScore() {
+      const body = {
+        student_no: val('sc_up_no'),
+        exam_order: numVal('sc_up_order'),
+        score: numVal('sc_up_score')
+      };
+      request('r_sc_op', 'PUT', '/score/update', { body });
+    }
+    function deleteScore() {
+      if (!val('sc_up_no') || !val('sc_up_order')) return alert('删除需填写学号和考试次序');
+      if (!confirm('确认删除该成绩？')) return;
+      request('r_sc_op', 'POST', '/score/is_delete' + qs({ student_no: val('sc_up_no'), exam_order: val('sc_up_order') }));
+    }
+    async function queryScore() {
+      const r = await request('r_sc_query', 'GET', '/score/query' + qs({
+        page: val('sc_page'), page_size: val('sc_psize'),
+        student_no: val('sc_q_no'), exam_order: val('sc_q_order'),
+        class_id: val('sc_q_class'), min_score: val('sc_q_min'), max_score: val('sc_q_max'),
+        sort_no: val('sc_q_sortno'), sort_score: val('sc_q_sortsc')
+      }));
+      renderTable('r_sc_query_table', pickList(r.data));
+    }
+
+    /* ===================== 就业管理 ===================== */
+    function createEmployment() {
+      const body = clean({
+        student_no: val('em_no'),
+        student_name: val('em_name'),
+        class_id: numVal('em_class'),
+        job_open_time: val('em_open'),
+        offer_send_time: val('em_offer'),
+        company_name: val('em_company'),
+        salary: numVal('em_salary')
+      });
+      request('r_em_create', 'POST', '/Employment/employment_create', { body });
+    }
+    async function listEmployment() {
+      const r = await request('r_em_query', 'GET', '/Employment/employment_list' + qs({
+        page: val('em_page'), size: val('em_size'),
+        student_name: val('em_q_name'), class_id: val('em_q_class'), company_name: val('em_q_company')
+      }));
+      renderTable('r_em_query_table', pickList(r.data));
+    }
+    async function getEmployment() {
+      if (!val('em_id')) return alert('请填写就业记录ID');
+      const r = await request('r_em_query', 'GET', '/Employment/employment_get/' + val('em_id'));
+      renderTable('r_em_query_table', r.data && typeof r.data === 'object' ? [r.data] : null);
+    }
+    function updateEmployment() {
+      if (!val('em_op_id')) return alert('请填写就业记录ID');
+      const body = clean({
+        company_name: val('em_up_company'),
+        salary: numVal('em_up_salary'),
+        offer_send_time: val('em_up_offer')
+      });
+      request('r_em_op', 'PUT', '/Employment/employment_update/' + val('em_op_id'), { body });
+    }
+    function deleteEmployment() {
+      if (!val('em_op_id')) return alert('请填写就业记录ID');
+      if (!confirm('确认逻辑删除？')) return;
+      request('r_em_op', 'DELETE', '/Employment/employment_delete/' + val('em_op_id'));
+    }
+    function recoverEmployment() {
+      if (!val('em_op_id')) return alert('请填写就业记录ID');
+      request('r_em_op', 'PUT', '/Employment/employment_recover/' + val('em_op_id'));
+    }
+    function hardDeleteEmployment() {
+      if (!val('em_op_id')) return alert('请填写就业记录ID');
+      if (!confirm('物理删除不可恢复，确认？')) return;
+      request('r_em_op', 'DELETE', '/Employment/employment_hard/' + val('em_op_id'));
+    }
+
+    /* ===================== 班级管理 ===================== */
+    function saveClass() {
+      const body = {
+        class_code: val('cl_code'),
+        class_name: val('cl_name'),
+        // datetime-local 没有秒，补成后端要的 ISO 格式
+        start_time: val('cl_start') ? val('cl_start') + ':00' : null
+      };
+      const id = val('cl_id');
+      request('r_cl_save', 'POST', '/class/create_or_update_class' + qs({ id }), { body });
+    }
+    async function getClasses() {
+      const r = await request('r_cl_query', 'GET', '/class/get_class' + qs({ page: val('cl_page'), limit: val('cl_limit') }));
+      renderTable('r_cl_query_table', pickList(r.data));
+    }
+    async function getClassById() {
+      if (!val('cl_q_id')) return alert('请填写班级ID');
+      const r = await request('r_cl_query', 'GET', '/class/get_class/' + val('cl_q_id'));
+      renderTable('r_cl_query_table', r.data && typeof r.data === 'object' && !Array.isArray(r.data) ? [r.data] : pickList(r.data));
+    }
+    function delClass() {
+      if (!val('cl_q_id')) return alert('请填写班级ID');
+      if (!confirm('确认删除该班级？')) return;
+      request('r_cl_query', 'DELETE', '/class/del_class' + qs({ id: val('cl_q_id') }));
+    }
+
+    /* ===================== 教师管理 ===================== */
+    function createTeachers() {
+      let arr;
+      try { arr = JSON.parse(val('te_batch')); }
+      catch (e) { return alert('JSON 格式有误：' + e.message); }
+      request('r_te_create', 'POST', '/teachers', { body: arr });
+    }
+    async function getTeachers() {
+      const r = await request('r_te_query', 'GET', '/teachers' + qs({
+        name: val('te_name'), gender: val('te_gender'), title: val('te_title'),
+        class_id: val('te_class'), phone: val('te_phone'), email: val('te_email'),
+        hire_date_start: val('te_hstart'), hire_date_end: val('te_hend'),
+        sort_by: val('te_sortby'), sort_order: val('te_sortorder'),
+        page: val('te_page'), page_size: val('te_psize')
+      }));
+      renderTable('r_te_query_table', pickList(r.data));
+    }
+    async function getTeacherById() {
+      if (!val('te_op_id')) return alert('请填写教师ID');
+      const r = await request('r_te_op', 'GET', '/teachers/' + val('te_op_id'));
+    }
+    function updateTeacher() {
+      if (!val('te_op_id')) return alert('请填写教师ID');
+      const body = clean({
+        name: val('te_up_name'),
+        gender: val('te_up_gender'),
+        phone: val('te_up_phone'),
+        title: val('te_up_title'),
+        class_id: numVal('te_up_class'),
+        email: val('te_up_email')
+      });
+      request('r_te_op', 'PUT', '/teachers/' + val('te_op_id'), { body });
+    }
+
+    /* ===================== 统计分析 ===================== */
+    async function staGeStu() {
+      const r = await request('r_sta', 'GET', '/statistics/ge_stu/plus' + qs({ skip: val('sta_skip'), limit: val('sta_limit'), age: val('sta_age') }));
+      renderTable('r_sta_table', pickList(r.data));
+    }
+    function staStuCount() { document.getElementById('r_sta_table').innerHTML = ''; request('r_sta', 'GET', '/statistics/stu_count'); }
+    async function staScoreGreater() {
+      const r = await request('r_sta', 'GET', '/statistics/score_greater/plus' + qs({ skip: val('sta_skip'), limit: val('sta_limit'), grade: val('sta_grade') }));
+      renderTable('r_sta_table', pickList(r.data));
+    }
+    async function staScoreFails() {
+      const r = await request('r_sta', 'GET', '/statistics/score_fails' + qs({ skip: val('sta_skip'), limit: val('sta_limit') }));
+      renderTable('r_sta_table', pickList(r.data));
+    }
+    async function staClassAvg() {
+      const r = await request('r_sta', 'GET', '/statistics/class_avg' + qs({ skip: val('sta_skip'), limit: val('sta_limit') }));
+      renderTable('r_sta_table', pickList(r.data));
+    }
+    async function staTallSal() {
+      const r = await request('r_sta', 'GET', '/statistics/tall_sal' + qs({ limit: val('sta_sal_limit') }));
+      renderTable('r_sta_table', pickList(r.data));
+    }
+    async function staJobTime() {
+      const r = await request('r_sta', 'GET', '/statistics/job_time' + qs({ skip: val('sta_skip'), limit: val('sta_limit') }));
+      renderTable('r_sta_table', pickList(r.data));
+    }
+    async function staAvgClassJobTime() {
+      const r = await request('r_sta', 'GET', '/statistics/avg_class_job_time' + qs({ skip: val('sta_skip'), limit: val('sta_limit') }));
+      renderTable('r_sta_table', pickList(r.data));
+    }
+
+    /* ===================== AI 作业模块 ===================== */
+    function workEvaluation() {
+      if (!val('wk_stuid')) return alert('请填写学生ID');
+      request('r_wk_eval', 'POST', '/work/evaluation' + qs({ student_id: val('wk_stuid'), style: val('wk_style') }));
+    }
+    async function workImage() {
+      if (!val('wk_prompt')) return alert('请填写提示词');
+      const preview = document.getElementById('r_wk_img_preview');
+      preview.innerHTML = '';
+      const r = await request('r_wk_img', 'POST', '/work/image' + qs({ prompt: val('wk_prompt') }));
+      // 尝试从返回里找出图片 URL 做预览
+      const url = findImageUrl(r.data);
+      if (url) preview.innerHTML = '<img src="' + url + '" alt="生成结果" />';
+    }
+    // 递归在返回 JSON 里找看起来像图片地址的字符串
+    function findImageUrl(obj) {
+      if (typeof obj === 'string' && /^https?:\/\/.+\.(png|jpe?g|webp|gif)/i.test(obj)) return obj;
+      if (typeof obj === 'string' && /^https?:\/\//.test(obj) && /(image|wanx|dashscope|oss)/i.test(obj)) return obj;
+      if (Array.isArray(obj)) { for (const x of obj) { const u = findImageUrl(x); if (u) return u; } }
+      else if (obj && typeof obj === 'object') { for (const k in obj) { const u = findImageUrl(obj[k]); if (u) return u; } }
+      return null;
+    }
+    function workTalk() {
+      if (!val('wk_session') || !val('wk_talk')) return alert('请填写会话ID和输入内容');
+      request('r_wk_talk', 'POST', '/work/talks' + qs({ session_id: val('wk_session'), prompt: val('wk_talk') }));
+    }
+    function workClearTalk() {
+      if (!val('wk_session')) return alert('请填写会话ID');
+      request('r_wk_talk', 'POST', '/work/talks/clear' + qs({ session_id: val('wk_session') }));
+    }
+    function workWeather() {
+      if (!val('wk_location') && !val('wk_adcode')) return alert('经纬度或行政编码至少填一个');
+      request('r_wk_weather', 'GET', '/work/weather' + qs({
+        location: val('wk_location'), adcode: val('wk_adcode'),
+        weather_type: val('wk_wtype'), added_fields: val('wk_added'), get_md: val('wk_getmd')
+      }));
+    }
+    function workGeocoder() {
+      if (!val('wk_address')) return alert('请填写地址');
+      request('r_wk_geo', 'GET', '/work/geocoder' + qs({ address: val('wk_address'), policy: val('wk_policy') }));
+    }
+
+    /* ===================== 邮件管理 ===================== */
+    function sendEmail() {
+      if (!val('mail_prompt')) return alert('请填写邮件需求');
+      request('r_mail', 'POST', '/email/send_email' + qs({ prompt: val('mail_prompt'), receiver: val('mail_receiver') }));
+    }
+  </script>
+</body>
+</html>
