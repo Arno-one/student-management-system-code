@@ -24,6 +24,3 @@ class Teacher(Base):
     update_time=Column(DateTime,onupdate=datetime.now,comment='更新时间')
     is_deleted=Column(Integer,default=0,comment='逻辑删除:0未删除，1已删除')
 
-
-if __name__=="__main__":
-    Base.metadata.create_all(engine)

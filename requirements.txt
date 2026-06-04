@@ -8,6 +8,10 @@
 fastapi==0.129.0          # Web 框架，提供路由、依赖注入、自动文档等
 starlette==0.52.1         # FastAPI 底层 ASGI 框架（中间件、请求/响应都基于它）
 uvicorn==0.24.0           # ASGI 服务器，用来跑 FastAPI 应用
+python-multipart==0.0.28  # 解析 multipart/form-data，教师 Excel 导入的文件上传需要
+
+# ==================== Excel 处理 ====================
+openpyxl==3.1.5           # 读写 .xlsx，用于教师批量导入解析与导入模板生成
 
 # ==================== 数据校验 ====================
 pydantic==2.10.3          # 请求/响应数据建模与校验（scheme 层大量使用）

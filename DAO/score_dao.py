@@ -4,6 +4,10 @@ from model.Score import Score
 from model.Student import Student
 from decimal import Decimal
 from typing import List
+from util.log import get_logger
+
+# 本模块专用 logger，来源标记为 DAO.score_dao
+logger = get_logger(__name__)
 
 
 #查询
@@ -43,6 +47,28 @@ def query_score(
     data_list = q.offset(offset).limit(page_size).all()
 
     return data_list
+
+
+#统计符合条件的成绩总条数（独立方法，不改 query_score 签名，专门给分页算 total 用）
+def count_score(
+    db: Session,
+    student_no: str | None = None,  #学生编号
+    exam_order: int | None = None,  #考试次序
+    class_id: int | None = None,  #班级id
+    min_score: Decimal | None = None,  #最低成绩
+    max_score: Decimal | None = None,  #最高成绩
+):
+    #和 query_score 用同一套筛选条件，但不分页、不排序，只取总数
+    q = db.query(Score).join(Student, Score.student_no == Student.student_no)
+    q = query_not_deleted(q)
+    q = query_student_no(q, student_no)
+    q = query_exam_order(q, exam_order)
+    q = query_score_min(q, min_score)
+    q = query_score_max(q, max_score)
+    q = query_class_id(q, class_id)
+    #返回满足条件的总行数
+    return q.count()
+
 
 #只未删除数据
 def query_not_deleted(q):
@@ -128,6 +154,8 @@ def add_score(db:Session,new_score):
     db.add(new_score)
     db.commit()
     db.refresh(new_score)
+    logger.info("成绩已入库（事务已提交）：student_no=%s, exam_order=%s",
+                new_score.student_no, new_score.exam_order)
     #返回插入的成绩
     return new_score
 
@@ -136,6 +164,8 @@ def batch_add_scores(db: Session, batch_data: List[Score]):
     # 直接批量插入
     db.add_all(batch_data)
     db.commit()
+    # 批量提交是关键节点，记录实际写入条数
+    logger.info("成绩批量入库（事务已提交）：共 %s 条", len(batch_data))
     # 返回处理好的数据
     return batch_data
 
@@ -148,6 +178,8 @@ def update_score(db:Session,student_no:str,exam_order:int,score:Decimal):
     result.score = score
     db.commit()
     db.refresh(result)
+    logger.info("成绩已更新（事务已提交）：student_no=%s, exam_order=%s, score=%s",
+                student_no, exam_order, score)
     return result
 
 
@@ -159,6 +191,8 @@ def is_delete(db:Session,student_no:str,exam_order:int):
     result.is_deleted = 1
     db.commit()
     db.refresh(result)
+    logger.info("成绩已逻辑删除（事务已提交）：student_no=%s, exam_order=%s",
+                student_no, exam_order)
     return result
 
 

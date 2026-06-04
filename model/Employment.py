@@ -15,5 +15,3 @@ class Employment(Base):
     is_deleted = Column(Integer, default=0, comment="逻辑删除 0-未删 1-已删")
     create_time = Column(DateTime,default=datetime.now,comment="创建时间")
     update_time = Column(DateTime,default=datetime.now,comment="更新时间")
-
-Base.metadata.create_all(engine)

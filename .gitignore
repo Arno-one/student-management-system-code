@@ -1,35 +1,37 @@
-# IDE
+# ==================== IDE ====================
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
 
-# OS
+# ==================== OS ====================
 .DS_Store
 Thumbs.db
 
-# Python
+# ==================== Python ====================
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
+*.egg-info/
+*.egg
+dist/
+build/
 .venv/
 venv/
-*.egg-info/
+env/
 
-# Java
-*.class
-*.jar
-*.war
-target/
-
-# Node
-node_modules/
-dist/
-
-# 日志
-*.log
-
-# 环境变量
+# ==================== Environment ====================
 .env
 .env.local
+.env.*.local
+
+# ==================== Logs ====================
+*.log
+logs/
+
+# ==================== Docker ====================
+.docker/
+
+# ==================== Project Specific ====================
+chatbot.html

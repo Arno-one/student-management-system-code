@@ -39,3 +39,10 @@ DB_PASSWORD = os.getenv("DB_PASSWORD", "")
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "3306")
 DB_NAME = os.getenv("DB_NAME", "student_management_system")
+
+# ==================== 日志系统 ====================
+# 全局日志级别：开发阶段用 DEBUG / INFO，生产环境建议用 WARNING。
+# .env 里写字符串（如 INFO），这里统一转成大写，方便 log 模块映射成 logging 的级别常量。
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+# 日志文件保留天数：只保留最近这么多天，更早的归档文件会被自动清理。
+LOG_BACKUP_DAYS = int(os.getenv("LOG_BACKUP_DAYS", "7"))

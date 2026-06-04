@@ -66,8 +66,55 @@ document.addEventListener('click', e => {
   if (b) _lastBtn = b;
 }, true);
 
+// 友好展示：徽章 + 可选正文（不 dump 整段 JSON）
+function showPlainResult(targetId, ok, badgeText, bodyText) {
+  const box = document.getElementById(targetId);
+  if (!box) return;
+  box.innerHTML = '<span class="badge ' + (ok ? 'ok' : 'err') + '">' + (ok ? '✓ ' : '✗ ') + badgeText + '</span>\n';
+  if (bodyText) box.append(document.createTextNode(bodyText));
+}
+
+// 从接口统一响应 { code, msg, data } 中取出业务数据
+function pickApiContent(apiBody) {
+  if (!apiBody || typeof apiBody !== 'object') return '';
+  const inner = apiBody.data;
+  if (typeof inner === 'string') return inner;
+  if (typeof inner === 'number') return String(inner);
+  if (inner && typeof inner === 'object') {
+    if (inner.reply != null) return String(inner.reply);
+    if (inner.message) return String(inner.message);
+    if (inner.error) return String(inner.error);
+  }
+  return '';
+}
+
+// 按展示模式写入结果区
+// display: msg=只显示提示语 | content=显示 data 正文(大模型/数字等) | json=原始 JSON(调试用) | silent=不写
+function paintResultBox(box, resp, parsed, display) {
+  const badge = resp.ok
+    ? '<span class="badge ok">✓ ' + resp.status + '</span>\n'
+    : '<span class="badge err">✗ ' + resp.status + '</span>\n';
+  box.innerHTML = badge;
+  const api = typeof parsed === 'object' && parsed !== null ? parsed : {};
+
+  if (display === 'msg') {
+    box.append(document.createTextNode(api.msg || (resp.ok ? '操作成功' : '操作失败')));
+    return;
+  }
+  if (display === 'content') {
+    const text = pickApiContent(api) || api.msg || (resp.ok ? '' : '操作失败');
+    if (text) box.append(document.createTextNode(text));
+    return;
+  }
+  // json：完整响应，仅调试时显式指定
+  box.append(document.createTextNode(
+    typeof parsed === 'string' ? parsed : JSON.stringify(parsed, null, 2)
+  ));
+}
+
 // 统一的请求方法：自动处理 JSON、错误、状态徽章，并在请求期间禁用触发按钮
-async function request(targetId, method, path, { body } = {}) {
+// 默认 display='msg'，只展示友好提示，不暴露整段 JSON
+async function request(targetId, method, path, { body, silent, display = 'msg' } = {}) {
   const box = document.getElementById(targetId);
   // 取出本次点击的按钮；已被其它逻辑禁用的按钮（如邮件自管理按钮）跳过，避免冲突
   const btn = (_lastBtn && !_lastBtn.disabled) ? _lastBtn : null;
@@ -75,7 +122,7 @@ async function request(targetId, method, path, { body } = {}) {
   let oldText;
   if (btn) { oldText = btn.textContent; btn.disabled = true; btn.textContent = '处理中...'; }
 
-  box.textContent = '请求中...';
+  if (!silent && box) box.textContent = '请求中...';
   try {
     const opts = { method, headers: {} };
     if (body !== undefined) {
@@ -86,19 +133,15 @@ async function request(targetId, method, path, { body } = {}) {
     const text = await resp.text();
     let data;
     try { data = JSON.parse(text); } catch { data = text; }
-    const badge = resp.ok
-      ? '<span class="badge ok">✓ ' + resp.status + '</span>\n'
-      : '<span class="badge err">✗ ' + resp.status + '</span>\n';
-    box.innerHTML = badge;
-    box.append(document.createTextNode(
-      typeof data === 'string' ? data : JSON.stringify(data, null, 2)
-    ));
+    if (!silent && box) paintResultBox(box, resp, data, display);
     return { ok: resp.ok, data };
   } catch (e) {
-    box.innerHTML = '<span class="badge err">✗ 网络错误</span>\n';
-    box.append(document.createTextNode(
-      e.message + '\n\n提示：请确认后端已启动，且已开启 CORS 跨域允许。'
-    ));
+    if (!silent && box) {
+      box.innerHTML = '<span class="badge err">✗ 网络错误</span>\n';
+      box.append(document.createTextNode(
+        e.message + '\n\n提示：请确认后端已启动，且已开启 CORS 跨域允许。'
+      ));
+    }
     return { ok: false, error: e };
   } finally {
     // 无论成功失败，都恢复按钮可点击状态
@@ -438,8 +481,12 @@ async function importTeachers() {
       ? '<span class="badge ok">✓ ' + resp.status + '</span>\n'
       : '<span class="badge err">✗ ' + resp.status + '</span>\n';
     box.innerHTML = badge;
-    box.append(document.createTextNode(JSON.stringify(data, null, 2)));
-    if (resp.ok && data && data.data) renderImportSummary(data.data);
+    if (resp.ok && data && data.data) {
+      renderImportSummary(data.data);
+      box.append(document.createTextNode(data.msg || '导入完成'));
+    } else {
+      box.append(document.createTextNode(data.msg || '导入失败，请检查文件格式或表头'));
+    }
   } catch (e) {
     box.innerHTML = '<span class="badge err">✗ 网络错误</span>\n';
     box.append(document.createTextNode(e.message + '\n\n提示：请确认后端已启动，且已开启 CORS 跨域允许。'));
@@ -475,7 +522,14 @@ async function getTeachers() {
 }
 async function getTeacherById() {
   if (!validate([['te_op_id', '教师ID']])) return;
-  await request('r_te_op', 'GET', '/teachers/' + val('te_op_id'));
+  const r = await request('r_te_op', 'GET', '/teachers/' + val('te_op_id'), { silent: true });
+  const rows = pickOne(r.data);
+  renderTable('r_te_op_table', rows);
+  if (r && r.ok) {
+    showPlainResult('r_te_op', true, '查询成功', rows && rows.length ? '详见上方表格' : '未找到该教师');
+  } else {
+    showPlainResult('r_te_op', false, '查询失败', (r && r.data && r.data.msg) || '请重试');
+  }
 }
 function updateTeacher() {
   if (!validate([['te_op_id', '教师ID']])) return;
@@ -504,7 +558,13 @@ async function staGeStu() {
   const r = await request('r_sta', 'GET', '/statistics/ge_stu/plus' + qs({ skip: val('sta_skip'), limit: val('sta_limit'), age: val('sta_age') }));
   renderTable('r_sta_table', pickList(r.data));
 }
-function staStuCount() { document.getElementById('r_sta_table').innerHTML = ''; request('r_sta', 'GET', '/statistics/stu_count'); }
+async function staStuCount() {
+  document.getElementById('r_sta_table').innerHTML = '';
+  const r = await request('r_sta', 'GET', '/statistics/stu_count', { silent: true });
+  const n = r && r.data && r.data.data;
+  showPlainResult('r_sta', !!(r && r.ok), '统计完成',
+    r && r.ok ? `学生总数：${n ?? '—'}` : ((r && r.data && r.data.msg) || '统计失败'));
+}
 async function staScoreGreater() {
   const r = await request('r_sta', 'GET', '/statistics/score_greater/plus' + qs({ skip: val('sta_skip'), limit: val('sta_limit'), grade: val('sta_grade') }));
   renderTable('r_sta_table', pickList(r.data));
@@ -531,18 +591,32 @@ async function staAvgClassJobTime() {
 }
 
 /* ===================== AI 作业模块 ===================== */
-function workEvaluation() {
+async function workEvaluation() {
   if (!validate([['wk_stuid', '学生ID']])) return;
-  request('r_wk_eval', 'POST', '/work/evaluation' + qs({ student_id: val('wk_stuid'), style: val('wk_style') }));
+  const box = document.getElementById('r_wk_eval');
+  box.textContent = '请求中...';
+  const r = await request('r_wk_eval', 'POST', '/work/evaluation' + qs({
+    student_id: val('wk_stuid'), style: val('wk_style')
+  }), { silent: true });
+  if (r && r.ok) showPlainResult('r_wk_eval', true, '评价生成成功', pickApiContent(r.data));
+  else showPlainResult('r_wk_eval', false, '评价生成失败', (r && r.data && r.data.msg) || '请重试');
 }
 async function workImage() {
   if (!validate([['wk_prompt', '提示词']])) return;
   const preview = document.getElementById('r_wk_img_preview');
   preview.innerHTML = '';
-  const r = await request('r_wk_img', 'POST', '/work/image' + qs({ prompt: val('wk_prompt') }));
-  // 尝试从返回里找出图片 URL 做预览
-  const url = findImageUrl(r.data);
-  if (url) preview.innerHTML = '<img src="' + url + '" alt="生成结果" />';
+  const box = document.getElementById('r_wk_img');
+  box.textContent = '请求中...';
+  const r = await request('r_wk_img', 'POST', '/work/image' + qs({ prompt: val('wk_prompt') }), { silent: true });
+  const inner = r && r.data && r.data.data;
+  const url = (inner && typeof inner === 'object' && inner.image_url) || findImageUrl(r.data);
+  if (r && r.ok && url) {
+    preview.innerHTML = '<img src="' + url + '" alt="生成结果" />';
+    showPlainResult('r_wk_img', true, '文生图成功', '图片已生成，请见上方预览');
+  } else {
+    const err = (inner && inner.error) || (r && r.data && r.data.msg) || '文生图失败，请重试';
+    showPlainResult('r_wk_img', false, '文生图失败', String(err));
+  }
 }
 // 递归在返回 JSON 里找看起来像图片地址的字符串
 function findImageUrl(obj) {
@@ -552,13 +626,28 @@ function findImageUrl(obj) {
   else if (obj && typeof obj === 'object') { for (const k in obj) { const u = findImageUrl(obj[k]); if (u) return u; } }
   return null;
 }
-function workTalk() {
+async function workTalk() {
   if (!validate([['wk_session', '会话ID'], ['wk_talk', '本轮输入']])) return;
-  request('r_wk_talk', 'POST', '/work/talks' + qs({ session_id: val('wk_session'), prompt: val('wk_talk') }));
+  const box = document.getElementById('r_wk_talk');
+  box.textContent = '请求中...';
+  try {
+    const r = await request('r_wk_talk', 'POST', '/work/talks' + qs({
+      session_id: val('wk_session'), prompt: val('wk_talk')
+    }), { silent: true });
+    if (r && r.ok) showPlainResult('r_wk_talk', true, '对话成功', pickApiContent(r.data) || '（无回复内容）');
+    else showPlainResult('r_wk_talk', false, '对话失败', (r && r.data && r.data.msg) || '请稍后重试');
+  } catch (e) {
+    showPlainResult('r_wk_talk', false, '网络错误', e.message);
+  }
 }
-function workClearTalk() {
+
+async function workClearTalk() {
   if (!validate([['wk_session', '会话ID']])) return;
-  request('r_wk_talk', 'POST', '/work/talks/clear' + qs({ session_id: val('wk_session') }));
+  const box = document.getElementById('r_wk_talk');
+  box.textContent = '请求中...';
+  const r = await request('r_wk_talk', 'POST', '/work/talks/clear' + qs({ session_id: val('wk_session') }), { silent: true });
+  const msg = (r && r.ok && r.data && r.data.data && r.data.data.message) || (r && r.data && r.data.msg) || '记忆已清空';
+  showPlainResult('r_wk_talk', !!(r && r.ok), r && r.ok ? '已清空记忆' : '操作失败', msg);
 }
 async function workWeather() {
   const locEl = document.getElementById('wk_location');
@@ -574,7 +663,7 @@ async function workWeather() {
   const r = await request('r_wk_weather', 'GET', '/work/weather' + qs({
     location: val('wk_location'), adcode: val('wk_adcode'),
     weather_type: val('wk_wtype'), added_fields: val('wk_added'), get_md: val('wk_getmd')
-  }));
+  }), { silent: true });
   // 请求成功后，把返回数据渲染成带图标的天气卡片；失败则给出友好提示
   if (r && r.ok) renderWeather(r.data);
   else document.getElementById('wk_weather_view').innerHTML =
@@ -700,7 +789,7 @@ async function workGeocoder() {
   if (!validate([['wk_address', '地址']])) return;
   // 先清空上一次的可视化结果
   document.getElementById('wk_geo_view').innerHTML = '';
-  const r = await request('r_wk_geo', 'GET', '/work/geocoder' + qs({ address: val('wk_address'), policy: val('wk_policy') }));
+  const r = await request('r_wk_geo', 'GET', '/work/geocoder' + qs({ address: val('wk_address'), policy: val('wk_policy') }), { silent: true });
   if (r && r.ok) renderGeocoder(r.data);
   else document.getElementById('wk_geo_view').innerHTML =
     '<div class="geo-card"><div class="geo-fail">❌ 地址解析失败，请检查地址或稍后重试</div></div>';
@@ -806,7 +895,7 @@ async function generateEmail() {
   const btn = document.getElementById('mail_gen_btn');
   btn.disabled = true; btn.textContent = '生成中...';
   try {
-    const r = await request('r_mail', 'POST', '/email/generate' + qs({ prompt: val('mail_prompt') }));
+    const r = await request('r_mail', 'POST', '/email/generate' + qs({ prompt: val('mail_prompt') }), { silent: true });
     const content = r && r.ok && r.data && r.data.data;
     if (content) {
       // 主题填入普通输入框；正文转成 HTML 后填入富文本编辑器
@@ -847,7 +936,7 @@ async function sendEmail() {
   try {
     const r = await request('r_mail', 'POST', '/email/send' + qs({
       subject: val('mail_subject'), body: bodyHtml, receiver: val('mail_receiver')
-    }));
+    }), { silent: true });
     // 只展示发送结果的友好提示，不暴露原始 JSON
     const res = r && r.data && r.data.data;
     if (res && res.success) mailStatus(true, res.message || '邮件已发送');

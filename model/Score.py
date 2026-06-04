@@ -18,7 +18,3 @@ class Score(Base):
     create_time= Column(DateTime,default=datetime.now) #创建时间
     update_time= Column(DateTime,default=datetime.now,onupdate=datetime.now) #更新时间
     student= relationship("Student",back_populates="score_list")
-
-
-# Base.metadata.create_all(engine)
-# Session = sessionmaker(bind=engine)

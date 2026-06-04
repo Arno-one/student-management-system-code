@@ -132,7 +132,8 @@ def get_score_fails_count(db: Session):
     stu_nos = [s[0] for s in query]
 
     if not stu_nos:
-        return []
+        # 没有2次以上不及格的学生时，总数应为 0（之前误写成 []，会让 total 变成空数组）
+        return 0
 
     # 查询这些学生的详细成绩信息
     result = (db.query(

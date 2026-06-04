@@ -1,6 +1,10 @@
 from model import Teacher
 from datetime import datetime
 from sqlalchemy.orm import joinedload
+from util.log import get_logger
+
+# 本模块专用 logger，来源标记为 DAO.teacher_information_CRUD
+logger = get_logger(__name__)
 
 class teacher_table_CRUD:
     def __init__(self,db):
@@ -13,6 +17,7 @@ class teacher_table_CRUD:
         self.db.commit()
         for i in Teacher_list:
             self.db.refresh(i)
+        logger.info("教师批量入库（事务已提交）：共 %s 条", len(Teacher_list))
 
     def read(self,id=-1):
         query = (
@@ -35,8 +40,10 @@ class teacher_table_CRUD:
             setattr(temp_Teacher,'update_time',datetime.now())
             self.db.commit()
             self.db.refresh(temp_Teacher)
+            logger.info("教师信息已更新（事务已提交）：id=%s", id)
             return temp_Teacher
         else:
+            logger.warning("更新教师失败：id=%s 不存在", id)
             raise Exception("id错误")
         
     def search(self, filters: dict = None, sort_by: str = None, sort_order: str = "asc", page: int = 1, page_size: int = 20):
@@ -84,7 +91,9 @@ class teacher_table_CRUD:
             setattr(temp_Teacher,'update_time',datetime.now())
             setattr(temp_Teacher,'is_deleted',1)
             self.db.commit()
+            logger.info("教师已逻辑删除（事务已提交）：id=%s", id)
         else:
+            logger.warning("删除教师失败：id=%s 不存在", id)
             raise Exception("id错误")
 
 

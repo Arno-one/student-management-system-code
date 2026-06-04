@@ -1,6 +1,10 @@
 from sqlalchemy.orm import Session
 from model.Student import Student
 from typing import Optional
+from util.log import get_logger
+
+# 本模块专用 logger，来源标记为 DAO.student_dao
+logger = get_logger(__name__)
 
 # ==================== 增（CREATE）====================
 def create_from_dict(data: dict,db:Session) -> Student:
@@ -10,6 +14,8 @@ def create_from_dict(data: dict,db:Session) -> Student:
     db.add(student)
     db.commit()
     db.refresh(student)
+    # 写库成功（事务已提交），记录关键标识，便于追溯数据变更
+    logger.info("学生已入库：id=%s, student_no=%s", student.id, student.student_no)
     return student
 
 # ==================== 查（READ）====================
@@ -69,6 +75,7 @@ def update(student_id: int, update_data: dict, db:Session) -> Optional[Student]:
 
     db.commit()
     db.refresh(student)
+    logger.info("学生信息已更新（事务已提交）：id=%s", student_id)
     return student
 
 # ==================== 逻辑删除（DELETE）====================
@@ -83,6 +90,7 @@ def soft_delete(student_id: int, db:Session) -> bool:
 
     student.is_deleted = 1
     db.commit()
+    logger.info("学生已逻辑删除（事务已提交）：id=%s", student_id)
     return True
 
 
@@ -97,6 +105,7 @@ def restore(student_id: int,db:Session) -> bool:
 
     student.is_deleted = 0
     db.commit()
+    logger.info("学生已恢复（事务已提交）：id=%s", student_id)
     return True
 
 

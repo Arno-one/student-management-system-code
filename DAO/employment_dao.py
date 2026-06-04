@@ -2,6 +2,10 @@ from sqlalchemy.orm import Session
 from model.Employment import Employment
 from scheme.employment_scheme import EmploymentCreate,EmploymentUpdate
 from datetime import datetime
+from util.log import get_logger
+
+# 本模块专用 logger，来源标记为 DAO.employment_dao
+logger = get_logger(__name__)
 
 #新建就业信息
 def create_employment(db: Session,data:EmploymentCreate):
@@ -9,6 +13,7 @@ def create_employment(db: Session,data:EmploymentCreate):
     db.add(emp)
     db.commit()
     db.refresh(emp)
+    logger.info("就业信息已入库（事务已提交）：id=%s, student_no=%s", emp.id, emp.student_no)
     return emp
 
 #根据id查询
@@ -63,6 +68,7 @@ def update_employment(db: Session,emp,data:EmploymentUpdate):
     emp.update_time = datetime.now()
     db.commit()
     db.refresh(emp)
+    logger.info("就业信息已更新（事务已提交）：id=%s, 字段=%s", emp.id, list(update_data.keys()))
     return emp
 
 
@@ -71,6 +77,7 @@ def delete_employment(db: Session,emp):
     emp.is_deleted = 1
     emp.delete_time = datetime.now()
     db.commit()
+    logger.info("就业信息已逻辑删除（事务已提交）：id=%s", emp.id)
     return {"删除成功"}
 
 #逻辑恢复
@@ -78,10 +85,13 @@ def recover_employment(db: Session,emp):
     emp.is_deleted = 0
     db.commit()
     db.refresh(emp)
+    logger.info("就业信息已恢复（事务已提交）：id=%s", emp.id)
     return {"message":"恢复成功","data":emp}
 
 #物理删除
 def hard_delete_employment(db: Session,emp):
+    # 物理删除不可恢复，用 warning 级别留个醒目记录
+    logger.warning("就业信息物理删除（不可恢复，事务即将提交）：id=%s", emp.id)
     db.delete(emp)
     db.commit()
     return {"message":"删除成功"}
