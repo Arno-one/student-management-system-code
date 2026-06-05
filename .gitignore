@@ -35,3 +35,16 @@ logs/
 
 # ==================== Project Specific ====================
 chatbot.html
+
+# ==================== Node.js ====================
+node_modules/
+frontend-vue/node_modules/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ==================== Build ====================
+frontend-vue/dist/
+frontend-vue/.vite/
+*.map
