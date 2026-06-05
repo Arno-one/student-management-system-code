@@ -1,5 +1,5 @@
 <template>
-  <section class="page active">
+  <section id="page-teacher" class="page active">
     <div class="sub-bar">
       <label>选择功能</label>
       <select v-model="sub" @change="saveSub">
@@ -11,7 +11,7 @@
     </div>
 
     <!-- 新增教师 -->
-    <div class="card subcard" :class="{ show: sub === 'te-create' }">
+    <div id="te-create" class="card subcard" :class="{ show: sub === 'te-create' }">
       <h3>新增教师</h3>
       <div class="grid">
         <div class="field"><label>姓名 *</label><input v-model="form.create.name" placeholder="李老师" /></div>
@@ -28,7 +28,7 @@
     </div>
 
     <!-- 批量导入 -->
-    <div class="card subcard" :class="{ show: sub === 'te-import' }">
+    <div id="te-import" class="card subcard" :class="{ show: sub === 'te-import' }">
       <h3>批量导入（Excel / CSV）</h3>
       <p class="hint">第一步：下载标准模板，按列填好教师信息。第二步：选择填好的文件上传导入。</p>
       <div class="actions">
@@ -45,7 +45,7 @@
     </div>
 
     <!-- 查询教师 -->
-    <div class="card subcard" :class="{ show: sub === 'te-query' }">
+    <div id="te-query" class="card subcard" :class="{ show: sub === 'te-query' }">
       <h3>查询教师</h3>
       <div class="grid">
         <div class="field"><label>姓名</label><input v-model="form.query.name" /></div>
@@ -67,7 +67,7 @@
     </div>
 
     <!-- 按ID查/更新 -->
-    <div class="card subcard" :class="{ show: sub === 'te-op' }">
+    <div id="te-op" class="card subcard" :class="{ show: sub === 'te-op' }">
       <h3>按ID查 / 更新教师</h3>
       <div class="grid">
         <div class="field"><label>教师ID *</label><input v-model.number="form.op.id" type="number" /></div>

@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
-from  DAO import student_dao,score_dao
+from  DAO import student_dao,score_dao, talk_dao
 from enum import Enum
 from service import work_service
 from util import email as email_util
 from util.log import get_logger
 from scheme.response_scheme import success  # 统一响应封装 {code, msg, data, total}
+from pydantic import BaseModel
 
 # 本模块专用 logger，来源标记为 API.work_api
 logger = get_logger(__name__)
@@ -14,6 +15,17 @@ logger = get_logger(__name__)
 woker = APIRouter()
 # 邮件模块单独用一个路由，方便在 docs 里独立成一个模块
 email_router = APIRouter()
+
+
+class CreateSessionBody(BaseModel):
+    user_id: str
+    title: str = "新对话"
+
+
+class TalkBody(BaseModel):
+    session_id: int
+    user_id: str
+    prompt: str
 
 class style(str, Enum):
     humor = "幽默"
@@ -49,30 +61,101 @@ def generate_image(prompt: str):
         :return: 接口返回的图片结果（包含图片URL）
     """
     logger.info("文生图：prompt=%s", prompt)
-    return success(work_service.generate_image(prompt), "文生图成功")
+    result = work_service.generate_image(prompt)
+    if result.get("success"):
+        logger.info("文生图成功：prompt=%s", prompt[:50])
+    else:
+        logger.error("文生图失败：prompt=%s, error=%s", prompt[:50], result.get("error"))
+    return success(result, "文生图成功")
 
-@woker.post("/talks", summary="多轮记忆对话")
-def talks(session_id: str, prompt: str):
+# ==================== 多轮记忆对话（持久化版） ====================
+
+@woker.get("/talks/sessions", summary="获取用户的所有历史会话")
+def list_sessions(user_id: str, db: Session = Depends(get_db)):
+    """返回该用户所有未删除的会话列表，按更新时间倒序"""
+    logger.info("获取会话列表：user_id=%s", user_id)
+    sessions = talk_dao.get_sessions_by_user(user_id, db)
+    return success([
+        {
+            "id": s.id,
+            "user_id": s.user_id,
+            "title": s.session_title,
+            "summary": s.summary,
+            "style": s.style,
+            "create_time": s.create_time.strftime("%Y-%m-%d %H:%M:%S") if s.create_time else None,
+            "update_time": s.update_time.strftime("%Y-%m-%d %H:%M:%S") if s.update_time else None,
+        }
+        for s in sessions
+    ], "查询成功")
+
+
+@woker.post("/talks/sessions", summary="创建新会话")
+def create_session(body: CreateSessionBody, db: Session = Depends(get_db)):
+    """为用户创建一个新的空白会话"""
+    logger.info("创建会话：user_id=%s, title=%s", body.user_id, body.title)
+    session = talk_dao.create_session(body.user_id, body.title, db)
+    return success({
+        "id": session.id,
+        "user_id": session.user_id,
+        "title": session.session_title,
+        "create_time": session.create_time.strftime("%Y-%m-%d %H:%M:%S") if session.create_time else None,
+    }, "会话已创建")
+
+
+@woker.delete("/talks/sessions/{session_id}", summary="删除会话（逻辑删除）")
+def delete_session(session_id: int, user_id: str, db: Session = Depends(get_db)):
+    """逻辑删除指定会话"""
+    logger.info("删除会话：session_id=%s, user_id=%s", session_id, user_id)
+    ok = talk_dao.soft_delete_session(session_id, db)
+    if not ok:
+        raise HTTPException(status_code=404, detail="会话不存在或已删除")
+    return success(None, "会话已删除")
+
+
+@woker.get("/talks/{session_id}/messages", summary="获取会话的全部历史消息")
+def get_messages(session_id: int, db: Session = Depends(get_db)):
+    """返回指定会话的全部消息（按时间正序），用于前端恢复对话界面"""
+    logger.info("获取会话消息：session_id=%s", session_id)
+    session = talk_dao.get_session_by_id(session_id, db)
+    if not session:
+        raise HTTPException(status_code=404, detail="会话不存在或已删除")
+    messages = talk_dao.get_messages_by_session(session_id, db)
+    return success([
+        {
+            "id": m.id,
+            "role": m.role,
+            "user_content": m.user_content,
+            "ai_content": m.ai_content,
+            "create_time": m.create_time.strftime("%Y-%m-%d %H:%M:%S") if m.create_time else None,
+        }
+        for m in messages
+    ], "查询成功")
+
+
+@woker.post("/talks", summary="多轮记忆对话（发送消息）")
+def talks(body: TalkBody, db: Session = Depends(get_db)):
     """
-    多轮记忆对话接口：同一个 session_id 下的多次请求会带上历史上下文，实现连续对话
-    :param session_id: 会话标识，前端自己生成（比如用户ID或一个唯一串），同一会话保持不变
-    :param prompt: 用户这一轮输入的内容
-    :return: 大模型这一轮的回复
+    多轮记忆对话接口：从数据库加载历史上下文，调用大模型，持久化本轮对话
     """
-    logger.info("多轮对话：session_id=%s", session_id)
-    reply = work_service.talks(session_id, prompt)
-    # data 直接放回复正文，前端只展示对话内容，不必再解析嵌套的 reply 字段
+    logger.info("多轮对话：user_id=%s, session_id=%s", body.user_id, body.session_id)
+    reply = work_service.talks(body.session_id, body.user_id, body.prompt, db)
+    if isinstance(reply, dict) and "error" in reply:
+        logger.warning("多轮对话失败：user_id=%s, session_id=%s, error=%s", body.user_id, body.session_id, reply["error"])
+        raise HTTPException(status_code=400, detail=reply["error"])
+    logger.info("多轮对话成功：user_id=%s, session_id=%s, reply_len=%s", body.user_id, body.session_id, len(reply) if isinstance(reply, str) else 0)
     return success(reply, "对话成功")
 
 
-@woker.post("/talks/clear", summary="清空指定会话的对话记忆")
-def clear_talks(session_id: str):
+@woker.post("/talks/clear", summary="清空指定会话的对话消息")
+def clear_talks(session_id: int, user_id: str, db: Session = Depends(get_db)):
     """
-    清空某个会话的历史记忆，下次对话就是全新开始
-    :param session_id: 要清空的会话标识
+    清空某个会话的全部历史消息（保留会话本身）
     """
-    logger.info("清空对话记忆：session_id=%s", session_id)
-    return success(work_service.clear_talks(session_id), "记忆已清空")
+    logger.info("清空对话消息：user_id=%s, session_id=%s", user_id, session_id)
+    result = work_service.clear_talks(session_id, user_id, db)
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("message"))
+    return success(result, "消息已清空")
 
 
 @woker.get("/weather", summary="天气查询（经纬度/行政区划编码 二选一）")
@@ -88,7 +171,10 @@ def query_weather(location: str = None, adcode: str = None, weather_type: str = 
     :return: 天气数据
     """
     logger.info("天气查询：location=%s, adcode=%s, type=%s", location, adcode, weather_type)
-    return success(work_service.query_weather(location, adcode, weather_type, added_fields, get_md), "天气查询成功")
+    result = work_service.query_weather(location, adcode, weather_type, added_fields, get_md)
+    if "error" in result:
+        logger.warning("天气查询失败：%s", result["error"])
+    return success(result, "天气查询成功")
 
 
 @woker.get("/geocoder", summary="经纬度查询（地址解析为经纬度）")
@@ -100,7 +186,10 @@ def address_to_location(address: str, policy: int = 0):
         :return: 经纬度、结构化地址、行政区划编码等信息
     """
     logger.info("地址解析：address=%s, policy=%s", address, policy)
-    return success(work_service.address_to_location(address, policy), "地址解析成功")
+    result = work_service.address_to_location(address, policy)
+    if "error" in result:
+        logger.warning("地址解析失败：%s", result["error"])
+    return success(result, "地址解析成功")
 
 
 @email_router.post("/generate", summary="第一步：大模型生成邮件内容（不发送）")
@@ -111,7 +200,12 @@ def generate_email(prompt: str):
     :return: 生成的邮件内容 {subject: 主题, body: 正文}
     """
     logger.info("生成邮件内容：prompt=%s", prompt)
-    return success(email_util.generate_email_content(prompt), "邮件内容已生成")
+    result = email_util.generate_email_content(prompt)
+    if result.get("success"):
+        logger.info("邮件内容生成成功：prompt=%s", prompt[:50])
+    else:
+        logger.error("邮件内容生成失败：prompt=%s, error=%s", prompt[:50], result.get("error"))
+    return success(result, "邮件内容已生成")
 
 
 @email_router.post("/send", summary="第二步：发送用户确认后的邮件")

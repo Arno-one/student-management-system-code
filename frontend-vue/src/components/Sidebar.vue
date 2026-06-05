@@ -1,40 +1,66 @@
 <template>
-  <aside class="sidebar">
+  <aside class="sidebar" :class="{ collapsed }">
     <div class="brand">
-      <div class="logo">学</div>
-      <div>
+      <div class="logo-wrap">
+        <div class="logo">学</div>
+        <span class="brand-signal"></span>
+      </div>
+
+      <div class="brand-text">
+        <p class="brand-kicker">Campus Operations Suite</p>
         <h1>学生信息管理系统</h1>
-        <p>逐光小组作品 · v0.5.0</p>
+        <p>以更精致的方式组织学生、教务、统计与智能流程。</p>
       </div>
     </div>
+
+    <div class="sidebar-section">Workspace</div>
+
     <nav>
-      <div
-        v-for="item in navItems"
+      <button
+        v-for="(item, index) in navItems"
         :key="item.page"
+        type="button"
         class="nav-item"
         :class="{ active: currentPage === item.page }"
+        :title="collapsed ? item.label : ''"
         @click="$emit('navigate', item.page)"
       >
-        <span class="ico">{{ item.icon }}</span>{{ item.label }}
-      </div>
+        <span class="nav-index">{{ String(index + 1).padStart(2, '0') }}</span>
+        <span class="ico">{{ item.short }}</span>
+        <span class="nav-copy">
+          <strong>{{ item.label }}</strong>
+          <small>{{ item.desc }}</small>
+        </span>
+        <span class="nav-arrow">↗</span>
+      </button>
     </nav>
+
+    <div class="sidebar-footer">
+      <span class="dot"></span>
+      <div>
+        <strong>系统运行中</strong>
+        <small>数据工作区与智能模块已就绪</small>
+      </div>
+    </div>
   </aside>
 </template>
 
 <script setup>
 defineProps({
+  collapsed: { type: Boolean, default: false },
   currentPage: { type: String, default: 'student' }
 })
 defineEmits(['navigate'])
 
 const navItems = [
-  { page: 'student', icon: '🎓', label: '学生信息管理' },
-  { page: 'score', icon: '📊', label: '考核成绩管理' },
-  { page: 'employment', icon: '💼', label: '就业信息管理' },
-  { page: 'class', icon: '🏫', label: '班级管理' },
-  { page: 'teacher', icon: '👨‍🏫', label: '教师管理' },
-  { page: 'statistics', icon: '📈', label: '统计分析' },
-  { page: 'work', icon: '🤖', label: 'AI 作业模块' },
-  { page: 'email', icon: '✉️', label: '邮件管理' }
+  { page: 'student', short: 'ST', label: '学生信息管理', desc: '档案录入、查询与状态维护' },
+  { page: 'score', short: 'SC', label: '考核成绩管理', desc: '单条、批量与区间查询' },
+  { page: 'employment', short: 'EM', label: '就业信息管理', desc: 'offer、薪资与就业跟踪' },
+  { page: 'class', short: 'CL', label: '班级管理', desc: '班级建档与排期信息' },
+  { page: 'teacher', short: 'TE', label: '教师管理', desc: '教师资料、导入与检索' },
+  { page: 'statistics', short: 'BI', label: '统计分析', desc: '关键指标与业务汇总' },
+  { page: 'work', short: 'AI', label: 'AI 作业模块', desc: '评价生成、对话与天气能力' },
+  { page: 'email', short: 'ML', label: '邮件管理', desc: '智能生成与发送邮件' },
+  { page: 'nl2sql', short: 'D2', label: 'NL2SQL 智能问数', desc: '自然语言转 SQL 数据查询' }
 ]
 </script>

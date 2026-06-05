@@ -1,5 +1,5 @@
 <template>
-  <section class="page active">
+  <section id="page-student" class="page active">
     <div class="sub-bar">
       <label>选择功能</label>
       <select v-model="sub" @change="saveSub">
@@ -10,7 +10,7 @@
     </div>
 
     <!-- 创建学生 -->
-    <div class="card subcard" :class="{ show: sub === 'st-create' }">
+    <div id="st-create" class="card subcard" :class="{ show: sub === 'st-create' }">
       <h3>创建学生</h3>
       <div class="grid">
         <div class="field"><label>学号 *</label><input v-model="form.create.no" placeholder="S2024001" /></div>
@@ -33,7 +33,7 @@
     </div>
 
     <!-- 查询学生 -->
-    <div class="card subcard" :class="{ show: sub === 'st-query' }">
+    <div id="st-query" class="card subcard" :class="{ show: sub === 'st-query' }">
       <h3>查询学生</h3>
       <div class="grid">
         <div class="field"><label>偏移量</label><input v-model.number="form.query.skip" type="number" /></div>
@@ -53,7 +53,7 @@
     </div>
 
     <!-- 更新/删除/恢复 -->
-    <div class="card subcard" :class="{ show: sub === 'st-op' }">
+    <div id="st-op" class="card subcard" :class="{ show: sub === 'st-op' }">
       <h3>更新 / 删除 / 恢复学生</h3>
       <div class="grid">
         <div class="field"><label>学生ID *</label><input v-model.number="form.op.id" type="number" placeholder="1" /></div>

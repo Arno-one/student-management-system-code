@@ -1,5 +1,5 @@
 <template>
-  <section class="page active">
+  <section id="page-class" class="page active">
     <div class="sub-bar">
       <label>选择功能</label>
       <select v-model="sub" @change="saveSub">
@@ -9,7 +9,7 @@
     </div>
 
     <!-- 新增/修改 -->
-    <div class="card subcard" :class="{ show: sub === 'cl-save' }">
+    <div id="cl-save" class="card subcard" :class="{ show: sub === 'cl-save' }">
       <h3>新增 / 修改班级</h3>
       <div class="grid">
         <div class="field"><label>班级ID（修改时填）</label><input v-model.number="form.save.id" type="number" /></div>
@@ -22,7 +22,7 @@
     </div>
 
     <!-- 查询/删除 -->
-    <div class="card subcard" :class="{ show: sub === 'cl-query' }">
+    <div id="cl-query" class="card subcard" :class="{ show: sub === 'cl-query' }">
       <h3>查询 / 删除班级</h3>
       <div class="grid">
         <div class="field"><label>页码</label><input v-model.number="form.query.page" type="number" /></div>

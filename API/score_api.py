@@ -2,7 +2,8 @@
 成绩管理Controller层 — MVC中的Controller
 只负责HTTP请求/响应处理，不包含业务逻辑
 """
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException, UploadFile, File
+from fastapi.responses import StreamingResponse
 from database import get_db
 from scheme.schema_score import Addscore, Updatescore
 from scheme.response_scheme import success, success_page
@@ -35,6 +36,38 @@ def add_score_api(new_score: Addscore, db=Depends(get_db)):
         logger.warning("新增成绩失败：student_no=%s, %s", new_score.student_no, e)
         raise HTTPException(status_code=400 if "已存在" in str(e) else 404,
                             detail=str(e))
+
+
+@router_score.get("/import/template", summary="下载成绩导入模板")
+def download_score_import_template():
+    logger.info("下载成绩导入模板")
+    bio = score_service.build_import_template()
+    headers = {"Content-Disposition": "attachment; filename=score_import_template.xlsx"}
+    return StreamingResponse(
+        bio,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers=headers,
+    )
+
+
+@router_score.post("/import", summary="上传 Excel/CSV 批量导入成绩")
+async def import_scores_api(
+    file: UploadFile = File(...),
+    db=Depends(get_db)
+):
+    logger.info("批量导入成绩：文件名=%s", file.filename)
+    try:
+        content = await file.read()
+        result = score_service.import_scores_from_file(content, file.filename, db)
+        msg = f"导入完成：成功 {result['success_count']} 条，失败 {result['fail_count']} 条"
+        logger.info("批量导入成绩成功：%s", msg)
+        return success(result, msg)
+    except ValueError as e:
+        logger.warning("批量导入成绩参数错误：%s", e)
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("批量导入成绩异常：%s", e)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router_score.post("/batch_add", summary="批量添加学生成绩")
@@ -130,7 +163,6 @@ def query_score_api(
             min_score, max_score,
             sort_no, sort_score
         )
-        # 分页查询统一用 success_page 封装，返回 data + page/page_size/total
         return success_page(
             [{"student_no": i.student_no,
               "student_name": i.student.student_name,

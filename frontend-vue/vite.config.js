@@ -14,7 +14,8 @@ export default defineConfig({
       '/teachers': 'http://localhost:8088',
       '/statistics': 'http://localhost:8088',
       '/work': 'http://localhost:8088',
-      '/email': 'http://localhost:8088'
+      '/email': 'http://localhost:8088',
+      '/nl2sql': 'http://localhost:8088'
     }
   }
 })

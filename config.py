@@ -40,6 +40,10 @@ DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "3306")
 DB_NAME = os.getenv("DB_NAME", "student_management_system")
 
+# NL2SQL 只读账号（数据库层面仅授予 SELECT，纵深防御最后一道防线）
+DB_READONLY_USER = os.getenv("DB_READONLY_USER", "")
+DB_READONLY_PASSWORD = os.getenv("DB_READONLY_PASSWORD", "")
+
 # ==================== 日志系统 ====================
 # 全局日志级别：开发阶段用 DEBUG / INFO，生产环境建议用 WARNING。
 # .env 里写字符串（如 INFO），这里统一转成大写，方便 log 模块映射成 logging 的级别常量。

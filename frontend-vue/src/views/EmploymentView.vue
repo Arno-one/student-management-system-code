@@ -1,5 +1,5 @@
 <template>
-  <section class="page active">
+  <section id="page-employment" class="page active">
     <div class="sub-bar">
       <label>选择功能</label>
       <select v-model="sub" @change="saveSub">
@@ -10,7 +10,7 @@
     </div>
 
     <!-- 新建 -->
-    <div class="card subcard" :class="{ show: sub === 'em-create' }">
+    <div id="em-create" class="card subcard" :class="{ show: sub === 'em-create' }">
       <h3>新建就业信息</h3>
       <div class="grid">
         <div class="field"><label>学号 *</label><input v-model="form.create.no" /></div>
@@ -26,7 +26,7 @@
     </div>
 
     <!-- 查询 -->
-    <div class="card subcard" :class="{ show: sub === 'em-query' }">
+    <div id="em-query" class="card subcard" :class="{ show: sub === 'em-query' }">
       <h3>查询就业信息</h3>
       <div class="grid">
         <div class="field"><label>页码</label><input v-model.number="form.query.page" type="number" /></div>
@@ -45,7 +45,7 @@
     </div>
 
     <!-- 修改/删除/恢复 -->
-    <div class="card subcard" :class="{ show: sub === 'em-op' }">
+    <div id="em-op" class="card subcard" :class="{ show: sub === 'em-op' }">
       <h3>修改 / 删除 / 恢复就业信息</h3>
       <div class="grid">
         <div class="field"><label>就业记录ID *</label><input v-model.number="form.op.id" type="number" /></div>

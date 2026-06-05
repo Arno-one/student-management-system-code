@@ -14,6 +14,7 @@ from API.student_api import student_router
 from API.employment_api import employment_router
 from API.teacher_information_API_Router import teacher_information_router
 from API.work_api import woker, email_router
+from API.nl2sql_api import nl2sql_router
 from util.log import setup_logging, get_logger, register_request_logging, takeover_uvicorn_loggers
 
 # ===== 初始化日志系统 =====
@@ -138,6 +139,8 @@ app.include_router(sta_router, prefix='/statistics', tags=['统计分析模块']
 app.include_router(woker, prefix='/work', tags=['作业模块'])
 # 邮件模块（调用大模型生成内容并发送邮件）
 app.include_router(email_router, prefix='/email', tags=['邮件管理'])
+# NL2SQL 智能问数模块
+app.include_router(nl2sql_router, prefix='/nl2sql', tags=['NL2SQL智能问数'])
 
 if __name__ == '__main__':
     uvicorn.run('main:app', host='localhost', port=8088, reload=True)

@@ -1,17 +1,17 @@
 <template>
-  <section class="page active">
+  <section id="page-score" class="page active">
     <div class="sub-bar">
       <label>选择功能</label>
       <select v-model="sub" @change="saveSub">
         <option value="sc-add">新增成绩</option>
-        <option value="sc-batch">批量新增成绩</option>
+        <option value="sc-batch">批量导入成绩</option>
         <option value="sc-op">修改 / 删除成绩</option>
         <option value="sc-query">查询成绩</option>
       </select>
     </div>
 
     <!-- 新增成绩 -->
-    <div class="card subcard" :class="{ show: sub === 'sc-add' }">
+    <div id="sc-add" class="card subcard" :class="{ show: sub === 'sc-add' }">
       <h3>新增成绩</h3>
       <div class="grid">
         <div class="field"><label>学号 *</label><input v-model="form.add.no" placeholder="S2025001" /></div>
@@ -22,19 +22,25 @@
       <ResultBadge :badge="results.add.badge" :text="results.add.text" />
     </div>
 
-    <!-- 批量新增 -->
-    <div class="card subcard" :class="{ show: sub === 'sc-batch' }">
-      <h3>批量新增成绩</h3>
-      <div class="field">
-        <label>成绩列表（JSON 数组）</label>
-        <textarea v-model="form.batch.json" rows="6"></textarea>
+    <!-- 批量导入 -->
+    <div id="sc-batch" class="card subcard" :class="{ show: sub === 'sc-batch' }">
+      <h3>批量导入成绩（Excel / CSV）</h3>
+      <p class="hint">第一步：下载标准模板，按列填好学生成绩。第二步：选择填好的文件上传导入。</p>
+      <div class="actions">
+        <button class="btn secondary" @click="downloadTemplate">⬇ 下载导入模板</button>
       </div>
-      <div class="actions"><button class="btn" :disabled="loading" @click="batchAddScore">{{ loading ? '处理中...' : '批量新增' }}</button></div>
+      <div class="field" style="margin-top: 14px;">
+        <label>选择 Excel / CSV 文件</label>
+        <input ref="fileInput" type="file" accept=".xlsx,.xls,.csv" />
+      </div>
+      <div class="actions"><button class="btn" :disabled="loading" @click="importScores">{{ loading ? '导入中...' : '开始导入' }}</button></div>
+      <div v-if="importSummary" v-html="importSummary"></div>
+      <DataTable :data="importFailures" />
       <ResultBadge :badge="results.batch.badge" :text="results.batch.text" />
     </div>
 
     <!-- 修改/删除 -->
-    <div class="card subcard" :class="{ show: sub === 'sc-op' }">
+    <div id="sc-op" class="card subcard" :class="{ show: sub === 'sc-op' }">
       <h3>修改 / 删除成绩</h3>
       <div class="grid">
         <div class="field"><label>学号 *</label><input v-model="form.op.no" placeholder="S2025001" /></div>
@@ -49,7 +55,7 @@
     </div>
 
     <!-- 查询成绩 -->
-    <div class="card subcard" :class="{ show: sub === 'sc-query' }">
+    <div id="sc-query" class="card subcard" :class="{ show: sub === 'sc-query' }">
       <h3>查询成绩</h3>
       <div class="grid">
         <div class="field"><label>页码</label><input v-model.number="form.query.page" type="number" /></div>
@@ -71,7 +77,7 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
-import { request, qs, pickList } from '../api'
+import { request, qs, pickList, getBaseUrl } from '../api'
 import ResultBadge from '../components/ResultBadge.vue'
 import DataTable from '../components/DataTable.vue'
 import { validateFields } from '../utils/helpers'
@@ -79,10 +85,12 @@ import { validateFields } from '../utils/helpers'
 const sub = ref(localStorage.getItem('sub-score') || 'sc-add')
 const loading = ref(false)
 const listData = ref(null)
+const fileInput = ref(null)
+const importSummary = ref('')
+const importFailures = ref(null)
 
 const form = reactive({
   add: { no: '', order: null, score: null },
-  batch: { json: '[\n  {"student_no": "S2025001", "exam_order": 1, "score": 90},\n  {"student_no": "S2025002", "exam_order": 1, "score": 75}\n]' },
   op: { no: '', order: null, score: null },
   query: { page: 1, psize: 10, no: '', order: null, classId: null, min: null, max: null, sortNo: '', sortSc: '' }
 })
@@ -116,10 +124,44 @@ async function addScore() {
   await doRequest('add', 'POST', '/score/add', { body: { student_no: form.add.no, exam_order: form.add.order, score: form.add.score } })
 }
 
-async function batchAddScore() {
-  let arr
-  try { arr = JSON.parse(form.batch.json) } catch (e) { return alert('JSON 格式有误：' + e.message) }
-  await doRequest('batch', 'POST', '/score/batch_add', { body: arr })
+async function downloadTemplate() {
+  try {
+    const resp = await fetch(getBaseUrl() + '/score/import/template')
+    if (!resp.ok) throw new Error('HTTP ' + resp.status)
+    const blob = await resp.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = 'score_import_template.xlsx'
+    document.body.appendChild(a); a.click(); a.remove()
+    URL.revokeObjectURL(url)
+  } catch (e) {
+    alert('下载模板失败：' + e.message + '\n请确认后端已启动。')
+  }
+}
+
+async function importScores() {
+  if (!fileInput.value?.files?.length) {
+    return alert('请先选择要导入的 Excel/CSV 文件')
+  }
+  importSummary.value = ''
+  importFailures.value = null
+  loading.value = true
+  const fd = new FormData()
+  fd.append('file', fileInput.value.files[0])
+  try {
+    const resp = await fetch(getBaseUrl() + '/score/import', { method: 'POST', body: fd })
+    const data = await resp.json()
+    setResult('batch', resp.ok, resp.ok ? '导入完成' : (data.msg || '导入失败'))
+    if (resp.ok && data?.data) {
+      const d = data.data
+      importSummary.value = `<div style="font-size:13px;color:var(--text);margin-top:8px">本次共 <b>${d.total ?? 0}</b> 行，<b style="color:var(--success)">成功 ${d.success_count ?? 0} 条</b>，<b style="color:var(--danger)">失败 ${d.fail_count ?? 0} 条</b>。</div>`
+      if (d.failures?.length) {
+        importFailures.value = d.failures.map(f => ({ '行号': f.row, '学号': f.student_no || '', '失败原因': f.reason }))
+      }
+    }
+  } catch (e) {
+    setResult('batch', false, `网络错误: ${e.message}`)
+  } finally { loading.value = false }
 }
 
 async function updateScore() {

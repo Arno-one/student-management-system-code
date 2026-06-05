@@ -7,7 +7,7 @@
 
 ## 📋 项目简介
 
-学生信息管理系统是一个功能完善的学生信息管理平台，涵盖学生基本信息、考核成绩、就业信息、班级管理和教师管理等核心模块，并提供多维度统计分析功能。项目还集成了 **DeepSeek 大模型**和**阿里云通义万相**，提供 AI 智能评价、多轮对话、文生图、天气/地址解析以及智能邮件助手等能力，并配套一个开箱即用的**纯静态前端控制台**。
+学生信息管理系统是一个功能完善的学生信息管理平台，涵盖学生基本信息、考核成绩、就业信息、班级管理和教师管理等核心模块，并提供多维度统计分析功能。项目还集成了 **DeepSeek 大模型**和**阿里云通义万相**，提供 AI 智能评价、多轮对话、文生图、天气/地址解析、智能邮件助手以及 NL2SQL 智能问数等能力，并配套推荐的 **Vue 3 前端工作台**和一个开箱即用的**纯静态前端控制台**。
 
 ### 技术栈
 
@@ -23,7 +23,9 @@
 | AI SDK | OpenAI SDK、DashScope SDK |
 | 第三方接口 | 腾讯地图（天气查询 / 地理编码）、QQ 邮箱 SMTP |
 | 文件处理 | openpyxl（Excel 读写）、python-multipart（文件上传） |
-| 前端 | 原生 HTML + CSS + JavaScript（单页控制台，无需构建） |
+| SQL 工具 | sqlparse（NL2SQL 生成 SQL 格式化） |
+| 前端 | Vue 3 + Vite + Vue Router + highlight.js（推荐） |
+| 前端（静态版） | 原生 HTML + CSS + JavaScript（单页控制台，无需构建） |
 | 语言 | Python 3.10+ |
 
 ---
@@ -47,10 +49,10 @@
 ├──────────────────────┴──────────────────────────┤
 │                database.py                      │
 │           数据库连接 & 会话管理                    │
-├─────────────────────────────────────────────────┤
-│                 frontend/                       │
-│      纯静态前端控制台 (HTML + CSS + JS)           │
-└─────────────────────────────────────────────────┘
+├──────────────────────┬──────────────────────────┤
+│     frontend-vue/    │       frontend/          │
+│   Vue 3 SPA (推荐)   │  纯静态控制台 (备选)       │
+└──────────────────────┴──────────────────────────┘
 ```
 
 ### 目录结构
@@ -67,28 +69,34 @@
 │   ├── employment_api.py                  # 就业管理接口
 │   ├── teacher_information_API_Router.py  # 教师管理接口（含单个新增 / Excel 导入）
 │   ├── statistical.py                     # 统计分析接口
-│   └── work_api.py                        # AI 作业模块 + 邮件模块接口
+│   ├── work_api.py                        # AI 作业 + 多轮对话 + 邮件模块接口
+│   └── nl2sql_api.py                      # NL2SQL 智能问数接口
 ├── service/             # Service 层 — 业务逻辑
 │   ├── student_service.py
-│   ├── score_service.py
+│   ├── score_service.py                    # 含成绩批量导入/模板构建
 │   ├── class_service.py
 │   ├── employment_service.py
 │   ├── teacher_service.py                 # 含 Excel/CSV 解析导入、模板生成
 │   ├── statistical_service.py
-│   └── work_service.py                    # AI 服务（评价/对话/文生图/天气/地址）
+│   ├── work_service.py                    # AI 服务（评价/对话/文生图/天气/地址）
+│   └── nl2sql_service.py                  # 自然语言转 SQL、Schema 管理与查询执行
 ├── DAO/                 # 数据访问层 — 纯数据库操作
 │   ├── student_dao.py
 │   ├── score_dao.py
 │   ├── class_dao.py
 │   ├── employment_dao.py
 │   ├── teacher_information_CRUD.py
-│   └── statistical.py
+│   ├── statistical.py
+│   ├── talk_dao.py                         # 多轮对话会话/消息持久化
+│   └── nl2sql_dao.py                       # NL2SQL 会话、消息与缓存记录持久化
 ├── model/               # Model 层 — SQLAlchemy ORM 定义
 │   ├── Student.py
 │   ├── Score.py
 │   ├── Class.py
 │   ├── Employment.py
-│   └── Teacher.py
+│   ├── Teacher.py
+│   ├── Talk.py                             # 会话表 + 消息表
+│   └── NL2SQL.py                           # NL2SQL 会话、消息与缓存表
 ├── scheme/              # View 层 — Pydantic 校验 & 统一响应
 │   ├── response_scheme.py                 # 统一 API 响应格式
 │   ├── student_scheme.py
@@ -104,9 +112,35 @@
 │   ├── ds_llm.py                          # DeepSeek 调用示例
 │   └── ds_llm.ipynb                       # Jupyter Notebook 交互示例
 ├── frontend/            # 纯静态前端控制台（无需构建，直接打开）
-│   ├── index.html                         # 页面结构
-│   ├── styles.css                         # 样式（白 + 蓝主题）
-│   └── app.js                             # 交互逻辑（接口调用 / 表单校验等）
+│   ├── index.html
+│   ├── styles.css
+│   └── app.js
+├── frontend-vue/         # Vue 3 前端（推荐，需构建运行）
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.js
+│   └── src/
+│       ├── main.js
+│       ├── App.vue
+│       ├── router/index.js
+│       ├── api/index.js
+│       ├── utils/helpers.js
+│       ├── assets/styles.css
+│       ├── components/
+│       │   ├── Sidebar.vue
+│       │   ├── TopBar.vue
+│       │   ├── ResultBadge.vue
+│       │   └── DataTable.vue
+│       └── views/
+│           ├── StudentView.vue
+│           ├── ScoreView.vue
+│           ├── EmploymentView.vue
+│           ├── ClassView.vue
+│           ├── TeacherView.vue
+│           ├── StatisticsView.vue
+│           ├── WorkView.vue
+│           ├── EmailView.vue
+│           └── NL2SQLView.vue
 └── logs/                # 运行日志（自动生成）
     ├── app.log                            # 全量应用日志
     └── error.log                          # 错误日志
@@ -169,7 +203,34 @@ python main.py
 
 ### 前端控制台
 
-`frontend/` 是一个纯静态单页控制台（HTML + CSS + 原生 JS），无需任何构建工具：
+项目提供两套前端，推荐使用 Vue 3 版本体验完整工作台能力，也可保留纯静态版本作为轻量备选：
+
+#### Vue 3 版本（推荐）— `frontend-vue/`
+
+基于 **Vue 3 + Vite + Vue Router**，支持组件化开发、热更新、懒加载、SQL 高亮和全局浅色 / 深色主题切换：
+
+```bash
+cd frontend-vue
+
+# 安装依赖（仅首次）
+npm install
+
+# 启动开发服务器 → http://localhost:3000
+npm run dev
+
+# 生产构建 → dist/
+npm run build
+```
+
+- 开发服务器已配置代理，API 请求自动转发到 `http://localhost:8088`，无需手动填写接口地址；
+- 左侧导航通过 Vue Router 管理，覆盖学生、成绩、就业、班级、教师、统计、AI 作业、邮件和 NL2SQL 智能问数等模块；
+- 支持全局浅色 / 深色主题切换，主题状态和子功能选择使用 `localStorage` 记忆；
+- NL2SQL 页面使用 `highlight.js` 高亮生成 SQL；
+- 组件懒加载，首屏仅加载当前模块。
+
+#### 静态版本 — `frontend/`
+
+纯 HTML + CSS + 原生 JS，无需任何构建工具：
 
 - 直接用浏览器打开 `frontend/index.html` 即可使用；
 - 页面右上角「接口地址」默认指向 `http://localhost:8088`，可随时修改；
@@ -202,13 +263,14 @@ docker run -d -p 8088:8088 \
 | 模块 | 前缀 | 标签 | 功能 |
 |------|------|------|------|
 | 学生管理 | `/student` | 学生基本信息管理 | CRUD、逻辑删除/恢复、分页查询 |
-| 成绩管理 | `/score` | 学生考核成绩管理 | 单个/批量添加、修改、查询、删除 |
+| 成绩管理 | `/score` | 学生考核成绩管理 | 单个/批量添加、修改、查询、删除、Excel 批量导入 |
 | 就业管理 | `/Employment` | 学生就业信息管理 | CRUD、逻辑删除/恢复、物理删除 |
 | 班级管理 | `/class` | 班级管理 | 新增/修改、删除、分页查询 |
 | 教师管理 | (根路径) | 教师管理 | 单个新增、Excel/CSV 批量导入、模板下载、分页多条件搜索、更新 |
 | 统计分析 | `/statistics` | 统计分析模块 | 年龄统计、成绩分析、薪资排行、就业时长 |
 | AI 作业模块 | `/work` | 作业模块 | AI 智能评价、文生图、多轮记忆对话、天气查询、地址解析 |
 | 邮件管理 | `/email` | 邮件管理 | 大模型生成邮件内容、确认后发送 |
+| NL2SQL 智能问数 | `/nl2sql` | NL2SQL智能问数 | 自然语言转 SQL、表结构概览、查询历史记录 |
 
 ---
 
@@ -229,12 +291,16 @@ docker run -d -p 8088:8088 \
 
 调用**阿里云通义万相 (qwen-image-2.0-pro)** 模型，根据文本描述生成图片。
 
-### 多轮记忆对话 (`POST /work/talks`)
+### 多轮记忆对话
 
-基于 **DeepSeek V4 Flash** 实现的多轮对话，支持通过 `session_id` 维护会话上下文，实现连续对话记忆。
+基于 **DeepSeek V4 Flash** 实现的多轮对话，会话和消息全部持久化到 MySQL，支持多用户、多会话管理：
 
-- `POST /work/talks` — 发起对话（传入 `session_id` 和 `prompt`），`data` 直接为大模型回复正文
-- `POST /work/talks/clear` — 清空指定会话的对话记忆
+- `GET /work/talks/sessions` — 获取用户的所有历史会话（按更新时间倒序）
+- `POST /work/talks/sessions` — 创建新会话
+- `DELETE /work/talks/sessions/{session_id}` — 逻辑删除指定会话
+- `GET /work/talks/{session_id}/messages` — 获取指定会话的全部历史消息
+- `POST /work/talks` — 发送消息（传入 `session_id`、`user_id`、`prompt`），大模型携带历史上下文回复
+- `POST /work/talks/clear` — 清空指定会话的全部消息（保留会话本身）
 
 ### 天气查询 / 地址解析（腾讯地图）
 
@@ -247,6 +313,14 @@ docker run -d -p 8088:8088 \
 
 - `POST /email/generate` — 一句话需求 → 大模型生成邮件主题与正文（仅返回内容，不发送）
 - `POST /email/send` — 发送用户确认后的邮件（通过 QQ 邮箱 SMTP）
+
+### NL2SQL 智能问数（`/nl2sql`）
+
+基于 **DeepSeek V4 Flash** 将自然语言问题转换为可执行 SQL，并返回查询结果、生成 SQL、耗时与缓存状态；查询会话与历史记录持久化到 MySQL。
+
+- `POST /nl2sql/query` — 提交自然语言问题，自动生成 SQL 并执行查询
+- `GET /nl2sql/schema` — 获取可查询数据库表结构、字段说明、JOIN 关系与聚合口径
+- `GET /nl2sql/sessions` — 获取指定用户的历史查询会话和消息记录
 
 ---
 
@@ -264,6 +338,21 @@ docker run -d -p 8088:8088 \
 | `/teachers/import/template` | GET | 下载导入模板（.xlsx） |
 | `/teachers/import` | POST | 上传 Excel/CSV 批量导入 |
 | `/teachers` | POST | （保留）JSON 数组批量创建，仅作兼容 |
+
+---
+
+## 📊 成绩批量导入
+
+成绩模块同样支持 **Excel/CSV 批量导入**，流程与教师导入一致：
+
+1. **下载模板** — `GET /score/import/template` 返回带中文表头的标准 `.xlsx` 模板；
+2. **填表** — 按列填写（学号、学生姓名、科目、成绩、考试日期等）；
+3. **上传导入** — `POST /score/import` 上传文件，逐行校验后入库，返回成功/失败条数与失败原因。
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/score/import/template` | GET | 下载导入模板（.xlsx） |
+| `/score/import` | POST | 上传 Excel/CSV 批量导入 |
 
 ---
 
@@ -337,10 +426,11 @@ DB_NAME=student_management_system
 
 - 数据表在应用启动时通过 `init_db()` 自动创建
 - 所有删除操作均为逻辑删除（`is_deleted` 字段），就业模块额外支持物理删除
-- 多轮对话记忆存储在内存中，服务重启后清空；生产环境建议替换为 Redis 等持久化存储
+- 多轮对话的会话与消息已持久化到 MySQL，不会因服务重启丢失；历史上下文按会话 ID 自动加载
+- NL2SQL 智能问数的查询会话、消息和缓存记录已持久化到 MySQL，前端可查看历史记录并高亮展示生成 SQL
 - 教师批量导入采用「逐行校验、部分成功」策略：合格数据入库，失败数据跳过并返回原因，不会因个别行出错而整体失败
 - 日志由 `util/log.py` 统一管理，应用日志写入 `logs/app.log`、错误日志写入 `logs/error.log`，并接管 uvicorn 日志与请求访问日志
-- 前端 `frontend/` 为纯静态页面，直接浏览器打开即可；调用接口依赖后端已开启 CORS
+- 前端提供两套实现：`frontend-vue/`（Vue 3，推荐，需 Node.js，支持全局浅色/深色主题与 NL2SQL SQL 高亮）和 `frontend/`（纯静态，直接浏览器打开）
 - DeepSeek、DashScope、腾讯地图等密钥请在 `.env` 中替换为自己的有效密钥
 
 ---

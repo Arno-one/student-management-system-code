@@ -1,5 +1,5 @@
 <template>
-  <section class="page active">
+  <section id="page-statistics" class="page active">
     <div class="sub-bar">
       <label>统计项目</label>
       <select v-model="selectedStat">

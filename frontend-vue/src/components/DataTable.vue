@@ -1,17 +1,27 @@
 <template>
-  <div class="table-wrap" v-if="columns.length && rows.length">
-    <table>
-      <thead>
-        <tr>
-          <th v-for="col in columns" :key="col">{{ col }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(row, ri) in rows" :key="ri">
-          <td v-for="col in columns" :key="col">{{ formatCell(row[col]) }}</td>
-        </tr>
-      </tbody>
-    </table>
+  <div v-if="columns.length && rows.length" class="table-panel">
+    <div class="table-head">
+      <div class="table-meta">
+        <span class="table-kicker">Query Result</span>
+        <strong>{{ rows.length }} 条记录</strong>
+      </div>
+      <span class="table-columns">{{ columns.length }} 列</span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th v-for="col in columns" :key="col">{{ col }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(row, ri) in rows" :key="ri">
+            <td v-for="col in columns" :key="col">{{ formatCell(row[col]) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
 

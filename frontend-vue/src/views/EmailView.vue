@@ -1,5 +1,5 @@
 <template>
-  <section class="page active">
+  <section id="page-email" class="page active">
     <div class="card">
       <h3>智能邮件助手</h3>
 

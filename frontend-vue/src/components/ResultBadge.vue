@@ -1,10 +1,12 @@
 <template>
-  <div class="result" :class="{ hidden: !text && !showEmpty }">
-    <span v-if="badge" class="badge" :class="badge.ok ? 'ok' : 'err'">
-      {{ badge.ok ? '✓ ' : '✗ ' }}{{ badge.text }}
-    </span>
-    <template v-if="text">{{ text }}</template>
-    <template v-else-if="showEmpty">（尚未请求）</template>
+  <div class="result" :class="{ hidden: !text && !showEmpty && !badge }">
+    <div v-if="badge" class="result-head">
+      <span class="badge" :class="badge.ok === true ? 'ok' : badge.ok === false ? 'err' : 'pending'">
+        {{ badge.ok === true ? '✓ ' : badge.ok === false ? '✗ ' : '… ' }}{{ badge.text }}
+      </span>
+    </div>
+    <div v-if="text" class="result-body">{{ text }}</div>
+    <div v-else-if="showEmpty && !badge" class="result-empty">（尚未请求）</div>
   </div>
 </template>
 
@@ -17,5 +19,5 @@ defineProps({
 </script>
 
 <style scoped>
-.result.hidden:empty { display: none; }
+.result.hidden { display: none; }
 </style>
