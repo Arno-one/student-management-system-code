@@ -8,6 +8,7 @@ from scheme.class_scheme import ClassCreateSchema as ccs
 from scheme.response_scheme import success, success_page
 from service import class_service
 from util.log import get_logger
+from util.rbac import get_current_user, ensure_permission, require_permission
 
 # 本模块专用 logger，来源标记为 API.class_api
 logger = get_logger(__name__)
@@ -19,9 +20,11 @@ class_router = APIRouter()
 def create_or_update_class(
     class_data: ccs,
     id: int = None,
+    current_user: dict = Depends(get_current_user),
     db=Depends(get_db)
 ):
     # id 有值是修改，没值是新增，日志里区分一下方便排查
+    ensure_permission(current_user, 'class:update' if id else 'class:create')
     logger.info("%s班级：id=%s", "修改" if id else "新增", id)
     try:
         result = class_service.create_or_update_class(class_data, db, id)
@@ -32,7 +35,7 @@ def create_or_update_class(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@class_router.delete("/del_class", description='删除班级数据')
+@class_router.delete("/del_class", description='删除班级数据', dependencies=[Depends(require_permission('class:delete'))])
 def del_class(id: int, db=Depends(get_db)):
     logger.info("删除班级：id=%s", id)
     result = class_service.delete_class(id, db)
@@ -45,7 +48,8 @@ def del_class(id: int, db=Depends(get_db)):
 
 @class_router.get(
     "/get_class",
-    description='分页查询所有数据'
+    description='分页查询所有数据',
+    dependencies=[Depends(require_permission('class:view'))]
 )
 def get_classes(
     db=Depends(get_db),
@@ -57,7 +61,7 @@ def get_classes(
     return success_page(info, p, size, total)
 
 
-@class_router.get("/get_class/{id}", description='根据id查询班级')
+@class_router.get("/get_class/{id}", description='根据id查询班级', dependencies=[Depends(require_permission('class:view'))])
 def get_class(id: int, db=Depends(get_db)):
     logger.info("按id查询班级：id=%s", id)
     try:

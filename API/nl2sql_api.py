@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from service.nl2sql_service import query
 from NL2SQL.schema_context import build_schema_text, get_business_table_names
 from util.log import get_logger
+from util.rbac import get_current_user, require_permission
 
 logger = get_logger(__name__)
 
@@ -24,9 +25,10 @@ class QueryResponse(BaseModel):
     data: dict | None = None
 
 
-@nl2sql_router.post("/query", summary="NL2SQL 智能问数")
+@nl2sql_router.post("/query", summary="NL2SQL 智能问数", dependencies=[Depends(require_permission('nl2sql:use'))])
 def nl2sql_query(
     req: QueryRequest,
+    current_user: dict = Depends(get_current_user),
     db_rw: Session = Depends(get_db),
     db_readonly: Session = Depends(get_db_readonly),
 ):
@@ -37,17 +39,17 @@ def nl2sql_query(
     - **user_id**: 用户标识，用于对话隔离
     - **session_id**: 可选，传入已有会话 ID 可实现多轮追问
     """
-    logger.info("NL2SQL 查询请求 | user=%s | question=%s", req.user_id, req.question[:100])
+    logger.info("NL2SQL 查询请求 | user=%s | question=%s", current_user['username'], req.question[:100])
     return query(
         question=req.question,
-        user_id=req.user_id,
+        user_id=current_user['username'],
         db_readonly=db_readonly,
         db_rw=db_rw,
         session_id=req.session_id,
     )
 
 
-@nl2sql_router.get("/schema", summary="获取数据库表结构概览")
+@nl2sql_router.get("/schema", summary="获取数据库表结构概览", dependencies=[Depends(require_permission('nl2sql:use'))])
 def nl2sql_schema():
     """返回数据库表结构摘要，供前端展示"可以问什么"。"""
     logger.info("NL2SQL 获取表结构概览")
@@ -64,9 +66,10 @@ def nl2sql_schema():
     }
 
 
-@nl2sql_router.get("/sessions", summary="获取 NL2SQL 历史会话")
-def nl2sql_sessions(user_id: str = "anonymous", db: Session = Depends(get_db)):
-    """查询某个用户的所有 NL2SQL 对话会话及消息。"""
+@nl2sql_router.get("/sessions", summary="获取 NL2SQL 历史会话", dependencies=[Depends(require_permission('nl2sql:use'))])
+def nl2sql_sessions(current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
+    """查询当前登录用户的所有 NL2SQL 对话会话及消息。"""
+    user_id = current_user['username']
     logger.info("NL2SQL 获取历史会话：user_id=%s", user_id)
     from DAO.nl2sql_dao import get_sessions_by_user, get_messages_by_session
     sessions = get_sessions_by_user(user_id, db)

@@ -15,6 +15,7 @@ from scheme.teacher_scheme import (
 from scheme.response_scheme import success, success_page
 from service import teacher_service
 from util.log import get_logger
+from util.rbac import require_permission
 
 # 本模块专用 logger，来源标记为 API.teacher_information_API_Router
 logger = get_logger(__name__)
@@ -22,7 +23,7 @@ logger = get_logger(__name__)
 teacher_information_router = APIRouter()
 
 
-@teacher_information_router.get('/teachers/{id}')
+@teacher_information_router.get('/teachers/{id}', dependencies=[Depends(require_permission('teacher:view'))])
 def get_teacher(id: int, db=Depends(database.get_db)):
     logger.info("按id查询教师：id=%s", id)
     try:
@@ -34,7 +35,7 @@ def get_teacher(id: int, db=Depends(database.get_db)):
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@teacher_information_router.get('/teachers')
+@teacher_information_router.get('/teachers', dependencies=[Depends(require_permission('teacher:view'))])
 def get_teachers(
     name: str | None = None,
     gender: Literal["男", "女"] | None = None,
@@ -73,7 +74,7 @@ def get_teachers(
     )
 
 
-@teacher_information_router.post('/teacher')
+@teacher_information_router.post('/teacher', dependencies=[Depends(require_permission('teacher:create'))])
 def post_one_teacher(
     teacher: POST_Teacher_Info,
     db=Depends(database.get_db)
@@ -92,7 +93,7 @@ def post_one_teacher(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@teacher_information_router.get('/teachers/import/template')
+@teacher_information_router.get('/teachers/import/template', dependencies=[Depends(require_permission('teacher:import'))])
 def download_import_template():
     """
     下载"教师批量导入"的标准 Excel 模板。
@@ -109,7 +110,7 @@ def download_import_template():
     )
 
 
-@teacher_information_router.post('/teachers/import')
+@teacher_information_router.post('/teachers/import', dependencies=[Depends(require_permission('teacher:import'))])
 async def import_teachers(
     file: UploadFile = File(...),
     db=Depends(database.get_db)
@@ -135,7 +136,7 @@ async def import_teachers(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@teacher_information_router.post('/teachers')
+@teacher_information_router.post('/teachers', dependencies=[Depends(require_permission('teacher:create'))])
 def post_teachers(
     temp_new_teachers: list[POST_Teacher_Info],
     db=Depends(database.get_db)
@@ -152,7 +153,7 @@ def post_teachers(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@teacher_information_router.put('/teachers/{id}')
+@teacher_information_router.put('/teachers/{id}', dependencies=[Depends(require_permission('teacher:update'))])
 def put_teacher(
     id: int,
     temp_teacher_update_info: PUT_Teacher_Info,

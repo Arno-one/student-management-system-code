@@ -9,6 +9,7 @@ from scheme import employment_scheme as EMP
 from scheme.response_scheme import success, success_page
 from service import employment_service
 from util.log import get_logger
+from util.rbac import require_permission
 
 # 本模块专用 logger，来源标记为 API.employment_api
 logger = get_logger(__name__)
@@ -17,7 +18,7 @@ employment_router = APIRouter()
 
 
 @employment_router.post("/employment_create",
-                        summary="新建学生就业信息")
+                        summary="新建学生就业信息", dependencies=[Depends(require_permission('employment:create'))])
 def employment_create(
     data: EMP.EmploymentCreate,
     db: Session = Depends(get_db)
@@ -33,7 +34,7 @@ def employment_create(
 
 
 @employment_router.get("/employment_get/{emp_id}",
-                       summary="根据id查询")
+                       summary="根据id查询", dependencies=[Depends(require_permission('employment:view'))])
 def employment_get(emp_id: int, db: Session = Depends(get_db)):
     logger.info("按id查询就业信息：emp_id=%s", emp_id)
     try:
@@ -44,7 +45,7 @@ def employment_get(emp_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@employment_router.get("/employment_list", summary="分页查询")
+@employment_router.get("/employment_list", summary="分页查询", dependencies=[Depends(require_permission('employment:view'))])
 def get_employment_list(
     page: int = Query(1, ge=1),
     size: int = Query(10, le=100, ge=1),
@@ -64,7 +65,7 @@ def get_employment_list(
 
 
 @employment_router.put("/employment_update/{emp_id}",
-                       summary="修改就业信息")
+                       summary="修改就业信息", dependencies=[Depends(require_permission('employment:update'))])
 def employment_update(
     emp_id: int,
     data: EMP.EmploymentUpdate,
@@ -81,7 +82,7 @@ def employment_update(
                             detail=str(e))
 
 
-@employment_router.delete("/employment_delete/{emp_id}", summary="逻辑删除")
+@employment_router.delete("/employment_delete/{emp_id}", summary="逻辑删除", dependencies=[Depends(require_permission('employment:delete'))])
 def employment_delete(emp_id: int, db: Session = Depends(get_db)):
     logger.info("逻辑删除就业信息：emp_id=%s", emp_id)
     try:
@@ -93,7 +94,7 @@ def employment_delete(emp_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@employment_router.put("/employment_recover/{emp_id}", summary="逻辑恢复")
+@employment_router.put("/employment_recover/{emp_id}", summary="逻辑恢复", dependencies=[Depends(require_permission('employment:update'))])
 def employment_recover(emp_id: int, db: Session = Depends(get_db)):
     logger.info("逻辑恢复就业信息：emp_id=%s", emp_id)
     try:
@@ -106,7 +107,7 @@ def employment_recover(emp_id: int, db: Session = Depends(get_db)):
                             detail=str(e))
 
 
-@employment_router.delete("/employment_hard/{emp_id}", summary="物理删除")
+@employment_router.delete("/employment_hard/{emp_id}", summary="物理删除", dependencies=[Depends(require_permission('employment:delete'))])
 def employment_hard(emp_id: int, db: Session = Depends(get_db)):
     # 物理删除不可恢复，用 warning 级别留个醒目记录
     logger.warning("物理删除就业信息（不可恢复）：emp_id=%s", emp_id)

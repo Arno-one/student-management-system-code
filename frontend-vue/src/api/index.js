@@ -1,8 +1,21 @@
 import { reactive } from 'vue'
 
+const TOKEN_KEY = 'auth-token'
+const USER_KEY = 'auth-user'
+
+function loadUser() {
+  try {
+    return JSON.parse(localStorage.getItem(USER_KEY) || 'null')
+  } catch {
+    return null
+  }
+}
+
 // Default base URL — can be changed from the topbar
 const state = reactive({
-  baseUrl: localStorage.getItem('api-base-url') || 'http://localhost:8088'
+  baseUrl: localStorage.getItem('api-base-url') || 'http://localhost:8088',
+  token: localStorage.getItem(TOKEN_KEY) || '',
+  user: loadUser()
 })
 
 export function getBaseUrl() {
@@ -12,6 +25,39 @@ export function getBaseUrl() {
 export function setBaseUrl(url) {
   state.baseUrl = url
   localStorage.setItem('api-base-url', url)
+}
+
+export function setAuth(token, user) {
+  state.token = token || ''
+  state.user = user || null
+  if (token) localStorage.setItem(TOKEN_KEY, token)
+  else localStorage.removeItem(TOKEN_KEY)
+  if (user) localStorage.setItem(USER_KEY, JSON.stringify(user))
+  else localStorage.removeItem(USER_KEY)
+}
+
+export function clearAuth() {
+  setAuth('', null)
+}
+
+export function isLoggedIn() {
+  return !!state.token
+}
+
+export function getAuthHeader() {
+  return state.token ? { Authorization: `Bearer ${state.token}` } : {}
+}
+
+export function hasPermission(code) {
+  return !!state.user?.permissions?.includes(code)
+}
+
+export function hasRole(code) {
+  return !!state.user?.roles?.some(item => item.role_code === code)
+}
+
+export function getMenuCodes() {
+  return new Set((state.user?.menus || []).map(item => item.permission_code))
 }
 
 export { state as apiState }
@@ -37,17 +83,52 @@ export function qs(params) {
 }
 
 // Unified request method
-export async function request(method, path, { body, silent = false, signal } = {}) {
-  const opts = { method, headers: {}, signal }
-  if (body !== undefined) {
-    opts.headers['Content-Type'] = 'application/json'
-    opts.body = JSON.stringify(body)
+export async function request(method, path, { body, silent = false, signal, headers = {} } = {}) {
+  const opts = {
+    method,
+    headers: {
+      ...getAuthHeader(),
+      ...headers
+    },
+    signal
   }
+
+  if (body !== undefined) {
+    if (body instanceof FormData) {
+      opts.body = body
+    } else {
+      opts.headers['Content-Type'] = 'application/json'
+      opts.body = JSON.stringify(body)
+    }
+  }
+
   const resp = await fetch(getBaseUrl() + path, opts)
   const text = await resp.text()
   let data
   try { data = JSON.parse(text) } catch { data = text }
+
+  if (resp.status === 401) {
+    clearAuth()
+  }
+
   return { ok: resp.ok, status: resp.status, data }
+}
+
+export async function fetchBlob(path, { method = 'GET', body, headers = {} } = {}) {
+  const opts = {
+    method,
+    headers: {
+      ...getAuthHeader(),
+      ...headers
+    }
+  }
+  if (body !== undefined) opts.body = body
+  const resp = await fetch(getBaseUrl() + path, opts)
+  if (!resp.ok) {
+    const text = await resp.text()
+    throw new Error(text || ('HTTP ' + resp.status))
+  }
+  return resp.blob()
 }
 
 // Pick list from various response structures

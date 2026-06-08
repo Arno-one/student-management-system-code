@@ -130,8 +130,8 @@
 </template>
 
 <script setup>
-import { reactive, ref, nextTick, onMounted, watch } from 'vue'
-import { request } from '../api'
+import { reactive, ref, nextTick, onMounted } from 'vue'
+import { request, apiState } from '../api'
 import ResultBadge from '../components/ResultBadge.vue'
 import DataTable from '../components/DataTable.vue'
 import hljs from 'highlight.js/lib/core'
@@ -147,7 +147,7 @@ const sqlCopied = ref(false)
 
 const form = reactive({
   question: '',
-  userId: 'default',
+  userId: apiState.user?.username || 'default',
 })
 
 const queryResult = reactive({

@@ -15,6 +15,8 @@ from API.employment_api import employment_router
 from API.teacher_information_API_Router import teacher_information_router
 from API.work_api import woker, email_router
 from API.nl2sql_api import nl2sql_router
+from API.auth_api import auth_router
+from API.system_api import system_router
 from util.log import setup_logging, get_logger, register_request_logging, takeover_uvicorn_loggers
 
 # ===== 初始化日志系统 =====
@@ -125,6 +127,10 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # 学生基本信息管理模块
 app.include_router(student_router, prefix='/student', tags=['学生基本信息管理'])
+# 登录认证模块
+app.include_router(auth_router, prefix='/auth', tags=['登录认证'])
+# 系统管理模块（用户 / 角色 / 权限）
+app.include_router(system_router, prefix='/system', tags=['系统管理'])
 # 学生考核成绩管理模块
 app.include_router(router_score, prefix='/score', tags=['学生考核成绩管理'])
 # 学生就业管理模块

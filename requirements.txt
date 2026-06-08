@@ -22,6 +22,7 @@ PyMySQL                   # MySQL 驱动（database.py 用 mysql+pymysql 连接�
 
 # ==================== 配置 ====================
 python-dotenv==1.1.0      # 读取 .env 配置文件（config.py 使用）
+PyJWT==2.10.1             # JWT 生成与校验（登录认证 / RBAC 使用）
 
 # ==================== SQL 美化 ====================
 sqlparse                  # NL2SQL 模块用，格式化 LLM 生成的 SQL —— 待补充版本

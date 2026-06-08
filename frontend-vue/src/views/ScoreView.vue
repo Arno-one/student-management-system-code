@@ -77,7 +77,7 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
-import { request, qs, pickList, getBaseUrl } from '../api'
+import { request, qs, pickList, fetchBlob } from '../api'
 import ResultBadge from '../components/ResultBadge.vue'
 import DataTable from '../components/DataTable.vue'
 import { validateFields } from '../utils/helpers'
@@ -126,9 +126,7 @@ async function addScore() {
 
 async function downloadTemplate() {
   try {
-    const resp = await fetch(getBaseUrl() + '/score/import/template')
-    if (!resp.ok) throw new Error('HTTP ' + resp.status)
-    const blob = await resp.blob()
+    const blob = await fetchBlob('/score/import/template')
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url; a.download = 'score_import_template.xlsx'
@@ -149,10 +147,10 @@ async function importScores() {
   const fd = new FormData()
   fd.append('file', fileInput.value.files[0])
   try {
-    const resp = await fetch(getBaseUrl() + '/score/import', { method: 'POST', body: fd })
-    const data = await resp.json()
-    setResult('batch', resp.ok, resp.ok ? '导入完成' : (data.msg || '导入失败'))
-    if (resp.ok && data?.data) {
+    const r = await request('POST', '/score/import', { body: fd })
+    const data = r.data
+    setResult('batch', r.ok, r.ok ? '导入完成' : (data.msg || '导入失败'))
+    if (r.ok && data?.data) {
       const d = data.data
       importSummary.value = `<div style="font-size:13px;color:var(--text);margin-top:8px">本次共 <b>${d.total ?? 0}</b> 行，<b style="color:var(--success)">成功 ${d.success_count ?? 0} 条</b>，<b style="color:var(--danger)">失败 ${d.fail_count ?? 0} 条</b>。</div>`
       if (d.failures?.length) {

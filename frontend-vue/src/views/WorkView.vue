@@ -35,7 +35,7 @@
       <h3>多轮记忆对话</h3>
 
       <!-- 步骤1：输入用户ID确认身份 -->
-      <div v-if="!talkConfirmed" class="talk-login">
+      <div v-if="false" class="talk-login">
         <div class="talk-login-box">
           <div class="talk-login-icon">🔑</div>
           <div class="talk-login-title">输入用户标识以开始对话</div>
@@ -54,7 +54,7 @@
       </div>
 
       <!-- 步骤2：确认后显示对话界面 -->
-      <template v-else>
+      <template v-if="true">
         <div class="talk-toolbar">
           <div class="talk-user-badge">
             <span class="talk-user-label">用户</span>
@@ -157,7 +157,7 @@
 
 <script setup>
 import { reactive, ref, nextTick } from 'vue'
-import { request, qs, pickApiContent } from '../api'
+import { request, qs, pickApiContent, apiState } from '../api'
 import ResultBadge from '../components/ResultBadge.vue'
 import { validateFields, weatherEmoji, findImageUrl } from '../utils/helpers'
 
@@ -172,7 +172,7 @@ const geoViewRef = ref(null)
 const form = reactive({
   eval: { stuId: null, style: '幽默' },
   img: { prompt: '' },
-  talk: { userId: localStorage.getItem('talk-user-id') || '', sessionId: null, prompt: '' },
+  talk: { userId: '', sessionId: null, prompt: '' },
   weather: { location: '', adcode: '', wtype: 'now', added: '', getmd: null },
   geo: { address: '', policy: '0' }
 })
@@ -180,8 +180,8 @@ const form = reactive({
 const sessions = ref([])
 const messages = ref([])
 const chatMsgsRef = ref(null)
-const talkConfirmed = ref(localStorage.getItem('talk-user-confirmed') === '1')
-const talkInputUserId = ref(localStorage.getItem('talk-user-id') || '')
+const talkConfirmed = ref(true)
+const talkInputUserId = ref('')
 
 const results = reactive({
   eval: { badge: null, text: '' }, img: { badge: null, text: '' }
@@ -239,7 +239,6 @@ function autoScrollChat() {
 }
 
 function onUserIdChange() {
-  localStorage.setItem('talk-user-id', form.talk.userId)
   form.talk.sessionId = null
   messages.value = []
   loadSessions()
@@ -247,22 +246,19 @@ function onUserIdChange() {
 
 // ===== 用户身份确认 / 切换 =====
 function confirmUserId() {
-  const uid = talkInputUserId.value.trim()
+  const uid = apiState.user?.username || ''
   if (!uid) return
   form.talk.userId = uid
-  localStorage.setItem('talk-user-id', uid)
   talkConfirmed.value = true
-  localStorage.setItem('talk-user-confirmed', '1')
   loadSessions()
 }
 
 function switchUser() {
-  talkConfirmed.value = false
-  localStorage.removeItem('talk-user-confirmed')
+  form.talk.userId = apiState.user?.username || ''
   form.talk.sessionId = null
   messages.value = []
   sessions.value = []
-  talkInputUserId.value = ''
+  loadSessions()
 }
 
 async function loadSessions() {
@@ -365,8 +361,9 @@ async function workClearTalk() {
   } finally { loading.value = false }
 }
 
-// 初始化：如果之前确认过用户ID则自动进入对话界面
-if (talkConfirmed.value && form.talk.userId) {
+// 初始化：自动使用当前登录用户作为会话归属
+form.talk.userId = apiState.user?.username || ''
+if (form.talk.userId) {
   loadSessions()
 }
 

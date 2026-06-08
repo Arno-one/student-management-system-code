@@ -50,3 +50,8 @@ DB_READONLY_PASSWORD = os.getenv("DB_READONLY_PASSWORD", "")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 # 日志文件保留天数：只保留最近这么多天，更早的归档文件会被自动清理。
 LOG_BACKUP_DAYS = int(os.getenv("LOG_BACKUP_DAYS", "7"))
+
+# ==================== 登录认证 / RBAC ====================
+AUTH_SECRET_KEY = os.getenv("AUTH_SECRET_KEY", "change-me-in-env")
+AUTH_TOKEN_EXPIRE_MINUTES = int(os.getenv("AUTH_TOKEN_EXPIRE_MINUTES", "720"))
+AUTH_PBKDF2_ITERATIONS = int(os.getenv("AUTH_PBKDF2_ITERATIONS", "600000"))

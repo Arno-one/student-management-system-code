@@ -3,6 +3,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 # 数据库连接信息统一从 config（.env）读取，不再硬编码在代码里
 from config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME, \
     DB_READONLY_USER, DB_READONLY_PASSWORD
+from util.log import register_sqlalchemy_sql_logging
 
 user = DB_USER
 password = DB_PASSWORD
@@ -15,6 +16,7 @@ engine = create_engine(
     f'mysql+pymysql://{user}:{password}@{host}:{port}/{database}',
     pool_size=5
 )
+register_sqlalchemy_sql_logging(engine, "rw")
 
 # 只读引擎 — NL2SQL 专用
 # 优先使用只读账号；未配置时回退到读写账号（兼容开发环境，但生产环境建议配置独立只读账号）
@@ -26,6 +28,7 @@ engine_readonly = create_engine(
     pool_size=3,
     execution_options={"isolation_level": "READ COMMITTED"}
 )
+register_sqlalchemy_sql_logging(engine_readonly, "readonly")
 
 # 创建基类
 Base = declarative_base()
@@ -63,4 +66,5 @@ def init_db():
     import model.Teacher  # noqa: F401
     import model.Talk  # noqa: F401
     import model.NL2SQL  # noqa: F401
+    import model.Auth  # noqa: F401
     Base.metadata.create_all(engine)

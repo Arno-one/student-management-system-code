@@ -25,8 +25,16 @@
 import os
 import sys
 import time
+import json
 import logging
+from decimal import Decimal
+from datetime import date, datetime
 from logging.handlers import TimedRotatingFileHandler
+
+try:
+    import sqlparse
+except Exception:
+    sqlparse = None
 
 # 日志级别、保留天数都从统一配置 config（.env）读取，方便不同环境无需改代码即可调整。
 from config import LOG_LEVEL, LOG_BACKUP_DAYS
@@ -146,6 +154,136 @@ def get_logger(name: str = None) -> logging.Logger:
     :return: logging.Logger 实例
     """
     return logging.getLogger(name)
+
+
+def _serialize_sql_param(value):
+    """把 SQL 参数转成适合写日志的可读文本。"""
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return value
+
+
+def _normalize_sql_params(parameters):
+    """统一把 SQLAlchemy 参数转成更易读的结构。"""
+    if parameters is None:
+        return None
+    if isinstance(parameters, dict):
+        return {k: _serialize_sql_param(v) for k, v in parameters.items()}
+    if isinstance(parameters, (list, tuple)):
+        if parameters and isinstance(parameters[0], dict):
+            return [
+                {k: _serialize_sql_param(v) for k, v in item.items()}
+                for item in parameters
+            ]
+        return [_serialize_sql_param(v) for v in parameters]
+    return _serialize_sql_param(parameters)
+
+
+def _format_sql_for_log(statement: str) -> str:
+    """把 SQL 语句格式化成适合日志阅读的多行文本。"""
+    sql = (statement or "").strip()
+    if not sql:
+        return "<empty sql>"
+    if sqlparse is not None:
+        try:
+            return sqlparse.format(
+                sql,
+                reindent=True,
+                keyword_case="upper",
+                indent_width=2,
+                wrap_after=100,
+                comma_first=False,
+            )
+        except Exception:
+            pass
+    return sql
+
+
+def _format_sql_log_message(statement: str, parameters, elapsed_ms: float, rowcount: int | None, engine_name: str) -> str:
+    """组装统一 SQL 日志内容。"""
+    pretty_sql = _format_sql_for_log(statement)
+    normalized_params = _normalize_sql_params(parameters)
+    params_text = "null"
+    if normalized_params is not None:
+        try:
+            params_text = json.dumps(normalized_params, ensure_ascii=False, default=_serialize_sql_param)
+        except Exception:
+            params_text = repr(normalized_params)
+
+    rowcount_text = "unknown" if rowcount is None or rowcount == -1 else str(rowcount)
+    return (
+        f"SQL执行 | engine={engine_name} | 耗时={elapsed_ms:.2f}ms | rowcount={rowcount_text}\n"
+        f"SQL:\n{pretty_sql}\n"
+        f"PARAMS:\n{params_text}"
+    )
+
+
+def _should_skip_sql_logging(statement: str) -> bool:
+    """跳过噪声较大的框架探测 SQL，保留业务执行 SQL。"""
+    sql = (statement or "").strip().upper()
+    if not sql:
+        return True
+    skip_prefixes = (
+        "PRAGMA ",
+        "SHOW VARIABLES",
+        "SHOW WARNINGS",
+        "SELECT VERSION()",
+        "SELECT DATABASE()",
+        "SELECT @@",
+        "DESCRIBE ",
+    )
+    return sql.startswith(skip_prefixes)
+
+
+def register_sqlalchemy_sql_logging(engine, engine_name: str) -> None:
+    """给 SQLAlchemy 引擎注册统一 SQL 日志。"""
+    if getattr(engine, "_claude_sql_logging_registered", False):
+        return
+
+    sql_logger = get_logger("sql")
+
+    from sqlalchemy import event
+
+    @event.listens_for(engine, "before_cursor_execute")
+    def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+        conn.info.setdefault("query_start_time", []).append(time.perf_counter())
+
+    @event.listens_for(engine, "after_cursor_execute")
+    def after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+        started = conn.info.get("query_start_time") or []
+        start = started.pop() if started else time.perf_counter()
+        elapsed_ms = (time.perf_counter() - start) * 1000
+        if _should_skip_sql_logging(statement):
+            return
+        sql_logger.info(
+            _format_sql_log_message(statement, parameters, elapsed_ms, cursor.rowcount, engine_name)
+        )
+
+    @event.listens_for(engine, "handle_error")
+    def handle_error(exception_context):
+        conn = exception_context.connection
+        started = conn.info.get("query_start_time") if conn is not None else None
+        start = started.pop() if started else time.perf_counter()
+        elapsed_ms = (time.perf_counter() - start) * 1000
+        if _should_skip_sql_logging(exception_context.statement):
+            return
+        sql_logger.error(
+            "%s\nERROR: %s",
+            _format_sql_log_message(
+                exception_context.statement,
+                exception_context.parameters,
+                elapsed_ms,
+                None,
+                engine_name,
+            ),
+            exception_context.original_exception,
+        )
+
+    engine._claude_sql_logging_registered = True
 
 
 def takeover_uvicorn_loggers() -> None:

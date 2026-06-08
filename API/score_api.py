@@ -11,6 +11,7 @@ from service import score_service
 from decimal import Decimal
 from typing import List, Optional, Literal
 from util.log import get_logger
+from util.rbac import require_permission
 
 # 本模块专用 logger，来源标记为 API.score_api
 logger = get_logger(__name__)
@@ -18,7 +19,7 @@ logger = get_logger(__name__)
 router_score = APIRouter()
 
 
-@router_score.post("/add", summary="新增单个学生成绩")
+@router_score.post("/add", summary="新增单个学生成绩", dependencies=[Depends(require_permission('score:create'))])
 def add_score_api(new_score: Addscore, db=Depends(get_db)):
     logger.info("新增成绩：student_no=%s, exam_order=%s, score=%s",
                 new_score.student_no, new_score.exam_order, new_score.score)
@@ -38,7 +39,7 @@ def add_score_api(new_score: Addscore, db=Depends(get_db)):
                             detail=str(e))
 
 
-@router_score.get("/import/template", summary="下载成绩导入模板")
+@router_score.get("/import/template", summary="下载成绩导入模板", dependencies=[Depends(require_permission('score:import'))])
 def download_score_import_template():
     logger.info("下载成绩导入模板")
     bio = score_service.build_import_template()
@@ -50,7 +51,7 @@ def download_score_import_template():
     )
 
 
-@router_score.post("/import", summary="上传 Excel/CSV 批量导入成绩")
+@router_score.post("/import", summary="上传 Excel/CSV 批量导入成绩", dependencies=[Depends(require_permission('score:import'))])
 async def import_scores_api(
     file: UploadFile = File(...),
     db=Depends(get_db)
@@ -70,7 +71,7 @@ async def import_scores_api(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router_score.post("/batch_add", summary="批量添加学生成绩")
+@router_score.post("/batch_add", summary="批量添加学生成绩", dependencies=[Depends(require_permission('score:create'))])
 def batch_add_score_api(
     score_list: List[Addscore],
     db=Depends(get_db)
@@ -92,7 +93,7 @@ def batch_add_score_api(
                             detail=str(e))
 
 
-@router_score.put("/update", summary="修改学生成绩")
+@router_score.put("/update", summary="修改学生成绩", dependencies=[Depends(require_permission('score:update'))])
 def update_score_api(new_score: Updatescore, db=Depends(get_db)):
     logger.info("修改成绩：student_no=%s, exam_order=%s",
                 new_score.student_no, new_score.exam_order)
@@ -111,7 +112,7 @@ def update_score_api(new_score: Updatescore, db=Depends(get_db)):
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router_score.post("/is_delete", summary="删除学生成绩")
+@router_score.post("/is_delete", summary="删除学生成绩", dependencies=[Depends(require_permission('score:delete'))])
 def is_delete_api(
     student_no: str = Query(...,
                             min_length=8, max_length=10,
@@ -135,7 +136,7 @@ def is_delete_api(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router_score.get("/query", summary="查询学生的成绩")
+@router_score.get("/query", summary="查询学生的成绩", dependencies=[Depends(require_permission('score:view'))])
 def query_score_api(
     db=Depends(get_db),
     page: int = Query(1, ge=1, description="页码，从1开始"),

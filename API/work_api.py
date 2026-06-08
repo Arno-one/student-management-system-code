@@ -6,6 +6,7 @@ from enum import Enum
 from service import work_service
 from util import email as email_util
 from util.log import get_logger
+from util.rbac import get_current_user, require_permission
 from scheme.response_scheme import success  # 统一响应封装 {code, msg, data, total}
 from pydantic import BaseModel
 
@@ -33,7 +34,7 @@ class style(str, Enum):
     incentive = "激励"
     criticism = "批判"
 
-@woker.post("/evaluation", summary="评价风格：1.幽默,2.严肃,3.激励,4.批判")
+@woker.post("/evaluation", summary="评价风格：1.幽默,2.严肃,3.激励,4.批判", dependencies=[Depends(require_permission('work:use'))])
 def evaluation(student_id: int,style: style,db: Session = Depends(get_db)):
     logger.info("生成学生评价：student_id=%s, style=%s", student_id, style.value)
     student = student_dao.get_by_id(student_id, db)
@@ -53,7 +54,7 @@ def evaluation(student_id: int,style: style,db: Session = Depends(get_db)):
     return success(result, "评价生成成功")
 
 
-@woker.post("/image", summary="文生图")
+@woker.post("/image", summary="文生图", dependencies=[Depends(require_permission('work:use'))])
 def generate_image(prompt: str):
     """
         调用阿里云通义万相 qwen-image-2.0-pro 文生图接口
@@ -70,9 +71,10 @@ def generate_image(prompt: str):
 
 # ==================== 多轮记忆对话（持久化版） ====================
 
-@woker.get("/talks/sessions", summary="获取用户的所有历史会话")
-def list_sessions(user_id: str, db: Session = Depends(get_db)):
-    """返回该用户所有未删除的会话列表，按更新时间倒序"""
+@woker.get("/talks/sessions", summary="获取用户的所有历史会话", dependencies=[Depends(require_permission('work:use'))])
+def list_sessions(current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
+    """返回当前登录用户所有未删除的会话列表，按更新时间倒序"""
+    user_id = current_user['username']
     logger.info("获取会话列表：user_id=%s", user_id)
     sessions = talk_dao.get_sessions_by_user(user_id, db)
     return success([
@@ -89,11 +91,12 @@ def list_sessions(user_id: str, db: Session = Depends(get_db)):
     ], "查询成功")
 
 
-@woker.post("/talks/sessions", summary="创建新会话")
-def create_session(body: CreateSessionBody, db: Session = Depends(get_db)):
-    """为用户创建一个新的空白会话"""
-    logger.info("创建会话：user_id=%s, title=%s", body.user_id, body.title)
-    session = talk_dao.create_session(body.user_id, body.title, db)
+@woker.post("/talks/sessions", summary="创建新会话", dependencies=[Depends(require_permission('work:use'))])
+def create_session(body: CreateSessionBody, current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
+    """为当前登录用户创建一个新的空白会话"""
+    user_id = current_user['username']
+    logger.info("创建会话：user_id=%s, title=%s", user_id, body.title)
+    session = talk_dao.create_session(user_id, body.title, db)
     return success({
         "id": session.id,
         "user_id": session.user_id,
@@ -102,23 +105,31 @@ def create_session(body: CreateSessionBody, db: Session = Depends(get_db)):
     }, "会话已创建")
 
 
-@woker.delete("/talks/sessions/{session_id}", summary="删除会话（逻辑删除）")
-def delete_session(session_id: int, user_id: str, db: Session = Depends(get_db)):
+@woker.delete("/talks/sessions/{session_id}", summary="删除会话（逻辑删除）", dependencies=[Depends(require_permission('work:use'))])
+def delete_session(session_id: int, current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
     """逻辑删除指定会话"""
+    user_id = current_user['username']
     logger.info("删除会话：session_id=%s, user_id=%s", session_id, user_id)
+    session = talk_dao.get_session_by_id(session_id, db)
+    if not session:
+        raise HTTPException(status_code=404, detail="会话不存在或已删除")
+    if session.user_id != user_id:
+        raise HTTPException(status_code=403, detail="无权操作该会话")
     ok = talk_dao.soft_delete_session(session_id, db)
     if not ok:
         raise HTTPException(status_code=404, detail="会话不存在或已删除")
     return success(None, "会话已删除")
 
 
-@woker.get("/talks/{session_id}/messages", summary="获取会话的全部历史消息")
-def get_messages(session_id: int, db: Session = Depends(get_db)):
+@woker.get("/talks/{session_id}/messages", summary="获取会话的全部历史消息", dependencies=[Depends(require_permission('work:use'))])
+def get_messages(session_id: int, current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
     """返回指定会话的全部消息（按时间正序），用于前端恢复对话界面"""
     logger.info("获取会话消息：session_id=%s", session_id)
     session = talk_dao.get_session_by_id(session_id, db)
     if not session:
         raise HTTPException(status_code=404, detail="会话不存在或已删除")
+    if session.user_id != current_user['username']:
+        raise HTTPException(status_code=403, detail="无权访问该会话")
     messages = talk_dao.get_messages_by_session(session_id, db)
     return success([
         {
@@ -132,25 +143,27 @@ def get_messages(session_id: int, db: Session = Depends(get_db)):
     ], "查询成功")
 
 
-@woker.post("/talks", summary="多轮记忆对话（发送消息）")
-def talks(body: TalkBody, db: Session = Depends(get_db)):
+@woker.post("/talks", summary="多轮记忆对话（发送消息）", dependencies=[Depends(require_permission('work:use'))])
+def talks(body: TalkBody, current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
     """
     多轮记忆对话接口：从数据库加载历史上下文，调用大模型，持久化本轮对话
     """
-    logger.info("多轮对话：user_id=%s, session_id=%s", body.user_id, body.session_id)
-    reply = work_service.talks(body.session_id, body.user_id, body.prompt, db)
+    user_id = current_user['username']
+    logger.info("多轮对话：user_id=%s, session_id=%s", user_id, body.session_id)
+    reply = work_service.talks(body.session_id, user_id, body.prompt, db)
     if isinstance(reply, dict) and "error" in reply:
-        logger.warning("多轮对话失败：user_id=%s, session_id=%s, error=%s", body.user_id, body.session_id, reply["error"])
+        logger.warning("多轮对话失败：user_id=%s, session_id=%s, error=%s", user_id, body.session_id, reply["error"])
         raise HTTPException(status_code=400, detail=reply["error"])
-    logger.info("多轮对话成功：user_id=%s, session_id=%s, reply_len=%s", body.user_id, body.session_id, len(reply) if isinstance(reply, str) else 0)
+    logger.info("多轮对话成功：user_id=%s, session_id=%s, reply_len=%s", user_id, body.session_id, len(reply) if isinstance(reply, str) else 0)
     return success(reply, "对话成功")
 
 
-@woker.post("/talks/clear", summary="清空指定会话的对话消息")
-def clear_talks(session_id: int, user_id: str, db: Session = Depends(get_db)):
+@woker.post("/talks/clear", summary="清空指定会话的对话消息", dependencies=[Depends(require_permission('work:use'))])
+def clear_talks(session_id: int, current_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
     """
     清空某个会话的全部历史消息（保留会话本身）
     """
+    user_id = current_user['username']
     logger.info("清空对话消息：user_id=%s, session_id=%s", user_id, session_id)
     result = work_service.clear_talks(session_id, user_id, db)
     if not result.get("success"):
@@ -158,7 +171,7 @@ def clear_talks(session_id: int, user_id: str, db: Session = Depends(get_db)):
     return success(result, "消息已清空")
 
 
-@woker.get("/weather", summary="天气查询（经纬度/行政区划编码 二选一）")
+@woker.get("/weather", summary="天气查询（经纬度/行政区划编码 二选一）", dependencies=[Depends(require_permission('work:use'))])
 def query_weather(location: str = None, adcode: str = None, weather_type: str = "now",
                   added_fields: str = None, get_md: int = None):
     """
@@ -177,7 +190,7 @@ def query_weather(location: str = None, adcode: str = None, weather_type: str = 
     return success(result, "天气查询成功")
 
 
-@woker.get("/geocoder", summary="经纬度查询（地址解析为经纬度）")
+@woker.get("/geocoder", summary="经纬度查询（地址解析为经纬度）", dependencies=[Depends(require_permission('work:use'))])
 def address_to_location(address: str, policy: int = 0):
     """
     调用腾讯地图地理编码接口，把文本地址解析成经纬度
@@ -192,7 +205,7 @@ def address_to_location(address: str, policy: int = 0):
     return success(result, "地址解析成功")
 
 
-@email_router.post("/generate", summary="第一步：大模型生成邮件内容（不发送）")
+@email_router.post("/generate", summary="第一步：大模型生成邮件内容（不发送）", dependencies=[Depends(require_permission('email:send'))])
 def generate_email(prompt: str):
     """
     一句话需求 -> 大模型自动生成邮件主题和正文，仅返回内容供用户编辑确认，不会发送。
@@ -208,7 +221,7 @@ def generate_email(prompt: str):
     return success(result, "邮件内容已生成")
 
 
-@email_router.post("/send", summary="第二步：发送用户确认后的邮件")
+@email_router.post("/send", summary="第二步：发送用户确认后的邮件", dependencies=[Depends(require_permission('email:send'))])
 def send_email(subject: str, body: str, receiver: str = "786453528@qq.com"):
     """
     把用户确认（可能已编辑修改）后的邮件主题、正文发送到目标邮箱。

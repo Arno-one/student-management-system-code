@@ -1,5 +1,5 @@
 <template>
-  <aside class="sidebar" :class="{ collapsed }">
+  <aside v-if="!isPublicPage" class="sidebar" :class="{ collapsed }">
     <div class="brand">
       <div class="logo-wrap">
         <div class="logo">学</div>
@@ -17,7 +17,7 @@
 
     <nav>
       <button
-        v-for="(item, index) in navItems"
+        v-for="(item, index) in visibleNavItems"
         :key="item.page"
         type="button"
         class="nav-item"
@@ -46,21 +46,37 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { getMenuCodes, hasRole } from '../api'
+
+const props = defineProps({
   collapsed: { type: Boolean, default: false },
   currentPage: { type: String, default: 'student' }
 })
 defineEmits(['navigate'])
 
+const route = useRoute()
+const isPublicPage = computed(() => !!route.meta?.public)
+
 const navItems = [
-  { page: 'student', short: 'ST', label: '学生信息管理', desc: '档案录入、查询与状态维护' },
-  { page: 'score', short: 'SC', label: '考核成绩管理', desc: '单条、批量与区间查询' },
-  { page: 'employment', short: 'EM', label: '就业信息管理', desc: 'offer、薪资与就业跟踪' },
-  { page: 'class', short: 'CL', label: '班级管理', desc: '班级建档与排期信息' },
-  { page: 'teacher', short: 'TE', label: '教师管理', desc: '教师资料、导入与检索' },
-  { page: 'statistics', short: 'BI', label: '统计分析', desc: '关键指标与业务汇总' },
-  { page: 'work', short: 'AI', label: 'AI 作业模块', desc: '评价生成、对话与天气能力' },
-  { page: 'email', short: 'ML', label: '邮件管理', desc: '智能生成与发送邮件' },
-  { page: 'nl2sql', short: 'D2', label: 'NL2SQL 智能问数', desc: '自然语言转 SQL 数据查询' }
+  { page: 'student', short: 'ST', label: '学生信息管理', desc: '档案录入、查询与状态维护', menuCode: 'student:page' },
+  { page: 'score', short: 'SC', label: '考核成绩管理', desc: '单条、批量与区间查询', menuCode: 'score:page' },
+  { page: 'employment', short: 'EM', label: '就业信息管理', desc: 'offer、薪资与就业跟踪', menuCode: 'employment:page' },
+  { page: 'class', short: 'CL', label: '班级管理', desc: '班级建档与排期信息', menuCode: 'class:page' },
+  { page: 'teacher', short: 'TE', label: '教师管理', desc: '教师资料、导入与检索', menuCode: 'teacher:page' },
+  { page: 'statistics', short: 'BI', label: '统计分析', desc: '关键指标与业务汇总', menuCode: 'statistics:page' },
+  { page: 'work', short: 'AI', label: 'AI 作业模块', desc: '评价生成、对话与天气能力', menuCode: 'work:page' },
+  { page: 'email', short: 'ML', label: '邮件管理', desc: '智能生成与发送邮件', menuCode: 'email:page' },
+  { page: 'nl2sql', short: 'D2', label: 'NL2SQL 智能问数', desc: '自然语言转 SQL 数据查询', menuCode: 'nl2sql:page' },
+  { page: 'system', short: 'SM', label: '系统管理', desc: '用户、角色与权限分配', menuCode: 'system:page', adminOnly: true }
 ]
+
+const visibleNavItems = computed(() => {
+  const menuCodes = getMenuCodes()
+  return navItems.filter(item => {
+    if (item.adminOnly && !hasRole('admin')) return false
+    return menuCodes.has(item.menuCode)
+  })
+})
 </script>

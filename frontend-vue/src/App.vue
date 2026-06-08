@@ -1,5 +1,5 @@
 <template>
-  <div class="app-layout" :class="[{ 'sidebar-collapsed': sidebarCollapsed }, themeClass]">
+  <div class="app-layout" :class="[{ 'sidebar-collapsed': sidebarCollapsed }, themeClass, { 'app-layout--public': isPublicPage }]">
     <div class="app-backdrop" aria-hidden="true">
       <span class="glow glow-a"></span>
       <span class="glow glow-b"></span>
@@ -12,7 +12,7 @@
       @navigate="navigate"
     />
 
-    <div class="main">
+    <div class="main" :class="{ 'main--public': isPublicPage }">
       <TopBar
         :sidebar-collapsed="sidebarCollapsed"
         :title="pageTitle"
@@ -20,8 +20,8 @@
         @toggle-sidebar="toggleSidebar"
         @toggle-theme="toggleTheme"
       />
-      <div class="content">
-        <div class="content-shell">
+      <div class="content" :class="{ 'content--public': isPublicPage }">
+        <div class="content-shell" :class="{ 'content-shell--public': isPublicPage }">
           <router-view />
         </div>
       </div>
@@ -44,6 +44,7 @@ const theme = ref(savedTheme === 'light' ? 'light' : 'dark')
 const currentPage = computed(() => route.name || 'student')
 const pageTitle = computed(() => route.meta?.title || '学生信息管理系统')
 const themeClass = computed(() => `theme-${theme.value}`)
+const isPublicPage = computed(() => !!route.meta?.public)
 
 function navigate(page) {
   router.push({ name: page })

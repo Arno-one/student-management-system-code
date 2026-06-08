@@ -9,6 +9,7 @@ from scheme.student_scheme import StudentCreate, StudentUpdate
 from scheme.response_scheme import success, success_page
 from service import student_service
 from util.log import get_logger
+from util.rbac import require_permission
 
 # 本模块专用 logger，日志里会显示来源是 API.student_api，方便定位
 logger = get_logger(__name__)
@@ -16,7 +17,7 @@ logger = get_logger(__name__)
 student_router = APIRouter()
 
 
-@student_router.post("/students", summary="创建学生")
+@student_router.post("/students", summary="创建学生", dependencies=[Depends(require_permission('student:create'))])
 def create_student(
     student_data: StudentCreate,
     db: Session = Depends(get_db)
@@ -36,7 +37,7 @@ def create_student(
         raise HTTPException(status_code=500, detail=f"创建失败: {str(e)}")
 
 
-@student_router.get("/students", summary="查询所有学生信息")
+@student_router.get("/students", summary="查询所有学生信息", dependencies=[Depends(require_permission('student:view'))])
 def get_all_students(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
@@ -47,7 +48,7 @@ def get_all_students(
     return success_page(students, page, page_size, total)
 
 
-@student_router.get("/students/{student_id}", summary="根据ID查询学生")
+@student_router.get("/students/{student_id}", summary="根据ID查询学生", dependencies=[Depends(require_permission('student:view'))])
 def get_student_by_id(
     student_id: int = Path(..., ge=1, le=999999),
     db: Session = Depends(get_db)
@@ -61,7 +62,7 @@ def get_student_by_id(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@student_router.get("/students/no/{student_no}", summary="根据学号查询学生")
+@student_router.get("/students/no/{student_no}", summary="根据学号查询学生", dependencies=[Depends(require_permission('student:view'))])
 def get_student_by_no(
     student_no: str,
     db: Session = Depends(get_db)
@@ -75,7 +76,7 @@ def get_student_by_no(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@student_router.get("/students/class/{class_id}", summary="根据班级查询")
+@student_router.get("/students/class/{class_id}", summary="根据班级查询", dependencies=[Depends(require_permission('student:view'))])
 def get_students_by_class(
     class_id: int = Path(..., ge=1),
     skip: int = Query(0, ge=0),
@@ -90,7 +91,7 @@ def get_students_by_class(
 
 
 @student_router.patch("/students/{student_id}",
-                      summary="更新学生信息（只改提供的字段）")
+                      summary="更新学生信息（只改提供的字段）", dependencies=[Depends(require_permission('student:update'))])
 def update_student(
     update_data: StudentUpdate,
     student_id: int = Path(..., ge=1, le=999999),
@@ -107,7 +108,7 @@ def update_student(
                             detail=str(e))
 
 
-@student_router.delete("/students/{student_id}", summary="逻辑删除学生")
+@student_router.delete("/students/{student_id}", summary="逻辑删除学生", dependencies=[Depends(require_permission('student:delete'))])
 def delete_student(
     student_id: int = Path(..., ge=1, le=999999),
     db: Session = Depends(get_db)
@@ -122,7 +123,7 @@ def delete_student(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@student_router.post("/students/{student_id}/restore", summary="恢复已删除学生")
+@student_router.post("/students/{student_id}/restore", summary="恢复已删除学生", dependencies=[Depends(require_permission('student:restore'))])
 def restore_student(
     student_id: int = Path(..., ge=1, le=999999),
     db: Session = Depends(get_db)

@@ -1,5 +1,5 @@
 <template>
-  <header class="topbar">
+  <header v-if="!isPublicPage" class="topbar">
     <div class="topbar-main">
       <button
         type="button"
@@ -21,6 +21,11 @@
     </div>
 
     <div class="topbar-actions">
+      <div class="topbar-user" v-if="apiState.user">
+        <strong>{{ apiState.user.real_name || apiState.user.username }}</strong>
+        <small>{{ apiState.user.username }}</small>
+      </div>
+
       <button
         type="button"
         class="theme-toggle"
@@ -29,6 +34,8 @@
       >
         <span class="theme-toggle-icon" aria-hidden="true">{{ theme === 'light' ? '☀' : '☾' }}</span>
       </button>
+
+      <button type="button" class="theme-toggle" aria-label="退出登录" @click="logout">⎋</button>
 
       <label class="api-box">
         <span>API Endpoint</span>
@@ -39,7 +46,9 @@
 </template>
 
 <script setup>
-import { apiState, setBaseUrl } from '../api'
+import { useRoute, useRouter } from 'vue-router'
+import { computed } from 'vue'
+import { apiState, clearAuth, setBaseUrl } from '../api'
 
 defineEmits(['toggle-sidebar', 'toggle-theme'])
 
@@ -49,7 +58,16 @@ defineProps({
   theme: { type: String, default: 'dark' }
 })
 
+const route = useRoute()
+const router = useRouter()
+const isPublicPage = computed(() => !!route.meta?.public)
+
 function onChange(e) {
   setBaseUrl(e.target.value)
+}
+
+function logout() {
+  clearAuth()
+  router.replace({ name: 'login' })
 }
 </script>
