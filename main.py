@@ -53,8 +53,6 @@ register_request_logging(app)
 
 # ===== 配置 CORS 跨域 =====
 # 前端 index.html 不管是用文件方式打开还是用本地静态服务器打开，
-# 都属于"跨域"请求，必须在后端放开跨域限制，浏览器才允许 fetch 调用接口。
-# 开发阶段直接放开所有来源；正式上线建议把 allow_origins 改成具体的前端域名。
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],      # 允许的来源，* 表示全部
@@ -65,12 +63,6 @@ app.add_middleware(
 
 
 # ===== 全局异常处理：让"报错"也返回统一结构 {code, msg, data, total} =====
-# 这样不管接口成功还是失败，前端拿到的 JSON 结构都一致，处理起来更省心。
-#
-# 注意一个坑：兜底的 Exception 处理器运行在最外层的 ServerErrorMiddleware 里，
-# 它在 CORSMiddleware 的"外面"，所以它返回的 500 响应默认不会带 CORS 头，
-# 浏览器就会把它当成跨域失败，前端只能看到 "Failed to fetch"，看不到真正的错误信息。
-# 解决办法：在所有异常处理器里手动补上 Access-Control-Allow-Origin 头，保证错误也能被前端读到。
 CORS_HEADERS = {"Access-Control-Allow-Origin": "*"}
 
 
