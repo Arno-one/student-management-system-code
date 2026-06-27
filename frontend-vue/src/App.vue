@@ -26,6 +26,8 @@
         </div>
       </div>
     </div>
+
+    <FloatingAgent />
   </div>
 </template>
 
@@ -34,6 +36,7 @@ import { computed, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import Sidebar from './components/Sidebar.vue'
 import TopBar from './components/TopBar.vue'
+import FloatingAgent from './components/FloatingAgent.vue'
 
 const router = useRouter()
 const route = useRoute()

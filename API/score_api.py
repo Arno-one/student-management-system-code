@@ -4,10 +4,11 @@
 """
 from fastapi import APIRouter, Depends, Query, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
 from database import get_db
-from scheme.schema_score import Addscore, Updatescore
+from scheme.schema_score import Addscore, Updatescore, ScoreExtract
 from scheme.response_scheme import success, success_page
-from service import score_service
+from service import score_service, extract_service
 from decimal import Decimal
 from typing import List, Optional, Literal
 from util.log import get_logger
@@ -17,6 +18,32 @@ from util.rbac import require_permission
 logger = get_logger(__name__)
 
 router_score = APIRouter()
+
+
+class NLExtractRequest(BaseModel):
+    """自然语言提取请求"""
+    text: str = Field(..., description="自然语言描述", min_length=1, max_length=2000)
+
+
+_SCORE_REQUIRED_FIELDS = ["student_no", "exam_order", "score"]
+
+
+@router_score.post("/extract", summary="自然语言提取成绩信息", dependencies=[Depends(require_permission('score:create'))])
+def extract_score(body: NLExtractRequest):
+    logger.info("NL提取成绩：text=%s", body.text[:80])
+    result = extract_service.extract_fields(
+        text=body.text,
+        schema=ScoreExtract,
+        entity="score",
+        required_fields=_SCORE_REQUIRED_FIELDS,
+    )
+    if result["error"]:
+        logger.warning("NL提取成绩失败：%s", result["error"])
+    else:
+        logger.info("NL提取成绩成功：提取字段=%s, 缺失=%s",
+                    list(result["extracted"].keys()) if result["extracted"] else 0,
+                    result["missing_required"])
+    return success(result)
 
 
 @router_score.post("/add", summary="新增单个学生成绩", dependencies=[Depends(require_permission('score:create'))])

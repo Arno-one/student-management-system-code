@@ -4,10 +4,12 @@
 """
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
+from pydantic import BaseModel, Field
 from database import get_db
-from scheme.student_scheme import StudentCreate, StudentUpdate
+from scheme.student_scheme import StudentCreate, StudentUpdate, StudentExtract, StudentUpdateExtract
 from scheme.response_scheme import success, success_page
-from service import student_service
+from service import student_service, extract_service
+from DAO.student_dao import get_by_student_no
 from util.log import get_logger
 from util.rbac import require_permission
 
@@ -15,6 +17,76 @@ from util.rbac import require_permission
 logger = get_logger(__name__)
 
 student_router = APIRouter()
+
+
+class NLExtractRequest(BaseModel):
+    """自然语言提取请求"""
+    text: str = Field(..., description="自然语言描述", min_length=1, max_length=2000)
+
+
+# StudentCreate 中的必填字段名
+_STUDENT_REQUIRED_FIELDS = ["student_no", "class_id", "student_name"]
+
+
+@student_router.post("/students/extract", summary="自然语言提取学生信息", dependencies=[Depends(require_permission('student:create'))])
+def extract_student(
+    body: NLExtractRequest,
+):
+    logger.info("NL提取学生信息：text=%s", body.text[:80])
+    result = extract_service.extract_fields(
+        text=body.text,
+        schema=StudentExtract,
+        entity="student",
+        required_fields=_STUDENT_REQUIRED_FIELDS,
+    )
+    if result["error"]:
+        logger.warning("NL提取学生信息失败：%s", result["error"])
+    else:
+        logger.info("NL提取学生信息成功：提取字段=%s, 缺失=%s",
+                    list(result["extracted"].keys()) if result["extracted"] else 0,
+                    result["missing_required"])
+    return success(result)
+
+
+@student_router.post("/students/update/extract", summary="自然语言提取学生修改意图", dependencies=[Depends(require_permission('student:update'))])
+def extract_student_update(
+    body: NLExtractRequest,
+    db: Session = Depends(get_db)
+):
+    logger.info("NL提取学生修改：text=%s", body.text[:80])
+    result = extract_service.extract_fields(
+        text=body.text,
+        schema=StudentUpdateExtract,
+        entity="student_update",
+        required_fields=[],  # update 无必填限制
+    )
+    if result["extracted"]:
+        ex = result["extracted"]
+        sid = ex.get("student_id")
+        sno = ex.get("student_no")
+
+        # 解析定位：优先用 ID，否则通过学号查 ID
+        if not sid and sno:
+            student = get_by_student_no(sno, db)
+            if student:
+                ex["student_id"] = getattr(student, "id", None)
+                ex["student_no"] = getattr(student, "student_no", None)
+                ex["student_name"] = getattr(student, "student_name", None)
+                logger.info("NL修改定位：学号 %s → 学生ID %s", sno, ex["student_id"])
+            else:
+                logger.warning("NL修改定位失败：学号 %s 对应的学生不存在", sno)
+                result["error"] = f"学号 {sno} 对应的学生不存在"
+                result["extracted"] = None
+
+    if result["error"]:
+        logger.warning("NL提取学生修改失败：%s", result["error"])
+    else:
+        ex = result.get("extracted", {})
+        changes = ex.get("changes", {}) if ex else {}
+        logger.info("NL提取学生修改成功：student_id=%s, 变更字段=%s",
+                    ex.get("student_id") if ex else None,
+                    list(changes.keys()) if changes else [])
+    return success(result)
 
 
 @student_router.post("/students", summary="创建学生", dependencies=[Depends(require_permission('student:create'))])

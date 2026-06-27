@@ -107,3 +107,8 @@ def delete_messages_by_session(session_id: int, db: Session):
     db.commit()
     logger.info("会话 %s 下的 %s 条消息已清除", session_id, count)
     return count
+
+
+def get_message_by_id(message_id: int, db: Session) -> TalkMessage | None:
+    """根据消息主键查询"""
+    return db.query(TalkMessage).filter(TalkMessage.id == message_id).first()

@@ -2,16 +2,7 @@
   <section id="page-statistics" class="page active">
     <div class="sub-bar">
       <label>统计项目</label>
-      <select v-model="selectedStat">
-        <option value="staGeStu">年龄大于阈值的学生</option>
-        <option value="staStuCount">学生总数</option>
-        <option value="staScoreGreater">每次考试≥阈值分</option>
-        <option value="staScoreFails">2次以上不及格</option>
-        <option value="staClassAvg">班级平均分</option>
-        <option value="staTallSal">最高薪资排行</option>
-        <option value="staJobTime">就业时长</option>
-        <option value="staAvgClassJobTime">班级平均就业时长</option>
-      </select>
+      <CustomSelect v-model="selectedStat" :options="statOptions" />
     </div>
 
     <div class="card">
@@ -35,8 +26,19 @@ import { reactive, ref } from 'vue'
 import { request, qs, pickList } from '../api'
 import ResultBadge from '../components/ResultBadge.vue'
 import DataTable from '../components/DataTable.vue'
+import CustomSelect from '../components/CustomSelect.vue'
 
 const selectedStat = ref('staGeStu')
+const statOptions = [
+  { value: 'staGeStu', label: '年龄大于阈值的学生' },
+  { value: 'staStuCount', label: '学生总数' },
+  { value: 'staScoreGreater', label: '每次考试≥阈值分' },
+  { value: 'staScoreFails', label: '2次以上不及格' },
+  { value: 'staClassAvg', label: '班级平均分' },
+  { value: 'staTallSal', label: '最高薪资排行' },
+  { value: 'staJobTime', label: '就业时长' },
+  { value: 'staAvgClassJobTime', label: '班级平均就业时长' },
+]
 const loading = ref(false)
 const listData = ref(null)
 const result = reactive({ badge: null, text: '' })

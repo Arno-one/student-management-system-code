@@ -17,6 +17,9 @@ from API.work_api import woker, email_router
 from API.nl2sql_api import nl2sql_router
 from API.auth_api import auth_router
 from API.system_api import system_router
+from RAG.controller import rag_router
+from agent_system.api import agent_router
+from agent_system.tools.mcp_client import tencent_map_mcp_client
 from util.log import setup_logging, get_logger, register_request_logging, takeover_uvicorn_loggers
 
 # ===== 初始化日志系统 =====
@@ -36,9 +39,14 @@ async def lifespan(app: FastAPI):
     takeover_uvicorn_loggers()
     logger.info("应用启动中：开始初始化数据库……")
     init_db()
+    # MCP 是增强能力，初始化失败也不能影响主应用启动，业务工具会自动回退原有 REST 链路。
+    await tencent_map_mcp_client.startup()
     logger.info("数据库初始化完成，应用已就绪")
-    yield
-    logger.info("应用正在关闭")
+    try:
+        yield
+    finally:
+        await tencent_map_mcp_client.shutdown()
+        logger.info("应用正在关闭")
 
 
 app = FastAPI(title='学生信息管理系统',
@@ -130,7 +138,7 @@ app.include_router(employment_router, prefix="/Employment", tags=["学生就业�
 # 班级管理模块
 app.include_router(class_router, prefix="/class", tags=["班级管理"])
 # 老师管理模块
-app.include_router(teacher_information_router, prefix="", tags=["教师管理"])
+app.include_router(teacher_information_router, prefix="/teacher", tags=["教师管理"])
 # 统计分析模块
 app.include_router(sta_router, prefix='/statistics', tags=['统计分析模块'])
 # 作业模块
@@ -139,6 +147,10 @@ app.include_router(woker, prefix='/work', tags=['作业模块'])
 app.include_router(email_router, prefix='/email', tags=['邮件管理'])
 # NL2SQL 智能问数模块
 app.include_router(nl2sql_router, prefix='/nl2sql', tags=['NL2SQL智能问数'])
+# RAG 四大名著知识库
+app.include_router(rag_router,prefix='/rag', tags=['RAG 四大名著知识库'])
+# 智能 Agent 助手
+app.include_router(agent_router, prefix='/agent', tags=['智能Agent'])
 
 if __name__ == '__main__':
-    uvicorn.run('main:app', host='localhost', port=8088, reload=True)
+    uvicorn.run('main:app', host='0.0.0.0', port=8088, reload=True)

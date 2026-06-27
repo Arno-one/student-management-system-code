@@ -2,11 +2,7 @@
   <section id="page-employment" class="page active">
     <div class="sub-bar">
       <label>选择功能</label>
-      <select v-model="sub" @change="saveSub">
-        <option value="em-create">新建就业信息</option>
-        <option value="em-query">查询就业信息</option>
-        <option value="em-op">修改 / 删除 / 恢复就业信息</option>
-      </select>
+      <CustomSelect v-model="sub" :options="subOptions" @update:model-value="saveSub" />
     </div>
 
     <!-- 新建 -->
@@ -61,6 +57,23 @@
       </div>
       <ResultBadge :badge="results.op.badge" :text="results.op.text" />
     </div>
+
+    <!-- 智能录入 -->
+    <div id="em-nl" class="card subcard" :class="{ show: sub === 'em-nl' }">
+      <SmartInput
+        title="智能录入就业信息"
+        input-label="用自然语言描述就业信息"
+        placeholder="例如：学号S2025001的学生张三，3班，拿到了字节跳动的offer，月薪25000"
+        extract-btn-text="智能提取"
+        confirm-btn-text="确认创建"
+        extract-url="/Employment/employment_extract"
+        submit-url="/Employment/employment_create"
+        submit-method="POST"
+        :fields="employmentFields"
+        :field-map="employmentFieldMap"
+        @submitted="onNlSubmitted"
+      />
+    </div>
   </section>
 </template>
 
@@ -69,9 +82,17 @@ import { reactive, ref } from 'vue'
 import { request, qs, clean, pickList, pickOne } from '../api'
 import ResultBadge from '../components/ResultBadge.vue'
 import DataTable from '../components/DataTable.vue'
+import SmartInput from '../components/SmartInput.vue'
+import CustomSelect from '../components/CustomSelect.vue'
 import { validateFields } from '../utils/helpers'
 
 const sub = ref(localStorage.getItem('sub-employment') || 'em-create')
+const subOptions = [
+  { value: 'em-create', label: '新建就业信息' },
+  { value: 'em-query', label: '查询就业信息' },
+  { value: 'em-op', label: '修改 / 删除 / 恢复就业信息' },
+  { value: 'em-nl', label: '智能录入' },
+]
 const loading = ref(false)
 const listData = ref(null)
 
@@ -82,8 +103,29 @@ const form = reactive({
 })
 
 const results = reactive({
-  create: { badge: null, text: '' }, query: { badge: null, text: '' }, op: { badge: null, text: '' }
+  create: { badge: null, text: '' }, query: { badge: null, text: '' }, op: { badge: null, text: '' },
+  nl: { badge: null, text: '' }
 })
+
+const employmentFields = [
+  { key: 'student_no', label: '学号', type: 'text', required: true, placeholder: 'S2024001' },
+  { key: 'student_name', label: '姓名', type: 'text', required: true, placeholder: '张三' },
+  { key: 'class_id', label: '班级ID', type: 'number', required: true, placeholder: '3' },
+  { key: 'job_open_time', label: '就业开放时间', type: 'date', required: false },
+  { key: 'offer_send_time', label: 'offer下发时间', type: 'date', required: false },
+  { key: 'company_name', label: '公司名称', type: 'text', required: false, placeholder: '字节跳动' },
+  { key: 'salary', label: '薪资（元）', type: 'number', required: false, placeholder: '25000' }
+]
+
+const employmentFieldMap = {
+  student_no: 'student_no',
+  student_name: 'student_name',
+  class_id: 'class_id',
+  job_open_time: 'job_open_time',
+  offer_send_time: 'offer_send_time',
+  company_name: 'company_name',
+  salary: 'salary'
+}
 
 function saveSub() { localStorage.setItem('sub-employment', sub.value) }
 
@@ -149,5 +191,9 @@ async function hardDeleteEmployment() {
   if (!validateFields([['#em-op', '就业记录ID', form.op.id]])) return
   if (!confirm('物理删除不可恢复，确认？')) return
   await doRequest('op', 'DELETE', '/Employment/employment_hard/' + form.op.id)
+}
+
+function onNlSubmitted(data) {
+  setResult('nl', true, '就业信息创建成功')
 }
 </script>

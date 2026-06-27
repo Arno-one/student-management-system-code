@@ -69,6 +69,8 @@ const navItems = [
   { page: 'work', short: 'AI', label: 'AI 作业模块', desc: '评价生成、对话与天气能力', menuCode: 'work:page' },
   { page: 'email', short: 'ML', label: '邮件管理', desc: '智能生成与发送邮件', menuCode: 'email:page' },
   { page: 'nl2sql', short: 'D2', label: 'NL2SQL 智能问数', desc: '自然语言转 SQL 数据查询', menuCode: 'nl2sql:page' },
+  { page: 'rag', short: 'RA', label: '四大名著知识库', desc: 'RAG 混合检索 + AI 问答' },
+  { page: 'agent', short: 'AG', label: '智能 Agent 助手', desc: '学业导师 · 成绩查询 · 陪伴对话' },
   { page: 'system', short: 'SM', label: '系统管理', desc: '用户、角色与权限分配', menuCode: 'system:page', adminOnly: true }
 ]
 
@@ -76,6 +78,7 @@ const visibleNavItems = computed(() => {
   const menuCodes = getMenuCodes()
   return navItems.filter(item => {
     if (item.adminOnly && !hasRole('admin')) return false
+    if (!item.menuCode) return true  // 无权限要求，始终可见
     return menuCodes.has(item.menuCode)
   })
 })

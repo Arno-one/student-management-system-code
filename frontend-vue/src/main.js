@@ -6,16 +6,26 @@ import { request, setAuth, apiState } from './api'
 
 const app = createApp(App)
 app.use(router)
-app.mount('#app')
 
 async function bootstrapAuth() {
   if (!apiState.token) return
-  const r = await request('GET', '/auth/me')
-  if (r.ok && r.data?.data) {
-    setAuth(apiState.token, r.data.data)
-  } else {
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 5000)
+    const r = await request('GET', '/auth/me', { signal: controller.signal })
+    clearTimeout(timeout)
+    if (r.ok && r.data?.data) {
+      setAuth(apiState.token, r.data.data)
+    } else {
+      setAuth('', null)
+    }
+  } catch {
+    // 网络异常或超时：保留 token 但清除用户数据，让 router guard 重定向到登录页
     setAuth('', null)
   }
 }
 
-bootstrapAuth()
+// 先验证 token 有效性，再挂载应用，避免用过期 token 渲染错误页面
+bootstrapAuth().finally(() => {
+  app.mount('#app')
+})

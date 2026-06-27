@@ -2,11 +2,7 @@
   <section id="page-nl2sql" class="page active">
     <div class="sub-bar">
       <label>选择功能</label>
-      <select v-model="sub" @change="saveSub">
-        <option value="ns-query">智能问数</option>
-        <option value="ns-schema">表结构概览</option>
-        <option value="ns-history">历史记录</option>
-      </select>
+      <CustomSelect v-model="sub" :options="subOptions" @update:model-value="saveSub" />
     </div>
 
     <!-- ====== 智能问数 ====== -->
@@ -134,12 +130,18 @@ import { reactive, ref, nextTick, onMounted } from 'vue'
 import { request, apiState } from '../api'
 import ResultBadge from '../components/ResultBadge.vue'
 import DataTable from '../components/DataTable.vue'
+import CustomSelect from '../components/CustomSelect.vue'
 import hljs from 'highlight.js/lib/core'
 import sql from 'highlight.js/lib/languages/sql'
 
 hljs.registerLanguage('sql', sql)
 
 const sub = ref(localStorage.getItem('sub-nl2sql') || 'ns-query')
+const subOptions = [
+  { value: 'ns-query', label: '智能问数' },
+  { value: 'ns-schema', label: '表结构概览' },
+  { value: 'ns-history', label: '历史记录' },
+]
 const loading = ref(false)
 const schemaLoading = ref(false)
 const sqlCodeRef = ref(null)

@@ -67,4 +67,6 @@ def init_db():
     import model.Talk  # noqa: F401
     import model.NL2SQL  # noqa: F401
     import model.Auth  # noqa: F401
+    import model.AgentTask  # noqa: F401
+    import model.AgentFeedback  # noqa: F401
     Base.metadata.create_all(engine)

@@ -2,12 +2,7 @@
   <section id="page-work" class="page active">
     <div class="sub-bar">
       <label>选择功能</label>
-      <select v-model="sub" @change="saveSub">
-        <option value="wk-eval">学生评价（大模型生成）</option>
-        <option value="wk-img">文生图（通义万相）</option>
-        <option value="wk-talk">多轮记忆对话</option>
-        <option value="wk-weather">天气查询 / 经纬度解析</option>
-      </select>
+      <CustomSelect v-model="sub" :options="subOptions" @update:model-value="saveSub" />
     </div>
 
     <!-- 学生评价 -->
@@ -15,7 +10,7 @@
       <h3>学生评价（大模型生成）</h3>
       <div class="grid">
         <div class="field"><label>学生ID *</label><input v-model.number="form.eval.stuId" type="number" placeholder="1" /></div>
-        <div class="field"><label>评价风格 *</label><select v-model="form.eval.style"><option>幽默</option><option>严肃</option><option>激励</option><option>批判</option></select></div>
+        <div class="field"><label>评价风格 *</label><CustomSelect v-model="form.eval.style" :options="evalStyleOptions" /></div>
       </div>
       <div class="actions"><button class="btn" :disabled="loading" @click="workEvaluation">{{ loading ? '处理中...' : '生成评价' }}</button></div>
       <ResultBadge :badge="results.eval.badge" :text="results.eval.text" />
@@ -128,7 +123,7 @@
       <div class="grid">
         <div class="field"><label>经纬度（纬度,经度）</label><input v-model="form.weather.location" placeholder="39.905023,116.724502" /></div>
         <div class="field"><label>行政区划编码</label><input v-model="form.weather.adcode" placeholder="130681" /></div>
-        <div class="field"><label>天气类型</label><select v-model="form.weather.wtype"><option value="now">实时</option><option value="future">多日</option><option value="hours">逐时</option></select></div>
+        <div class="field"><label>天气类型</label><CustomSelect v-model="form.weather.wtype" :options="weatherTypeOptions" /></div>
         <div class="field"><label>附加字段</label><input v-model="form.weather.added" placeholder="alarm,air" /></div>
         <div class="field"><label>天数控制（多日生效）</label><input v-model.number="form.weather.getmd" type="number" placeholder="0" /></div>
       </div>
@@ -140,7 +135,7 @@
       <div class="section-title">地址解析为经纬度</div>
       <div class="grid">
         <div class="field" style="grid-column: span 2;"><label>地址 *</label><input v-model="form.geo.address" placeholder="北京市海淀区彩和坊路海淀西大街74号" /></div>
-        <div class="field"><label>解析策略</label><select v-model="form.geo.policy"><option value="0">标准</option><option value="1">宽松</option></select></div>
+        <div class="field"><label>解析策略</label><CustomSelect v-model="form.geo.policy" :options="geoPolicyOptions" /></div>
       </div>
       <div class="actions"><button class="btn" :disabled="loading" @click="workGeocoder">解析地址</button></div>
       <!-- 地址解析结果区：用事件委托接管「查该地天气」按钮（v-html 内联 onclick 在 Vue 中不可靠） -->
@@ -159,9 +154,31 @@
 import { reactive, ref, nextTick } from 'vue'
 import { request, qs, pickApiContent, apiState } from '../api'
 import ResultBadge from '../components/ResultBadge.vue'
+import CustomSelect from '../components/CustomSelect.vue'
 import { validateFields, weatherEmoji, findImageUrl } from '../utils/helpers'
 
 const sub = ref(localStorage.getItem('sub-work') || 'wk-eval')
+const subOptions = [
+  { value: 'wk-eval', label: '学生评价（大模型生成）' },
+  { value: 'wk-img', label: '文生图（通义万相）' },
+  { value: 'wk-talk', label: '多轮记忆对话' },
+  { value: 'wk-weather', label: '天气查询 / 经纬度解析' },
+]
+const evalStyleOptions = [
+  { value: '幽默', label: '幽默' },
+  { value: '严肃', label: '严肃' },
+  { value: '激励', label: '激励' },
+  { value: '批判', label: '批判' },
+]
+const weatherTypeOptions = [
+  { value: 'now', label: '实时' },
+  { value: 'future', label: '多日' },
+  { value: 'hours', label: '逐时' },
+]
+const geoPolicyOptions = [
+  { value: '0', label: '标准' },
+  { value: '1', label: '宽松' },
+]
 const loading = ref(false)
 const imageUrl = ref('')
 const weatherHtml = ref('')

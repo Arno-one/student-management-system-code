@@ -2,12 +2,7 @@
   <section id="page-teacher" class="page active">
     <div class="sub-bar">
       <label>选择功能</label>
-      <select v-model="sub" @change="saveSub">
-        <option value="te-create">新增教师</option>
-        <option value="te-import">批量导入（Excel）</option>
-        <option value="te-query">查询教师</option>
-        <option value="te-op">按ID查 / 更新教师</option>
-      </select>
+      <CustomSelect v-model="sub" :options="subOptions" @update:model-value="saveSub" />
     </div>
 
     <!-- 新增教师 -->
@@ -15,7 +10,7 @@
       <h3>新增教师</h3>
       <div class="grid">
         <div class="field"><label>姓名 *</label><input v-model="form.create.name" placeholder="李老师" /></div>
-        <div class="field"><label>性别 *</label><select v-model="form.create.gender"><option>男</option><option>女</option></select></div>
+        <div class="field"><label>性别 *</label><CustomSelect v-model="form.create.gender" :options="genderOptions" /></div>
         <div class="field"><label>联系电话 *</label><input v-model="form.create.phone" placeholder="13800000000" /></div>
         <div class="field"><label>职务 *</label><input v-model="form.create.title" placeholder="讲师" /></div>
         <div class="field"><label>所带班级ID *</label><input v-model.number="form.create.classId" type="number" placeholder="1" /></div>
@@ -49,15 +44,15 @@
       <h3>查询教师</h3>
       <div class="grid">
         <div class="field"><label>姓名</label><input v-model="form.query.name" /></div>
-        <div class="field"><label>性别</label><select v-model="form.query.gender"><option value="">全部</option><option>男</option><option>女</option></select></div>
+        <div class="field"><label>性别</label><CustomSelect v-model="form.query.gender" :options="genderQueryOptions" /></div>
         <div class="field"><label>职称</label><input v-model="form.query.title" /></div>
         <div class="field"><label>班级ID</label><input v-model.number="form.query.classId" type="number" /></div>
         <div class="field"><label>手机号</label><input v-model="form.query.phone" /></div>
         <div class="field"><label>邮箱</label><input v-model="form.query.email" /></div>
         <div class="field"><label>入职起始</label><input v-model="form.query.hstart" type="datetime-local" /></div>
         <div class="field"><label>入职截止</label><input v-model="form.query.hend" type="datetime-local" /></div>
-        <div class="field"><label>排序字段</label><select v-model="form.query.sortby"><option value="">默认</option><option value="id">编号</option><option value="name">姓名</option><option value="hire_date">入职时间</option><option value="create_time">创建时间</option><option value="class_id">班级</option></select></div>
-        <div class="field"><label>排序方向</label><select v-model="form.query.sortorder"><option value="asc">升序</option><option value="desc">降序</option></select></div>
+        <div class="field"><label>排序字段</label><CustomSelect v-model="form.query.sortby" :options="sortbyOptions" /></div>
+        <div class="field"><label>排序方向</label><CustomSelect v-model="form.query.sortorder" :options="sortorderOptions" /></div>
         <div class="field"><label>页码</label><input v-model.number="form.query.page" type="number" /></div>
         <div class="field"><label>每页条数</label><input v-model.number="form.query.psize" type="number" /></div>
       </div>
@@ -93,9 +88,37 @@ import { reactive, ref } from 'vue'
 import { request, qs, clean, pickList, pickOne, fetchBlob } from '../api'
 import ResultBadge from '../components/ResultBadge.vue'
 import DataTable from '../components/DataTable.vue'
+import CustomSelect from '../components/CustomSelect.vue'
 import { validateFields } from '../utils/helpers'
 
 const sub = ref(localStorage.getItem('sub-teacher') || 'te-create')
+const subOptions = [
+  { value: 'te-create', label: '新增教师' },
+  { value: 'te-import', label: '批量导入（Excel）' },
+  { value: 'te-query', label: '查询教师' },
+  { value: 'te-op', label: '按ID查 / 更新教师' },
+]
+const genderOptions = [
+  { value: '男', label: '男' },
+  { value: '女', label: '女' },
+]
+const genderQueryOptions = [
+  { value: '', label: '全部' },
+  { value: '男', label: '男' },
+  { value: '女', label: '女' },
+]
+const sortbyOptions = [
+  { value: '', label: '默认' },
+  { value: 'id', label: '编号' },
+  { value: 'name', label: '姓名' },
+  { value: 'hire_date', label: '入职时间' },
+  { value: 'create_time', label: '创建时间' },
+  { value: 'class_id', label: '班级' },
+]
+const sortorderOptions = [
+  { value: 'asc', label: '升序' },
+  { value: 'desc', label: '降序' },
+]
 const loading = ref(false)
 const listData = ref(null)
 const opData = ref(null)

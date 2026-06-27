@@ -7,7 +7,7 @@
 
 ## 📋 项目简介
 
-学生信息管理系统是一个功能完善的学生信息管理平台，涵盖学生基本信息、考核成绩、就业信息、班级管理和教师管理等核心模块，并提供多维度统计分析功能。项目还集成了 **DeepSeek 大模型**和**阿里云通义万相**，提供 AI 智能评价、多轮对话、文生图、天气/地址解析、智能邮件助手以及 NL2SQL 智能问数等能力，并配套推荐的 **Vue 3 前端工作台**和一个开箱即用的**纯静态前端控制台**。
+学生信息管理系统是一个功能完善的学生信息管理平台，涵盖学生基本信息、考核成绩、就业信息、班级管理、教师管理和统计分析等核心模块。当前版本已内置 **JWT + RBAC** 登录认证体系，提供登录态持久化、菜单/接口权限控制、系统用户/角色/权限管理；同时集成 **DeepSeek 大模型**和**阿里云通义万相**，提供 AI 智能评价、多轮对话、文生图、天气/地址解析、智能邮件助手以及 NL2SQL 智能问数等能力，并配套完整的 **Vue 3 前端工作台**。
 
 ### 技术栈
 
@@ -16,6 +16,7 @@
 | Web 框架 | FastAPI 0.x |
 | ORM | SQLAlchemy |
 | 数据校验 | Pydantic |
+| 认证鉴权 | JWT（Bearer Token）+ RBAC |
 | 数据库 | MySQL 5.7+ / 8.0 |
 | 数据库驱动 | PyMySQL |
 | 服务器 | Uvicorn |
@@ -25,7 +26,7 @@
 | 文件处理 | openpyxl（Excel 读写）、python-multipart（文件上传） |
 | SQL 工具 | sqlparse（NL2SQL 生成 SQL 格式化） |
 | 前端 | Vue 3 + Vite + Vue Router + highlight.js（推荐） |
-| 前端（静态版） | 原生 HTML + CSS + JavaScript（单页控制台，无需构建） |
+| 前端（静态版） | 原生 HTML + CSS + JavaScript（轻量调试面板） |
 | 语言 | Python 3.10+ |
 
 ---
@@ -51,7 +52,7 @@
 │           数据库连接 & 会话管理                    │
 ├──────────────────────┬──────────────────────────┤
 │     frontend-vue/    │       frontend/          │
-│   Vue 3 SPA (推荐)   │  纯静态控制台 (备选)       │
+│   Vue 3 SPA (推荐)   │  纯静态调试页（无鉴权）   │
 └──────────────────────┴──────────────────────────┘
 ```
 
@@ -63,6 +64,8 @@
 ├── config.py            # 集中加载 .env 配置（数据库 / 各类密钥）
 ├── requirements.txt     # Python 依赖清单
 ├── API/                 # Controller 层 — HTTP 请求/响应处理
+│   ├── auth_api.py                        # 登录 / 当前用户 / 修改密码
+│   ├── system_api.py                      # 系统用户 / 角色 / 权限管理（仅 admin 可访问）
 │   ├── student_api.py                     # 学生管理接口
 │   ├── score_api.py                       # 成绩管理接口
 │   ├── class_api.py                       # 班级管理接口
@@ -72,6 +75,7 @@
 │   ├── work_api.py                        # AI 作业 + 多轮对话 + 邮件模块接口
 │   └── nl2sql_api.py                      # NL2SQL 智能问数接口
 ├── service/             # Service 层 — 业务逻辑
+│   ├── auth_service.py                     # 登录、改密、用户/角色/权限管理
 │   ├── student_service.py
 │   ├── score_service.py                    # 含成绩批量导入/模板构建
 │   ├── class_service.py
@@ -81,6 +85,7 @@
 │   ├── work_service.py                    # AI 服务（评价/对话/文生图/天气/地址）
 │   └── nl2sql_service.py                  # 自然语言转 SQL、Schema 管理与查询执行
 ├── DAO/                 # 数据访问层 — 纯数据库操作
+│   ├── auth_dao.py                         # RBAC 用户/角色/权限读写
 │   ├── student_dao.py
 │   ├── score_dao.py
 │   ├── class_dao.py
@@ -90,6 +95,7 @@
 │   ├── talk_dao.py                         # 多轮对话会话/消息持久化
 │   └── nl2sql_dao.py                       # NL2SQL 会话、消息与缓存记录持久化
 ├── model/               # Model 层 — SQLAlchemy ORM 定义
+│   ├── Auth.py                             # sys_user / sys_role / sys_permission 等 RBAC 模型
 │   ├── Student.py
 │   ├── Score.py
 │   ├── Class.py
@@ -99,6 +105,7 @@
 │   └── NL2SQL.py                           # NL2SQL 会话、消息与缓存表
 ├── scheme/              # View 层 — Pydantic 校验 & 统一响应
 │   ├── response_scheme.py                 # 统一 API 响应格式
+│   ├── auth_scheme.py                     # 登录 / 系统用户 / 角色相关请求模型
 │   ├── student_scheme.py
 │   ├── schema_score.py
 │   ├── class_scheme.py
@@ -106,12 +113,14 @@
 │   ├── teacher_scheme.py
 │   └── statistical_request.py
 ├── util/                # 工具层 — 跨模块通用能力
+│   ├── auth.py                            # 密码哈希、JWT 生成与校验
+│   ├── rbac.py                            # 当前用户解析、角色/权限校验依赖
 │   ├── log.py                             # 日志系统（应用日志 + 请求访问日志）
 │   └── email.py                           # 邮件内容生成（大模型）与 SMTP 发送
 ├── LLM/                 # AI 大模型集成
 │   ├── ds_llm.py                          # DeepSeek 调用示例
 │   └── ds_llm.ipynb                       # Jupyter Notebook 交互示例
-├── frontend/            # 纯静态前端控制台（无需构建，直接打开）
+├── frontend/            # 纯静态调试页（无登录态 / 不含 RBAC）
 │   ├── index.html
 │   ├── styles.css
 │   └── app.js
@@ -132,6 +141,8 @@
 │       │   ├── ResultBadge.vue
 │       │   └── DataTable.vue
 │       └── views/
+│           ├── LoginView.vue
+│           ├── SystemView.vue
 │           ├── StudentView.vue
 │           ├── ScoreView.vue
 │           ├── EmploymentView.vue
@@ -203,11 +214,11 @@ python main.py
 
 ### 前端控制台
 
-项目提供两套前端，推荐使用 Vue 3 版本体验完整工作台能力，也可保留纯静态版本作为轻量备选：
+项目提供两套前端，推荐使用 Vue 3 版本体验完整登录鉴权、RBAC 菜单控制、系统管理和 NL2SQL 等能力；纯静态版本适合作为轻量调试面板：
 
 #### Vue 3 版本（推荐）— `frontend-vue/`
 
-基于 **Vue 3 + Vite + Vue Router**，支持组件化开发、热更新、懒加载、SQL 高亮和全局浅色 / 深色主题切换：
+基于 **Vue 3 + Vite + Vue Router**，支持登录鉴权、Bearer Token 持久化、路由守卫、按权限动态显示菜单、系统管理页、SQL 高亮和全局浅色 / 深色主题切换：
 
 ```bash
 cd frontend-vue
@@ -222,19 +233,23 @@ npm run dev
 npm run build
 ```
 
-- 开发服务器已配置代理，API 请求自动转发到 `http://localhost:8088`，无需手动填写接口地址；
-- 左侧导航通过 Vue Router 管理，覆盖学生、成绩、就业、班级、教师、统计、AI 作业、邮件和 NL2SQL 智能问数等模块；
+- 页面默认请求 `http://localhost:8088`，右上角 `API Endpoint` 可切换到其他后端地址；
+- 左侧导航通过 Vue Router 管理，覆盖登录、学生、成绩、就业、班级、教师、统计、AI 作业、邮件、NL2SQL 和系统管理等模块；
+- 支持 Bearer Token 持久化、启动时自动调用 `/auth/me` 恢复登录态、未登录跳转 `/login`、无菜单权限自动重定向；
+- `SystemView.vue` 提供系统用户、角色、权限分配管理，且仅 `admin` 角色且拥有 `system:page` 菜单权限的账号可见；
 - 支持全局浅色 / 深色主题切换，主题状态和子功能选择使用 `localStorage` 记忆；
 - NL2SQL 页面使用 `highlight.js` 高亮生成 SQL；
+- AI 作业多轮对话与 NL2SQL 默认绑定当前登录用户，无需手动输入 user_id；
 - 组件懒加载，首屏仅加载当前模块。
 
 #### 静态版本 — `frontend/`
 
-纯 HTML + CSS + 原生 JS，无需任何构建工具：
+纯 HTML + CSS + 原生 JS，无需任何构建工具，适合作为轻量调试面板：
 
 - 直接用浏览器打开 `frontend/index.html` 即可使用；
 - 页面右上角「接口地址」默认指向 `http://localhost:8088`，可随时修改；
-- 左侧按模块导航，每个模块用下拉框切换具体功能（界面会记住上次所在模块与功能）；
+- 覆盖学生、成绩、就业、班级、教师、统计、AI 作业、邮件等模块的基础调用；
+- **不包含登录页、Bearer Token 持久化、路由守卫、系统管理页和 NL2SQL 页面**，这些能力请使用 `frontend-vue/`；
 - 后端需开启 CORS（项目默认已放开），前端才能正常跨域调用接口。
 
 ### Docker 部署
@@ -262,6 +277,8 @@ docker run -d -p 8088:8088 \
 
 | 模块 | 前缀 | 标签 | 功能 |
 |------|------|------|------|
+| 登录认证 | `/auth` | 登录认证 | 账号登录、获取当前用户、当前用户修改密码 |
+| 系统管理 | `/system` | 系统管理 | 用户管理、角色管理、权限目录查询（仅 admin 可访问） |
 | 学生管理 | `/student` | 学生基本信息管理 | CRUD、逻辑删除/恢复、分页查询 |
 | 成绩管理 | `/score` | 学生考核成绩管理 | 单个/批量添加、修改、查询、删除、Excel 批量导入 |
 | 就业管理 | `/Employment` | 学生就业信息管理 | CRUD、逻辑删除/恢复、物理删除 |
@@ -293,7 +310,7 @@ docker run -d -p 8088:8088 \
 
 ### 多轮记忆对话
 
-基于 **DeepSeek V4 Flash** 实现的多轮对话，会话和消息全部持久化到 MySQL，支持多用户、多会话管理：
+基于 **DeepSeek V4 Flash** 实现的多轮对话，会话和消息全部持久化到 MySQL，支持多用户、多会话管理。当前后端会以**当前登录用户**作为会话归属，Vue 前端无需手动输入 user_id：
 
 - `GET /work/talks/sessions` — 获取用户的所有历史会话（按更新时间倒序）
 - `POST /work/talks/sessions` — 创建新会话
@@ -316,13 +333,38 @@ docker run -d -p 8088:8088 \
 
 ### NL2SQL 智能问数（`/nl2sql`）
 
-基于 **DeepSeek V4 Flash** 将自然语言问题转换为可执行 SQL，并返回查询结果、生成 SQL、耗时与缓存状态；查询会话与历史记录持久化到 MySQL。
+基于 **DeepSeek V4 Flash** 将自然语言问题转换为可执行 SQL，并返回查询结果、生成 SQL、耗时与缓存状态；查询会话与历史记录持久化到 MySQL。当前查询默认绑定当前登录用户，前端无需手动输入 user_id。
 
 - `POST /nl2sql/query` — 提交自然语言问题，自动生成 SQL 并执行查询
 - `GET /nl2sql/schema` — 获取可查询数据库表结构、字段说明、JOIN 关系与聚合口径
 - `GET /nl2sql/sessions` — 获取指定用户的历史查询会话和消息记录
 
 ---
+
+## 🔐 认证与 RBAC
+
+当前版本已接入基于 **Bearer Token** 的登录认证与 **RBAC** 权限模型：
+
+- 后端通过 `Authorization: Bearer <token>` 识别当前用户；
+- `util/auth.py` 负责密码强度校验、PBKDF2-SHA256 密码哈希、JWT 生成与校验；
+- `util/rbac.py` 提供 `get_current_user`、角色校验、权限校验依赖；
+- `API/system_api.py` 整体要求 `admin` 角色，同时细分到用户管理、角色管理、权限分配等接口权限；
+- 业务模块接口已按 `student:*`、`score:*`、`employment:*`、`class:*`、`teacher:*`、`statistics:view`、`work:use`、`email:send`、`nl2sql:use` 等权限码接入校验；
+- Vue 前端会在启动时通过 `/auth/me` 自动恢复登录态，并基于返回的 `menus / permissions / roles` 控制路由访问与菜单显示。
+
+当前认证相关接口：
+
+- `POST /auth/login` — 账号密码登录，返回 token、过期时间和当前用户信息
+- `GET /auth/me` — 获取当前登录用户信息、角色、权限与菜单
+- `POST /auth/change-password` — 当前登录用户修改密码
+- `GET /system/users` / `POST /system/users` / `PATCH /system/users/{user_id}` — 系统用户管理
+- `POST /system/users/{user_id}/reset-password` — 重置用户密码
+- `POST /system/users/{user_id}/assign-roles` — 为用户分配角色
+- `GET /system/roles` / `POST /system/roles` / `PATCH /system/roles/{role_id}` — 系统角色管理
+- `POST /system/roles/{role_id}/assign-permissions` — 为角色分配权限
+- `GET /system/permissions` — 查询权限目录
+
+> 注意：仓库当前只保留了 RBAC 模型与接口实现，**未包含初始化 RBAC 默认数据的 SQL 文件**。如需登录与系统管理能力，需要先在数据库中准备 `sys_user / sys_role / sys_permission / sys_user_role / sys_role_permission` 数据。
 
 ## 👨‍🏫 教师批量导入
 
@@ -414,6 +456,13 @@ DB_PASSWORD=你的数据库密码
 DB_HOST=localhost
 DB_PORT=3306
 DB_NAME=student_management_system
+DB_READONLY_USER=你的只读用户
+DB_READONLY_PASSWORD=你的只读用户密码
+
+# 登录认证 / RBAC
+AUTH_SECRET_KEY=请改成一个长度足够且随机的密钥
+AUTH_TOKEN_EXPIRE_MINUTES=720
+AUTH_PBKDF2_ITERATIONS=600000
 ```
 
 > `.env` 已被 `.gitignore` 忽略，不会提交到仓库；团队协作时只需共享 `.env.example` 模板。
@@ -424,13 +473,16 @@ DB_NAME=student_management_system
 
 ## 📝 开发说明
 
-- 数据表在应用启动时通过 `init_db()` 自动创建
+- 数据表在应用启动时通过 `init_db()` 自动创建；其中 RBAC 相关模型也会自动建表，但默认用户/角色/权限数据需要你自行初始化
 - 所有删除操作均为逻辑删除（`is_deleted` 字段），就业模块额外支持物理删除
+- 登录认证采用 Bearer Token；密码使用 PBKDF2-SHA256 哈希，JWT 过期时间与哈希迭代次数可通过 `.env` 配置
+- Vue 前端当前已经支持登录页、登录态恢复、菜单级权限控制、系统管理页、当前用户展示与退出登录
+- `frontend-vue` 通过 `src/api/index.js` 统一管理 API base URL 与 Bearer Token；如需改成完全相对路径部署，可再按需完善 `vite.config.js` 代理
 - 多轮对话的会话与消息已持久化到 MySQL，不会因服务重启丢失；历史上下文按会话 ID 自动加载
 - NL2SQL 智能问数的查询会话、消息和缓存记录已持久化到 MySQL，前端可查看历史记录并高亮展示生成 SQL
 - 教师批量导入采用「逐行校验、部分成功」策略：合格数据入库，失败数据跳过并返回原因，不会因个别行出错而整体失败
 - 日志由 `util/log.py` 统一管理，应用日志写入 `logs/app.log`、错误日志写入 `logs/error.log`，并接管 uvicorn 日志与请求访问日志
-- 前端提供两套实现：`frontend-vue/`（Vue 3，推荐，需 Node.js，支持全局浅色/深色主题与 NL2SQL SQL 高亮）和 `frontend/`（纯静态，直接浏览器打开）
+- 前端提供两套实现：`frontend-vue/`（Vue 3，推荐，支持登录鉴权、RBAC 菜单控制、系统管理、浅色/深色主题与 NL2SQL SQL 高亮）和 `frontend/`（纯静态调试页，不含登录态 / RBAC / 系统管理 / NL2SQL 页面）
 - DeepSeek、DashScope、腾讯地图等密钥请在 `.env` 中替换为自己的有效密钥
 
 ---

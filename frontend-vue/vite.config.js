@@ -15,7 +15,8 @@ export default defineConfig({
       '/statistics': 'http://localhost:8088',
       '/work': 'http://localhost:8088',
       '/email': 'http://localhost:8088',
-      '/nl2sql': 'http://localhost:8088'
+      '/nl2sql': 'http://localhost:8088',
+      '/rag': 'http://localhost:8088'
     }
   }
 })

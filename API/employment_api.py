@@ -4,10 +4,11 @@
 """
 from fastapi import Depends, HTTPException, APIRouter, Query
 from sqlalchemy.orm import Session
+from pydantic import BaseModel, Field
 from database import get_db
 from scheme import employment_scheme as EMP
 from scheme.response_scheme import success, success_page
-from service import employment_service
+from service import employment_service, extract_service
 from util.log import get_logger
 from util.rbac import require_permission
 
@@ -15,6 +16,32 @@ from util.rbac import require_permission
 logger = get_logger(__name__)
 
 employment_router = APIRouter()
+
+
+class NLExtractRequest(BaseModel):
+    """自然语言提取请求"""
+    text: str = Field(..., description="自然语言描述", min_length=1, max_length=2000)
+
+
+_EMPLOYMENT_REQUIRED_FIELDS = ["student_no", "student_name", "class_id"]
+
+
+@employment_router.post("/employment_extract", summary="自然语言提取就业信息", dependencies=[Depends(require_permission('employment:create'))])
+def extract_employment(body: NLExtractRequest):
+    logger.info("NL提取就业信息：text=%s", body.text[:80])
+    result = extract_service.extract_fields(
+        text=body.text,
+        schema=EMP.EmploymentExtract,
+        entity="employment",
+        required_fields=_EMPLOYMENT_REQUIRED_FIELDS,
+    )
+    if result["error"]:
+        logger.warning("NL提取就业信息失败：%s", result["error"])
+    else:
+        logger.info("NL提取就业信息成功：提取字段=%s, 缺失=%s",
+                    list(result["extracted"].keys()) if result["extracted"] else 0,
+                    result["missing_required"])
+    return success(result)
 
 
 @employment_router.post("/employment_create",

@@ -2,10 +2,7 @@
   <section id="page-class" class="page active">
     <div class="sub-bar">
       <label>选择功能</label>
-      <select v-model="sub" @change="saveSub">
-        <option value="cl-save">新增 / 修改班级</option>
-        <option value="cl-query">查询 / 删除班级</option>
-      </select>
+      <CustomSelect v-model="sub" :options="subOptions" @update:model-value="saveSub" />
     </div>
 
     <!-- 新增/修改 -->
@@ -45,9 +42,14 @@ import { reactive, ref } from 'vue'
 import { request, qs, pickList, pickOne } from '../api'
 import ResultBadge from '../components/ResultBadge.vue'
 import DataTable from '../components/DataTable.vue'
+import CustomSelect from '../components/CustomSelect.vue'
 import { validateFields } from '../utils/helpers'
 
 const sub = ref(localStorage.getItem('sub-class') || 'cl-save')
+const subOptions = [
+  { value: 'cl-save', label: '新增 / 修改班级' },
+  { value: 'cl-query', label: '查询 / 删除班级' },
+]
 const loading = ref(false)
 const listData = ref(null)
 

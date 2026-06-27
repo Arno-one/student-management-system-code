@@ -55,3 +55,6 @@ LOG_BACKUP_DAYS = int(os.getenv("LOG_BACKUP_DAYS", "7"))
 AUTH_SECRET_KEY = os.getenv("AUTH_SECRET_KEY", "change-me-in-env")
 AUTH_TOKEN_EXPIRE_MINUTES = int(os.getenv("AUTH_TOKEN_EXPIRE_MINUTES", "720"))
 AUTH_PBKDF2_ITERATIONS = int(os.getenv("AUTH_PBKDF2_ITERATIONS", "600000"))
+
+# ==================== LLM 提取服务 ====================
+LLM_EXTRACT_PROVIDER = os.getenv("LLM_EXTRACT_PROVIDER", "deepseek")

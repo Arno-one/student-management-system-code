@@ -2,12 +2,7 @@
   <section id="page-score" class="page active">
     <div class="sub-bar">
       <label>选择功能</label>
-      <select v-model="sub" @change="saveSub">
-        <option value="sc-add">新增成绩</option>
-        <option value="sc-batch">批量导入成绩</option>
-        <option value="sc-op">修改 / 删除成绩</option>
-        <option value="sc-query">查询成绩</option>
-      </select>
+      <CustomSelect v-model="sub" :options="subOptions" @update:model-value="saveSub" />
     </div>
 
     <!-- 新增成绩 -->
@@ -65,12 +60,29 @@
         <div class="field"><label>班级ID</label><input v-model.number="form.query.classId" type="number" /></div>
         <div class="field"><label>最低分</label><input v-model.number="form.query.min" type="number" /></div>
         <div class="field"><label>最高分</label><input v-model.number="form.query.max" type="number" /></div>
-        <div class="field"><label>按学号排序</label><select v-model="form.query.sortNo"><option value="">不排序</option><option value="asc">升序</option><option value="desc">降序</option></select></div>
-        <div class="field"><label>按成绩排序</label><select v-model="form.query.sortSc"><option value="">不排序</option><option value="asc">升序</option><option value="desc">降序</option></select></div>
+        <div class="field"><label>按学号排序</label><CustomSelect v-model="form.query.sortNo" :options="sortOptions" /></div>
+        <div class="field"><label>按成绩排序</label><CustomSelect v-model="form.query.sortSc" :options="sortOptions" /></div>
       </div>
       <div class="actions"><button class="btn" :disabled="loading" @click="queryScore">{{ loading ? '处理中...' : '查询' }}</button></div>
       <DataTable :data="listData" />
       <ResultBadge :badge="results.query.badge" :text="results.query.text" />
+    </div>
+
+    <!-- 智能录入 -->
+    <div id="sc-nl" class="card subcard" :class="{ show: sub === 'sc-nl' }">
+      <SmartInput
+        title="智能录入成绩"
+        input-label="用自然语言描述成绩"
+        placeholder="例如：学号S2025001的学生第一次考试成绩88分"
+        extract-btn-text="智能提取"
+        confirm-btn-text="确认创建"
+        extract-url="/score/extract"
+        submit-url="/score/add"
+        submit-method="POST"
+        :fields="scoreFields"
+        :field-map="scoreFieldMap"
+        @submitted="onNlSubmitted"
+      />
     </div>
   </section>
 </template>
@@ -80,9 +92,23 @@ import { reactive, ref } from 'vue'
 import { request, qs, pickList, fetchBlob } from '../api'
 import ResultBadge from '../components/ResultBadge.vue'
 import DataTable from '../components/DataTable.vue'
+import SmartInput from '../components/SmartInput.vue'
+import CustomSelect from '../components/CustomSelect.vue'
 import { validateFields } from '../utils/helpers'
 
 const sub = ref(localStorage.getItem('sub-score') || 'sc-add')
+const subOptions = [
+  { value: 'sc-add', label: '新增成绩' },
+  { value: 'sc-batch', label: '批量导入成绩' },
+  { value: 'sc-op', label: '修改 / 删除成绩' },
+  { value: 'sc-query', label: '查询成绩' },
+  { value: 'sc-nl', label: '智能录入' },
+]
+const sortOptions = [
+  { value: '', label: '不排序' },
+  { value: 'asc', label: '升序' },
+  { value: 'desc', label: '降序' },
+]
 const loading = ref(false)
 const listData = ref(null)
 const fileInput = ref(null)
@@ -97,8 +123,21 @@ const form = reactive({
 
 const results = reactive({
   add: { badge: null, text: '' }, batch: { badge: null, text: '' },
-  op: { badge: null, text: '' }, query: { badge: null, text: '' }
+  op: { badge: null, text: '' }, query: { badge: null, text: '' },
+  nl: { badge: null, text: '' }
 })
+
+const scoreFields = [
+  { key: 'student_no', label: '学号', type: 'text', required: true, placeholder: 'S2025001' },
+  { key: 'exam_order', label: '考试次序', type: 'number', required: true, placeholder: '1' },
+  { key: 'score', label: '成绩（0-100）', type: 'number', required: true, placeholder: '88' }
+]
+
+const scoreFieldMap = {
+  student_no: 'student_no',
+  exam_order: 'exam_order',
+  score: 'score'
+}
 
 function saveSub() { localStorage.setItem('sub-score', sub.value) }
 
@@ -181,5 +220,9 @@ async function queryScore() {
     sort_no: form.query.sortNo || null, sort_score: form.query.sortSc || null
   }))
   listData.value = pickList(r.data)
+}
+
+function onNlSubmitted(data) {
+  setResult('nl', true, '成绩添加成功')
 }
 </script>
