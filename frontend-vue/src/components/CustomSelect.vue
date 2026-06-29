@@ -179,6 +179,8 @@ onBeforeUnmount(() => {
   box-shadow: var(--shadow-lg); overflow: hidden;
   max-height: 300px; overflow-y: auto;
   padding: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(209, 161, 90, 0.42) rgba(255,255,255,0.04);
 }
 
 /* ── 选项 ── */
@@ -198,6 +200,72 @@ onBeforeUnmount(() => {
 }
 
 .cs-check { flex-shrink: 0; color: var(--gold); }
+
+.cs-theme--light.cs-drop {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.98), rgba(240,248,255,0.96));
+  border-color: rgba(61, 149, 232, 0.18);
+  box-shadow: 0 20px 45px rgba(65, 122, 176, 0.16);
+  scrollbar-color: rgba(61, 149, 232, 0.4) rgba(61, 149, 232, 0.08);
+}
+
+.cs-theme--light .cs-option {
+  color: #35516c;
+}
+
+.cs-theme--light .cs-option:hover,
+.cs-theme--light .cs-option--active {
+  background: linear-gradient(135deg, rgba(61, 149, 232, 0.1), rgba(61, 149, 232, 0.04));
+  color: #163a5c;
+}
+
+.cs-theme--light .cs-option--selected {
+  color: #1677d2;
+  background: linear-gradient(90deg, rgba(22,119,210,0.14), rgba(22,119,210,0.05));
+}
+
+.cs-theme--light .cs-check {
+  color: #1677d2;
+}
+
+.cs-drop::-webkit-scrollbar {
+  width: 10px;
+}
+
+.cs-drop::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.04);
+  border-radius: 999px;
+}
+
+.cs-drop::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(229, 192, 131, 0.72), rgba(125, 157, 255, 0.44)) padding-box;
+  background-clip: padding-box;
+}
+
+.cs-drop::-webkit-scrollbar-thumb:hover {
+  background:
+    linear-gradient(180deg, rgba(229, 192, 131, 0.9), rgba(125, 157, 255, 0.6)) padding-box;
+  background-clip: padding-box;
+}
+
+.cs-theme--light.cs-drop::-webkit-scrollbar-track {
+  background: rgba(61, 149, 232, 0.08);
+}
+
+.cs-theme--light.cs-drop::-webkit-scrollbar-thumb {
+  background:
+    linear-gradient(180deg, rgba(61, 149, 232, 0.72), rgba(22, 119, 210, 0.42)) padding-box;
+  background-clip: padding-box;
+}
+
+.cs-theme--light.cs-drop::-webkit-scrollbar-thumb:hover {
+  background:
+    linear-gradient(180deg, rgba(61, 149, 232, 0.88), rgba(22, 119, 210, 0.58)) padding-box;
+  background-clip: padding-box;
+}
 
 /* ── Teleport 过渡动画 ── */
 .cs-drop-enter-active { transition: opacity 0.15s ease, transform 0.15s ease; }

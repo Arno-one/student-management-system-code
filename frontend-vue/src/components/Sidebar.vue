@@ -65,7 +65,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { getMenuCodes, hasRole } from '../api'
 import { getModuleDefaultSub, getModuleSubStorageKey, isValidModuleSub, moduleNavigation } from '../config/moduleNavigation'
@@ -78,6 +78,7 @@ const emit = defineEmits(['navigate'])
 
 const route = useRoute()
 const isPublicPage = computed(() => !!route.meta?.public)
+const expandedPage = ref('')
 
 const visibleNavItems = computed(() => {
   const menuCodes = getMenuCodes()
@@ -108,7 +109,7 @@ function hasChildren(item) {
 }
 
 function showChildren(item) {
-  return !props.collapsed && isActivePage(item.page) && hasChildren(item)
+  return !props.collapsed && expandedPage.value === item.page && hasChildren(item)
 }
 
 function getTargetSub(item) {
@@ -118,6 +119,30 @@ function getTargetSub(item) {
 }
 
 function handleNavigate(item) {
+  if (hasChildren(item)) {
+    expandedPage.value = expandedPage.value === item.page ? '' : item.page
+    return
+  }
   emit('navigate', { page: item.page, sub: getTargetSub(item) })
 }
+
+watch(
+  () => props.currentPage,
+  (page) => {
+    const currentItem = visibleNavItems.value.find(item => item.page === page)
+    expandedPage.value = currentItem && hasChildren(currentItem) ? currentItem.page : ''
+  },
+  { immediate: true }
+)
+
+watch(
+  () => props.collapsed,
+  (collapsed) => {
+    if (collapsed) expandedPage.value = ''
+    else {
+      const currentItem = visibleNavItems.value.find(item => item.page === props.currentPage)
+      expandedPage.value = currentItem && hasChildren(currentItem) ? currentItem.page : ''
+    }
+  }
+)
 </script>
