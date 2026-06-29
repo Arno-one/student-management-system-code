@@ -5,53 +5,40 @@
       <span class="sub-bar-hint">学业导师 · 成绩查询 · 知识问答 · 陪伴对话</span>
     </div>
 
-    <div id="agent-chat" class="card subcard show">
-      <!-- ====== 顶部操作栏 ====== -->
-      <div class="agent-topbar">
-        <div class="agent-topbar-left">
+    <div class="agent-workspace">
+      <div id="agent-chat" class="card subcard show agent-chat-main">
+        <!-- ====== 顶部操作栏 ====== -->
+        <div class="agent-topbar">
+          <div class="agent-topbar-left">
           <div class="agent-persona-row">
-            <h3>{{ currentPersona?.name || '学业导师' }}</h3>
-            <CustomSelect v-model="selectedPersona" :options="personaOptions" :disabled="loading" />
+              <h3>{{ personaTitle(currentPersona) }}</h3>
+              <CustomSelect v-model="selectedPersona" :options="personaOptions" :disabled="loading" />
+            </div>
+            <p class="hint">{{ currentPersona?.description || '学业导师，帮你查成绩、分析学业、回答问题' }}</p>
           </div>
-          <p class="hint">{{ currentPersona?.description || '学业导师，帮你查成绩、分析学业、回答问题' }}</p>
-        </div>
-        <div class="agent-topbar-right">
-          <button class="agent-btn secondary" :disabled="loading" @click="newChat">
-            + 新对话
-          </button>
-        </div>
-      </div>
-
-      <!-- ====== 会话列表（可折叠） ====== -->
-      <div class="agent-sessions" v-if="sessions.length > 0">
-        <button
-          v-for="s in sessions"
-          :key="s.id"
-          class="agent-session-chip"
-          :class="{ active: s.id === currentSessionId }"
-          @click="loadSession(s.id)"
-        >
-          <span class="agent-session-title">{{ s.summary || s.title || '对话' }}</span>
-          <span class="agent-session-time">{{ fmtTime(s.update_time) }}</span>
-        </button>
-      </div>
-
-      <!-- ====== 消息列表 ====== -->
-      <div class="agent-messages" ref="msgListRef">
-        <div class="agent-empty" v-if="messages.length === 0 && !loading">
-          <div class="agent-empty-icon">🤖</div>
-          <p>和{{ currentPersona?.name || '学业导师' }}聊聊吧</p>
-          <p class="agent-empty-sub">{{ emptyHint }}</p>
+          <div class="agent-topbar-right">
+            <button class="agent-btn secondary" :disabled="loading" @click="newChat">
+              + 新对话
+            </button>
+          </div>
         </div>
 
-        <div
-          v-for="(msg, idx) in messages"
-          :key="idx"
-          class="agent-msg"
-          :class="'agent-msg-' + msg.role"
-        >
-          <div class="agent-msg-avatar">{{ msg.role === 'user' ? '我' : '师' }}</div>
-          <div class="agent-msg-body">
+        <!-- ====== 消息列表 ====== -->
+        <div class="agent-messages" ref="msgListRef">
+          <div class="agent-empty" v-if="messages.length === 0 && !loading">
+            <div class="agent-empty-icon">🤖</div>
+            <p>和{{ currentPersona?.name || '学业导师' }}聊聊吧</p>
+            <p class="agent-empty-sub">{{ emptyHint }}</p>
+          </div>
+
+          <div
+            v-for="(msg, idx) in messages"
+            :key="idx"
+            class="agent-msg"
+            :class="'agent-msg-' + msg.role"
+          >
+            <div class="agent-msg-avatar">{{ msg.role === 'user' ? '我' : '师' }}</div>
+            <div class="agent-msg-body">
             <!-- Assistant 等待首个流式片段时，复用当前消息气泡，避免额外生成一条带头像的 loading 消息 -->
             <div class="agent-loading" v-if="msg.role === 'assistant' && msg._streaming && !msg.content">
               <span class="agent-loading-dot"></span>
@@ -74,9 +61,20 @@
             <!-- 结构化卡片：自然语言回复继续走 Markdown，天气等结构化结果单独渲染 -->
             <div class="agent-cards" v-if="msg.cards?.length">
               <WeatherCard
-                v-for="(card, ci) in msg.cards.filter(c => c.type === 'weather')"
-                :key="ci"
+                v-for="(card, ci) in msg.cards.filter(c => c.type === 'weather' && isCardVersionSupported(c))"
+                :key="'weather-' + ci"
                 :card="card"
+              />
+              <RouteCard
+                v-for="(card, ci) in msg.cards.filter(c => c.type === 'route' && isCardVersionSupported(c))"
+                :key="'route-' + ci"
+                :card="card"
+              />
+              <PoiListCard
+                v-for="(card, ci) in msg.cards.filter(c => c.type === 'poi_list' && isCardVersionSupported(c))"
+                :key="'poi-list-' + ci"
+                :card="card"
+                @plan-route="fillRouteDraft"
               />
             </div>
 
@@ -119,7 +117,7 @@
               </div>
             </div>
 
-            <!-- 任务级反馈：绑定 AgentTask.id，重复提交由后端覆盖 -->
+              <!-- 任务级反馈：绑定 AgentTask.id，同一轮对话只能提交一次 -->
             <div class="agent-feedback" v-if="msg.role === 'assistant' && msg.feedback?.taskId && !msg._streaming">
               <div class="agent-feedback-actions">
                 <button
@@ -161,36 +159,69 @@
                 <span class="agent-source-preview">{{ src.text_preview }}</span>
               </div>
             </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ====== 示例问题（无消息时展示） ====== -->
+        <div class="rag-examples" v-if="messages.length === 0">
+          <span class="rag-examples-label">试试问</span>
+          <button v-for="q in exampleQuestions" :key="q" class="rag-example-chip"
+            :disabled="loading" @click="form.message = q; doSend()">{{ q }}</button>
+        </div>
+
+        <!-- ====== 输入区 ====== -->
+        <div class="agent-input-area">
+          <textarea
+            v-model="form.message"
+            placeholder="输入你想问的..."
+            :disabled="loading"
+            rows="2"
+            @keydown.ctrl.enter="doSend"
+            @keydown.meta.enter="doSend"
+          ></textarea>
+          <div class="agent-input-bar">
+            <span class="rag-input-count">{{ form.message.length }} / 2000</span>
+            <button class="rag-submit-btn" :disabled="loading || !form.message.trim()" @click="doSend">
+              <span class="rag-submit-icon">→</span>
+              <span>{{ loading ? '思考中...' : '发送' }}</span>
+            </button>
           </div>
         </div>
-
       </div>
 
-      <!-- ====== 示例问题（无消息时展示） ====== -->
-      <div class="rag-examples" v-if="messages.length === 0">
-        <span class="rag-examples-label">试试问</span>
-        <button v-for="q in exampleQuestions" :key="q" class="rag-example-chip"
-          :disabled="loading" @click="form.message = q; doSend()">{{ q }}</button>
-      </div>
-
-      <!-- ====== 输入区 ====== -->
-      <div class="agent-input-area">
-        <textarea
-          v-model="form.message"
-          placeholder="输入你想问的..."
-          :disabled="loading"
-          rows="2"
-          @keydown.ctrl.enter="doSend"
-          @keydown.meta.enter="doSend"
-        ></textarea>
-        <div class="agent-input-bar">
-          <span class="rag-input-count">{{ form.message.length }} / 2000</span>
-          <button class="rag-submit-btn" :disabled="loading || !form.message.trim()" @click="doSend">
-            <span class="rag-submit-icon">→</span>
-            <span>{{ loading ? '思考中...' : '发送' }}</span>
+      <aside class="agent-summary-panel">
+        <div class="agent-summary-head">
+          <div>
+            <h4>历史摘要</h4>
+            <p>只展示每轮多轮对话的摘要内容</p>
+          </div>
+          <button class="agent-summary-new" :disabled="loading" @click="newChat">+</button>
+        </div>
+        <div class="agent-summary-loading" v-if="sessionsLoading">
+          历史摘要加载中...
+        </div>
+        <div class="agent-summary-error" v-else-if="sessionsLoadError">
+          <span>{{ sessionsLoadError }}</span>
+          <button type="button" class="agent-summary-retry" @click="loadSessions()">重新加载</button>
+        </div>
+        <div class="agent-summary-empty" v-else-if="sessions.length === 0">
+          暂无历史摘要
+        </div>
+        <div v-else class="agent-summary-list">
+          <button
+            v-for="s in sessions"
+            :key="s.id"
+            class="agent-summary-item"
+            :class="{ active: s.id === currentSessionId }"
+            @click="loadSession(s.id)"
+          >
+            <span class="agent-summary-text">{{ sessionSummary(s) }}</span>
+            <span class="agent-summary-time">{{ fmtTime(s.update_time || s.create_time) }}</span>
           </button>
         </div>
-      </div>
+      </aside>
     </div>
   </section>
 </template>
@@ -201,6 +232,9 @@ import { marked } from 'marked'
 import { request, getBaseUrl, getAuthHeader } from '../api'
 import CustomSelect from '../components/CustomSelect.vue'
 import WeatherCard from '../components/WeatherCard.vue'
+import RouteCard from '../components/RouteCard.vue'
+import PoiListCard from '../components/PoiListCard.vue'
+import { fallbackAgentPersonas } from '../config/agentPersonas'
 
 // 配置 marked 不渲染原始 HTML（防止 XSS）
 marked.setOptions({ breaks: true, gfm: true })
@@ -213,7 +247,9 @@ function renderMarkdown(text) {
 const loading = ref(false)
 const messages = ref([])
 const sessions = ref([])
-const personas = ref([])
+const sessionsLoading = ref(false)
+const sessionsLoadError = ref('')
+const personas = ref([...fallbackAgentPersonas])
 const selectedPersona = ref('academic_mentor')
 const currentSessionId = ref(null)
 const msgListRef = ref(null)
@@ -221,7 +257,7 @@ const msgListRef = ref(null)
 const form = reactive({ message: '' })
 
 const currentPersona = computed(() => personas.value.find(p => p.id === selectedPersona.value))
-const personaOptions = computed(() => personas.value.map(p => ({ value: p.id, label: p.name })))
+const personaOptions = computed(() => personas.value.map(p => ({ value: p.id, label: personaTitle(p) })))
 
 const personaExamples = {
   academic_mentor: [
@@ -240,11 +276,20 @@ const personaExamples = {
     '帮我做一个今晚能完成的小计划',
     '我今天状态不好，但又不想放弃',
   ],
+  xinge: [
+    '昕哥，我这次又粗心错题了，帮我复盘下',
+    '好兄弟，我最近学习有点没劲',
+    '我这个错误以后怎么避免？',
+    '帮我把今天要做的事拆一下',
+    '从宝安中心到龙岗坐地铁怎么去',
+    '帮我写封邮件给老师说明情况',
+  ],
 }
 
 const personaEmptyHints = {
   academic_mentor: '可以查成绩、问制度、聊学习，也可以说说心里话',
   companion_head_teacher: '可以聊压力、拖延、考试焦虑，也可以一起拆一个小计划',
+  xinge: '可以让昕哥帮你复盘错误、鼓劲打气、拆下一步行动',
 }
 
 const exampleQuestions = computed(() => personaExamples[selectedPersona.value] || personaExamples.academic_mentor)
@@ -256,8 +301,16 @@ function toolLabel(name) {
     rag_tool: '知识检索',
     nl2sql_tool: '数据查询',
     student_tool: '身份识别',
+    weather_tool: '天气查询',
+    commute_plan_tool: '通勤规划',
+    nearby_service_tool: '周边服务',
   }
   return map[name] || name
+}
+
+function personaTitle(persona) {
+  if (!persona) return '🎓 学业导师'
+  return [persona.icon, persona.name].filter(Boolean).join(' ')
 }
 
 function fmtTime(ts) {
@@ -270,25 +323,66 @@ function fmtTime(ts) {
   return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
 }
 
-function createFeedback(taskId = null) {
+function normalizeSessions(payload) {
+  // 兼容后端直接返回数组，或将列表包在常见字段里的情况
+  if (Array.isArray(payload)) return payload.filter(item => item && typeof item === 'object')
+  if (payload && typeof payload === 'object') {
+    for (const key of ['items', 'list', 'records', 'rows', 'result']) {
+      if (Array.isArray(payload[key])) {
+        return payload[key].filter(item => item && typeof item === 'object')
+      }
+    }
+  }
+  return []
+}
+
+function sessionSummary(session) {
+  // 旧会话可能还没生成 summary，这里优先回退到 title，避免列表看起来像“没数据”
+  const summary = String(session?.summary || session?.title || '').trim()
+  if (summary) return summary
+  return '摘要生成中，继续对话后会自动更新。'
+}
+
+function isCardVersionSupported(card) {
+  return !card?.card_version || card.card_version === 1
+}
+
+function createFeedback(taskId = null, saved = null) {
+  const submitted = !!saved?.submitted
   return {
     taskId,
-    rating: null,
-    draftComment: '',
+    rating: saved?.rating || null,
+    draftComment: saved?.comment || '',
     open: false,
     loading: false,
-    submitted: false,
-    status: '',
+    submitted,
+    status: submitted ? '已记录反馈' : '',
   }
 }
 
-async function loadSessions() {
+async function loadSessions({ silent = false } = {}) {
+  if (!silent) {
+    sessionsLoading.value = true
+    sessionsLoadError.value = ''
+  }
   try {
     const r = await request('GET', '/agent/sessions')
     if (r.ok && r.data?.code === 200) {
-      sessions.value = r.data.data || []
+      sessions.value = normalizeSessions(r.data.data)
+      return
     }
-  } catch (_) { /* 静默失败 */ }
+    if (!silent) {
+      sessionsLoadError.value = r.data?.msg || `历史摘要加载失败（${r.status || '未知状态'}）`
+    }
+  } catch (_) {
+    if (!silent) {
+      sessionsLoadError.value = '历史摘要加载失败，请检查后端服务或稍后重试'
+    }
+  } finally {
+    if (!silent) {
+      sessionsLoading.value = false
+    }
+  }
 }
 
 async function loadSession(sessionId) {
@@ -303,10 +397,13 @@ async function loadSession(sessionId) {
         toolCalls: m.metadata?.tool_calls || null,
         sources: m.metadata?.sources || null,
         cards: m.metadata?.cards || null,
-        feedback: m.role === 'assistant' && m.metadata?.task_id ? createFeedback(m.metadata.task_id) : null,
+        feedback: m.role === 'assistant' && m.metadata?.task_id
+          ? createFeedback(m.metadata.task_id, m.metadata.feedback)
+          : null,
         // 从持久化 metadata 重建 HITL 卡片
         hitl: m.metadata?.hitl ? {
           tool_name: m.metadata.hitl.tool_name,
+          stepId: m.metadata.hitl.step_id || 1,
           preview: m.metadata.hitl.preview || {},
           riskLevel: m.metadata.hitl.risk_level || 'medium',
           timeoutSeconds: m.metadata.hitl.timeout_seconds || 600,
@@ -327,6 +424,10 @@ async function loadSession(sessionId) {
 function newChat() {
   currentSessionId.value = null
   messages.value = []
+}
+
+function fillRouteDraft(destination) {
+  form.message = `从 [请补充起点] 到 ${destination} 怎么去？`
 }
 
 async function doSend() {
@@ -401,7 +502,7 @@ async function doSend() {
   } finally {
     loading.value = false
     scrollBottom()
-    loadSessions()
+    loadSessions({ silent: true })
   }
 }
 
@@ -460,6 +561,7 @@ function handleSSE(event, data, currentMsg, msgIdx) {
       // HITL: 暂停流，展示确认卡片
       currentMsg().hitl = {
         tool_name: data.tool_name,
+        stepId: data.step_id || 1,
         preview: data.preview || {},
         riskLevel: data.risk_level || 'medium',
         timeoutSeconds: data.timeout_seconds || 600,
@@ -514,6 +616,7 @@ async function submitFeedback(msg, rating, withComment = false) {
       msg.feedback.open = false
       msg.feedback.status = '已记录反馈'
     } else {
+      if (r.status === 409) msg.feedback.submitted = true
       msg.feedback.status = r.data?.detail || r.data?.msg || '反馈提交失败'
     }
   } catch (e) {
@@ -530,7 +633,7 @@ async function confirmHitl(msg) {
     const r = await request('POST', '/agent/step/confirm', {
       body: {
         task_id: String(currentSessionId.value || 'default'),
-        step_id: 1,
+        step_id: msg.hitl.stepId || 1,
         confirmed: true,
         modified_params: {
           subject: msg.hitl.preview.subject,
@@ -562,7 +665,7 @@ async function cancelHitl(msg) {
   msg.hitl.loading = true
   try {
     await request('POST', '/agent/step/confirm', {
-      body: { task_id: String(currentSessionId.value || 'default'), step_id: 1, confirmed: false },
+      body: { task_id: String(currentSessionId.value || 'default'), step_id: msg.hitl.stepId || 1, confirmed: false },
     })
   } catch (_) { /* 静默 */ }
   msg.hitl.resolved = true
@@ -578,26 +681,37 @@ function scrollBottom() {
   })
 }
 
-// 初始化加载会话列表
-loadSessions()
-
 async function loadPersonas() {
   try {
     const r = await request('GET', '/agent/personas')
-    if (r.ok && r.data?.code === 200) {
-      personas.value = r.data.data || []
+    if (r.ok && r.data?.code === 200 && Array.isArray(r.data.data) && r.data.data.length > 0) {
+      personas.value = r.data.data
       if (personas.value.length > 0 && !personas.value.find(p => p.id === selectedPersona.value)) {
         selectedPersona.value = personas.value[0].id
       }
     }
-  } catch (_) { /* 静默失败，保留 academic_mentor 默认值 */ }
+  } catch (_) { /* 静默失败，保留前端兜底角色 */ }
 }
 
-onMounted(() => { loadPersonas() })
+onMounted(() => {
+  loadPersonas()
+  loadSessions()
+})
 </script>
 
 <style scoped>
 .sub-bar-hint { margin-left: auto; font-size: 12px; color: var(--text-dim); opacity: 0.7; }
+
+.agent-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  gap: 16px;
+  align-items: start;
+}
+
+.agent-chat-main {
+  min-width: 0;
+}
 
 /* ====== 顶部 ====== */
 .agent-topbar {
@@ -619,21 +733,149 @@ onMounted(() => { loadPersonas() })
 .agent-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
 .agent-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* ====== 会话列表 ====== */
-.agent-sessions {
-  display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 0;
-  border-bottom: 1px solid var(--line); margin-bottom: 12px;
+/* ====== 右侧历史摘要 ====== */
+.agent-summary-panel {
+  position: sticky;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: calc(100vh - 140px);
+  padding: 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--panel-solid);
+  box-shadow: var(--shadow-sm);
+  overflow-y: auto;
 }
-.agent-session-chip {
-  display: flex; flex-direction: column; gap: 2px;
-  padding: 6px 14px; border: 1px solid var(--line); border-radius: 8px;
-  background: var(--panel-2); color: var(--text-soft); font-size: 12px;
-  cursor: pointer; transition: all var(--dur-fast);
+
+.agent-summary-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
 }
-.agent-session-chip:hover { border-color: var(--gold); }
-.agent-session-chip.active { border-color: var(--gold); background: var(--gold-bg); color: var(--gold); }
-.agent-session-title { font-weight: 600; }
-.agent-session-time { font-size: 11px; color: var(--text-muted); }
+
+.agent-summary-head h4 {
+  margin: 0;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.agent-summary-head p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.agent-summary-new {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  background: var(--panel-2);
+  color: var(--text-soft);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.agent-summary-new:hover:not(:disabled) {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: var(--gold-bg);
+}
+
+.agent-summary-new:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.agent-summary-empty {
+  padding: 18px 10px;
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.agent-summary-loading,
+.agent-summary-error {
+  display: grid;
+  gap: 10px;
+  padding: 18px 10px;
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.agent-summary-list {
+  display: grid;
+  gap: 8px;
+}
+
+.agent-summary-retry {
+  justify-self: center;
+  padding: 6px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--text-soft);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.agent-summary-retry:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: var(--gold-bg);
+}
+
+.agent-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--text-soft);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--dur-fast), background var(--dur-fast), transform var(--dur-fast);
+}
+
+.agent-summary-item:hover {
+  border-color: var(--gold);
+  transform: translateY(-1px);
+}
+
+.agent-summary-item.active {
+  border-color: var(--gold);
+  background: var(--gold-bg);
+}
+
+.agent-summary-text {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+}
+
+.agent-summary-time {
+  color: var(--text-muted);
+  font-size: 11px;
+}
 
 /* ====== 消息列表 ====== */
 .agent-messages {
@@ -882,5 +1124,33 @@ onMounted(() => { loadPersonas() })
 }
 @keyframes cursor-blink {
   50% { opacity: 0; }
+}
+
+@media (max-width: 1120px) {
+  .agent-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .agent-summary-panel {
+    position: static;
+    max-height: 320px;
+  }
+}
+
+@media (max-width: 680px) {
+  .agent-topbar,
+  .agent-summary-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .agent-persona-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .agent-msg-body {
+    max-width: 88%;
+  }
 }
 </style>
