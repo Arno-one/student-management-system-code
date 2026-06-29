@@ -16,11 +16,6 @@
           <span class="rag-brief-tag">{{ currentMode.tag }}</span>
         </div>
 
-        <div class="rag-notice" :class="`notice-${currentMode.accent}`">
-          <strong>{{ currentMode.noticeTitle }}</strong>
-          <p>{{ currentMode.noticeText }}</p>
-        </div>
-
         <div class="rag-query-card">
           <div class="rag-examples">
             <span class="rag-examples-label">快速试问</span>
@@ -162,14 +157,11 @@ const modeMap = {
     key: 'rg-novels',
     name: '经典文学问答',
     tag: 'novels',
-    accent: 'amber',
     askPath: '/rag/ask',
     kicker: 'Classic Literature',
     headerLabel: '经典文学 / 智能问答',
     headerHint: '仅面向四大名著知识库',
     longDesc: '只检索《三国演义》《水浒传》《红楼梦》《西游记》这套文学知识库，不会混入工程文档或学校业务数据。',
-    noticeTitle: '检索范围',
-    noticeText: '兼容原有四大名著问答链路，适合人物、剧情、典故出处等问题。',
     answerBadge: 'Literature',
     loadingText: 'AI 正在翻阅四大名著...',
     placeholder: '输入文学问题，例如：桃园三结义是哪三个人？',
@@ -186,14 +178,11 @@ const modeMap = {
     key: 'rg-production',
     name: '工程文档检索',
     tag: 'production',
-    accent: 'cyan',
     askPath: '/rag/kbs/production/ask',
     kicker: 'Production Knowledge Base',
     headerLabel: '工程文档 / 专项检索',
     headerHint: '仅面向 production 工程知识库',
     longDesc: '只检索 production 工程知识库，不和四大名著、学生档案或其他业务数据混检。',
-    noticeTitle: '检索范围',
-    noticeText: '先查标准 Q&A，再回退原文切片；证据不足时会明确拒答，避免乱编。',
     answerBadge: 'Production',
     loadingText: 'AI 正在扫描工程文档与标准问答...',
     placeholder: '输入工程问题，例如：本工程项目名称是什么？',
@@ -403,45 +392,6 @@ function traceSummary(trace = {}) {
 .theme-light .rag-brief-tag {
   background: rgba(53, 122, 196, 0.1);
   color: #357ac4;
-}
-
-.rag-notice {
-  padding: 16px 18px;
-  border-radius: 16px;
-  border: 1px solid var(--line);
-  background: var(--panel-2);
-}
-
-.rag-notice strong {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-.rag-notice p {
-  margin: 0;
-  line-height: 1.8;
-  color: var(--text-dim);
-}
-
-.notice-amber {
-  border-color: rgba(227, 179, 65, 0.2);
-  background: rgba(227, 179, 65, 0.08);
-}
-
-.notice-cyan {
-  border-color: rgba(96, 178, 206, 0.28);
-  background: rgba(96, 178, 206, 0.1);
-}
-
-.theme-light .notice-amber {
-  border-color: rgba(198, 157, 65, 0.18);
-  background: rgba(255, 248, 232, 0.92);
-}
-
-.theme-light .notice-cyan {
-  border-color: rgba(141, 196, 224, 0.42);
-  background: rgba(236, 247, 253, 0.94);
 }
 
 .rag-query-card {
