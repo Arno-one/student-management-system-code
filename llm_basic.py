@@ -13,7 +13,6 @@ import json
 from typing import Type, Optional
 from pydantic import BaseModel
 from langchain_core.messages import SystemMessage, HumanMessage
-from langchain_core.output_parsers import JsonOutputParser
 
 from util.log import get_logger
 

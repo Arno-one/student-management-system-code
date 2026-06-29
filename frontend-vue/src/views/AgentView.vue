@@ -372,6 +372,10 @@ async function loadSessions({ silent = false } = {}) {
       return
     }
     if (!silent) {
+      if (r.status === 401) {
+        sessionsLoadError.value = '登录状态已失效，请重新登录后查看历史摘要'
+        return
+      }
       sessionsLoadError.value = r.data?.msg || `历史摘要加载失败（${r.status || '未知状态'}）`
     }
   } catch (_) {

@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import os
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware  # 跨域中间件，前端页面调用接口需要
 from fastapi.exceptions import RequestValidationError  # 参数校验异常
@@ -152,5 +153,20 @@ app.include_router(rag_router,prefix='/rag', tags=['RAG 四大名著知识库'])
 # 智能 Agent 助手
 app.include_router(agent_router, prefix='/agent', tags=['智能Agent'])
 
+def _is_reload_enabled() -> bool:
+    """是否开启热重载：默认关闭，避免前端依赖和构建产物频繁改动把后端反复刷重启。"""
+    value = str(os.getenv('UVICORN_RELOAD', '')).strip().lower()
+    return value in {'1', 'true', 'yes', 'on'}
+
+
 if __name__ == '__main__':
-    uvicorn.run('main:app', host='0.0.0.0', port=8088, reload=True)
+    reload_enabled = _is_reload_enabled()
+    uvicorn.run(
+        'main:app',
+        host='0.0.0.0',
+        port=8088,
+        reload=reload_enabled,
+        # 只有在显式开启热重载时，才限制监控目录，避免监控到 node_modules、日志和构建产物。
+        reload_dirs=['API', 'agent_system', 'DAO', 'model', 'service', 'util', 'RAG'] if reload_enabled else None,
+        reload_excludes=['frontend-vue/node_modules/*', 'frontend-vue/dist/*', 'logs/*', '.git/*', '.codegraph/*'] if reload_enabled else None,
+    )
