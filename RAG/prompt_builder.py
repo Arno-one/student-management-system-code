@@ -1,267 +1,230 @@
 """
-结果组装模块：small-to-big 邻居合并、去重、Token 预算、Prompt 组装。
+结果组装模块：small-to-big 邻居合并、去重、Token 预算和 Prompt 组装。
 """
+from __future__ import annotations
+
 from pymilvus import Collection
 
+from RAG.clients import _ensure_orm_connection
 from RAG.config import config
-from RAG.clients import get_milvus_client, _ensure_orm_connection
 from util.log import get_logger
 
 logger = get_logger(__name__)
 
 
-def _to_int(v) -> int:
-    """安全转 int，处理 Milvus 返回的字符串类型"""
+def _to_int(value) -> int:
+    """安全转 int，处理 Milvus 返回的字符串值。"""
     try:
-        return int(v)
+        return int(value)
     except (TypeError, ValueError):
         return 0
 
 
 def fetch_neighbors(candidates: list[dict]) -> list[dict]:
     """
-    small-to-big retrieval：对每个命中 chunk，拉取其前后相邻 chunk。
-
-    在当前 Collection 中按 doc_id 查找相邻 chunk_index。
+    small-to-big retrieval：对命中的每个 chunk 拉取前后相邻片段。
+    这样在回答长段落问题时，上下文会更完整。
     """
     if not candidates:
         return []
 
     _ensure_orm_connection()
-    client = get_milvus_client()
-    expanded = {}
     collection = Collection(config.milvus_collection_name)
+    expanded: dict[str, dict] = {}
 
-    for c in candidates:
-        doc_id = c.get("doc_id", "")
-        chunk_idx = _to_int(c.get("chunk_index"))
+    for candidate in candidates:
+        doc_id = candidate.get("doc_id", "")
+        chunk_index = _to_int(candidate.get("chunk_index"))
 
-        # 计算邻居索引：当前 ± 1
-        neighbor_indices = set()
-        if chunk_idx > 0:
-            neighbor_indices.add(chunk_idx - 1)
-        neighbor_indices.add(chunk_idx)
-        neighbor_indices.add(chunk_idx + 1)
+        neighbor_indices = {chunk_index}
+        if chunk_index > 0:
+            neighbor_indices.add(chunk_index - 1)
+        neighbor_indices.add(chunk_index + 1)
 
-        for ni in sorted(neighbor_indices):
-            key = f"{doc_id}_{ni}"
-            if key in expanded:
+        for neighbor_index in sorted(neighbor_indices):
+            cache_key = f"{doc_id}_{neighbor_index}"
+            if cache_key in expanded:
                 continue
 
-            # 如果就是当前 chunk，直接保留
-            if ni == chunk_idx:
-                expanded[key] = c
+            if neighbor_index == chunk_index:
+                expanded[cache_key] = candidate
                 continue
 
-            # 查询邻居
             try:
                 results = collection.query(
-                    expr=f'doc_id == "{doc_id}" and chunk_index == {ni}',
+                    expr=f'doc_id == "{doc_id}" and chunk_index == {neighbor_index}',
                     output_fields=[
-                        "doc_id", "text", "question", "answer", "reason",
-                        "file_name", "chunk_index", "total_chunks", "source_type",
+                        "doc_id",
+                        "text",
+                        "question",
+                        "answer",
+                        "reason",
+                        "file_name",
+                        "chunk_index",
+                        "total_chunks",
+                        "source_type",
                     ],
                     limit=1,
                 )
-                if results:
-                    r = results[0]
-                    expanded[key] = {
-                        "id": str(r.get("id", "")),
-                        "doc_id": r.get("doc_id", ""),
-                        "text": r.get("text", ""),
-                        "question": r.get("question", ""),
-                        "answer": r.get("answer", ""),
-                        "reason": r.get("reason", ""),
-                        "file_name": r.get("file_name", ""),
-                        "chunk_index": _to_int(r.get("chunk_index")),
-                        "total_chunks": _to_int(r.get("total_chunks")),
-                        "source_type": r.get("source_type", ""),
-                        "score": c.get("score", 0),
-                        "rerank_score": c.get("rerank_score", 0),
-                        "is_neighbor": ni != chunk_idx,
-                    }
-            except Exception as e:
-                logger.debug("查询邻居失败 doc_id=%s chunk=%d: %s", doc_id, ni, e)
+                if not results:
+                    continue
+
+                row = results[0]
+                expanded[cache_key] = {
+                    "id": str(row.get("id", "")),
+                    "doc_id": row.get("doc_id", ""),
+                    "text": row.get("text", ""),
+                    "question": row.get("question", ""),
+                    "answer": row.get("answer", ""),
+                    "reason": row.get("reason", ""),
+                    "file_name": row.get("file_name", ""),
+                    "chunk_index": _to_int(row.get("chunk_index")),
+                    "total_chunks": _to_int(row.get("total_chunks")),
+                    "source_type": row.get("source_type", ""),
+                    "score": candidate.get("score", 0),
+                    "rerank_score": candidate.get("rerank_score", 0),
+                    "is_neighbor": True,
+                }
+            except Exception as exc:
+                logger.debug("查询邻居失败 doc_id=%s chunk=%d: %s", doc_id, neighbor_index, exc)
 
     result = list(expanded.values())
-    logger.debug("small-to-big: %d → %d", len(candidates), len(result))
+    logger.debug("small-to-big: %d -> %d", len(candidates), len(result))
     return result
 
 
 def deduplicate(candidates: list[dict], threshold: float = 0.85) -> list[dict]:
-    """
-    去重：先按(doc_id, chunk_index)去重，再按 Jaccard 相似度去重。
-
-    保留分数更高的版本。
-    """
+    """先按 (doc_id, chunk_index) 去重，再按文本 Jaccard 相似度做一轮软去重。"""
     if not candidates:
         return []
 
-    # 第一层：按 (doc_id, chunk_index) 去重
-    seen_keys = set()
-    layer1 = []
-    for c in sorted(candidates, key=lambda x: x.get("rerank_score", x.get("score", 0)), reverse=True):
-        key = (c.get("doc_id"), _to_int(c.get("chunk_index")))
-        if key not in seen_keys:
-            seen_keys.add(key)
-            layer1.append(c)
+    first_layer = []
+    seen_keys: set[tuple[str, int]] = set()
+    for candidate in sorted(
+        candidates,
+        key=lambda item: item.get("rerank_score", item.get("score", 0)),
+        reverse=True,
+    ):
+        key = (candidate.get("doc_id", ""), _to_int(candidate.get("chunk_index")))
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+        first_layer.append(candidate)
 
-    # 第二层：Jaccard 相似度去重
     deduped = []
-    seen_texts = []
-
-    for c in layer1:
-        is_dup = False
-        c_chars = set(c.get("text", ""))
-        if not c_chars:
+    seen_texts: list[str] = []
+    for candidate in first_layer:
+        text = candidate.get("text", "")
+        text_chars = set(text)
+        if not text_chars:
             continue
 
-        for s_text in seen_texts:
-            s_chars = set(s_text)
-            intersection = len(c_chars & s_chars)
-            union = len(c_chars | s_chars)
+        is_dup = False
+        for seen_text in seen_texts:
+            seen_chars = set(seen_text)
+            union = len(text_chars | seen_chars)
             if union == 0:
                 continue
-            if intersection / union > threshold:
+            if len(text_chars & seen_chars) / union > threshold:
                 is_dup = True
                 break
 
         if not is_dup:
-            deduped.append(c)
-            seen_texts.append(c.get("text", ""))
+            deduped.append(candidate)
+            seen_texts.append(text)
 
     return deduped
 
 
 def estimate_tokens(text: str) -> int:
-    """保守估计 token 数：中文字符约 0.5 token，这里取 1:1 上限"""
+    """保守估算 Token 数，中文场景先按 1 字符约等于 1 token 上限处理。"""
     return len(text)
 
 
 def build_context_blocks(candidates: list[dict], max_tokens: int | None = None) -> tuple[list[dict], int]:
-    """
-    按 Token 预算组装上下文块。
-
-    Returns:
-        (selected_blocks, total_tokens)
-    """
-    max_tokens = max_tokens or config.max_context_tokens
+    """按 Token 预算裁出本轮真正送给 LLM 的上下文块。"""
+    budget = max_tokens or config.max_context_tokens
     blocks = []
     token_count = 0
 
-    # 优先非邻居 + 高分在前
     sorted_candidates = sorted(
         candidates,
-        key=lambda x: (
-            x.get("is_neighbor", False),           # 非邻居优先
-            -(x.get("rerank_score", x.get("score", 0))),  # 高分优先
+        key=lambda item: (
+            item.get("is_neighbor", False),  # 非邻居优先
+            -(item.get("rerank_score", item.get("score", 0))),
         ),
     )
 
-    for c in sorted_candidates:
-        text = c.get("text", "")
+    for candidate in sorted_candidates:
+        text = candidate.get("text", "")
         chunk_tokens = estimate_tokens(text)
 
-        if token_count + chunk_tokens > max_tokens:
-            # 截断最后一条
-            remaining = max_tokens - token_count
-            if remaining > 80:  # 至少保留 80 字有意义的内容
-                c = {**c, "text": text[:remaining * 2] + "..."}
-                blocks.append(c)
+        if token_count + chunk_tokens > budget:
+            remaining = budget - token_count
+            if remaining > 80:
+                truncated = {**candidate, "text": text[: remaining * 2] + "..."}
+                blocks.append(truncated)
                 token_count += remaining
             break
 
-        blocks.append(c)
+        blocks.append(candidate)
         token_count += chunk_tokens
 
     return blocks, token_count
 
 
 def format_context(block: dict, index: int) -> str:
-    """格式化单个上下文块，带来源标记。QA 对用问答格式，文档用原文格式。"""
+    """把单个上下文块格式化成最终 Prompt 里的可读片段。"""
     file_name = block.get("file_name", "未知")
     source_type = block.get("source_type", "")
-    chunk_idx = _to_int(block.get("chunk_index"))
-    total = _to_int(block.get("total_chunks"))
+    chunk_index = _to_int(block.get("chunk_index"))
+    total_chunks = _to_int(block.get("total_chunks"))
     text = block.get("text", "")
 
     if source_type == "qa":
-        question = block.get("question", "")
-        answer = block.get("answer", "")
-        reason = block.get("reason", "")
         return (
-            f"[来源 {index} | QA问答对 | {file_name} | #{chunk_idx + 1}/{total}]\n"
-            f"问题: {question}\n"
-            f"答案: {answer}\n"
-            f"依据: {reason}"
+            f"[来源 {index} | QA问答对 | {file_name} | #{chunk_index + 1}/{total_chunks}]\n"
+            f"问题: {block.get('question', '')}\n"
+            f"答案: {block.get('answer', '')}\n"
+            f"依据: {block.get('reason', '')}"
         )
 
     return (
-        f"[来源 {index} | 文档原文 | {file_name} | chunk {chunk_idx + 1}/{total}]\n"
+        f"[来源 {index} | 文档原文 | {file_name} | chunk {chunk_index + 1}/{total_chunks}]\n"
         f"{text}"
     )
 
 
-def build_prompt(
-    user_query: str,
-    candidates: list[dict],
-    max_tokens: int | None = None,
-) -> dict:
-    """
-    组装最终 RAG Prompt。
-
-    Returns:
-        {
-            "system_prompt": str,
-            "user_prompt": str,
-            "context_blocks": list[dict],
-            "context_tokens": int,
-            "citations": list[dict],
-        }
-    """
-    # small-to-big
+def build_prompt(user_query: str, candidates: list[dict], max_tokens: int | None = None) -> dict:
+    """把检索片段组装成最终发给 LLM 的 Prompt。"""
     expanded = fetch_neighbors(candidates)
-
-    # 去重
     deduped = deduplicate(expanded)
-
-    # Token 预算
     blocks, token_count = build_context_blocks(deduped, max_tokens)
 
-    # 组装上下文
     context_parts = []
     citations = []
-    for i, block in enumerate(blocks, 1):
-        context_parts.append(format_context(block, i))
-        citations.append({
-            "source_id": i,
-            "file_name": block.get("file_name", ""),
-            "source_type": block.get("source_type", ""),
-            "chunk_index": _to_int(block.get("chunk_index")),
-            "text_preview": (block.get("question") or block.get("text", ""))[:100],
-            "answer_preview": block.get("answer", "")[:100],
-        })
+    for index, block in enumerate(blocks, 1):
+        context_parts.append(format_context(block, index))
+        citations.append(
+            {
+                "source_id": index,
+                "file_name": block.get("file_name", ""),
+                "source_type": block.get("source_type", ""),
+                "chunk_index": _to_int(block.get("chunk_index")),
+                "text_preview": (block.get("question") or block.get("text", ""))[:100],
+                "answer_preview": block.get("answer", "")[:100],
+            }
+        )
 
     context_text = "\n\n---\n\n".join(context_parts)
-
-    system_prompt = (
-        "你是一个四大名著知识问答助手。请严格基于下面提供的上下文信息回答问题。\n\n"
-        "规则：\n"
-        "1. 只能基于上下文回答，不要使用外部知识。\n"
-        "2. 如果上下文不足以回答问题，请明确说「资料不足，无法确定」。\n"
-        "3. 回答中引用来源编号，例如 [来源 1]。\n"
-        "4. 不要编造文件名、页码或不存在的引用。\n"
-        "5. 简洁准确，直接回答核心问题。"
-    )
-
     user_prompt = (
         f"## 参考资料\n\n{context_text}\n\n"
         f"## 用户问题\n\n{user_query}\n\n"
-        f"请基于以上参考资料回答问题。"
+        "请基于以上参考资料回答问题。"
     )
 
     return {
-        "system_prompt": system_prompt,
+        "system_prompt": config.answer_system_prompt,
         "user_prompt": user_prompt,
         "context_blocks": blocks,
         "context_tokens": token_count,

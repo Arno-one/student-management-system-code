@@ -1,35 +1,38 @@
-# 学生信息管理系统 —— Python 依赖清单
+# 学生信息管理系统 Python 依赖清单
 # 安装方式：pip install -r requirements.txt
-# 说明：带 == 的是当前环境验证过的精确版本；
-#       末尾"待补充版本"的三个包当前环境未安装，先不锁版本，安装时会自动装最新版，
-#       装好后建议用 `pip freeze` 回填精确版本，保证团队环境一致。
+# 说明：
+# 1. 带 == 的为当前项目已验证过的固定版本。
+# 2. 未锁版本的依赖建议安装后再用 pip freeze 回填，保证团队环境一致。
 
 # ==================== Web 框架 ====================
-fastapi==0.129.0          # Web 框架，提供路由、依赖注入、自动文档等
-starlette==0.52.1         # FastAPI 底层 ASGI 框架（中间件、请求/响应都基于它）
-uvicorn==0.24.0           # ASGI 服务器，用来跑 FastAPI 应用
-python-multipart==0.0.28  # 解析 multipart/form-data，教师 Excel 导入的文件上传需要
+fastapi==0.129.0
+starlette==0.52.1
+uvicorn==0.24.0
+python-multipart==0.0.28
 
-# ==================== Excel 处理 ====================
-openpyxl==3.1.5           # 读写 .xlsx，用于教师批量导入解析与导入模板生成
+# ==================== 文档处理 ====================
+openpyxl==3.1.5
+python-docx
+pypdf
+langchain-text-splitters
 
 # ==================== 数据校验 ====================
-pydantic==2.10.3          # 请求/响应数据建模与校验（scheme 层大量使用）
+pydantic==2.10.3
 
 # ==================== 数据库 ====================
-SQLAlchemy==2.0.39        # ORM，负责模型定义与数据库操作
-PyMySQL                   # MySQL 驱动（database.py 用 mysql+pymysql 连接）—— 待补充版本
+SQLAlchemy==2.0.39
+PyMySQL
 
 # ==================== 配置 ====================
-python-dotenv==1.1.0      # 读取 .env 配置文件（config.py 使用）
-PyJWT==2.10.1             # JWT 生成与校验（登录认证 / RBAC 使用）
+python-dotenv==1.1.0
+PyJWT==2.10.1
 
-# ==================== SQL 美化 ====================
-sqlparse                  # NL2SQL 模块用，格式化 LLM 生成的 SQL —— 待补充版本
+# ==================== SQL / 文本处理 ====================
+sqlparse
 
 # ==================== 第三方接口 / 大模型 ====================
-requests==2.32.3          # 调用腾讯地图天气/地理编码等 HTTP 接口
-openai                    # 调用 DeepSeek（OpenAI 兼容接口）—— 待补充版本
-dashscope                 # 阿里云通义万相文生图 —— 待补充版本
-langgraph                 # Agent 中间件图编排，用于通勤规划输入完整性检查 —— 待补充版本
-mcp                       # 腾讯地图 MCP 客户端 SDK，用于 geocoder / route / weather 等 MCP tool 调用 —— 待补充版本
+requests==2.32.3
+openai
+dashscope
+langgraph
+mcp

@@ -1,50 +1,41 @@
 """
 Milvus Collection Schema 定义与创建。
-
-在 four_novels_rag 数据库中创建 document_chunks 集合，
-包含稠密向量(1024维) + BM25 稀疏向量 + 标量字段。
 """
-from pymilvus import (
-    Collection, CollectionSchema, FieldSchema,
-    DataType, Function, FunctionType,
-    connections, utility,
-)
+from __future__ import annotations
+
+from pymilvus import Collection, CollectionSchema, DataType, FieldSchema, Function, FunctionType
+
+from RAG.clients import _ensure_orm_connection, get_milvus_client
 from RAG.config import config
-from RAG.clients import get_milvus_client, _ensure_orm_connection
 from util.log import get_logger
 
 logger = get_logger(__name__)
 
 
 def get_or_create_collection(drop_existing: bool = False) -> Collection:
-    """
-    获取或创建 document_chunks Collection。
-
-    Args:
-        drop_existing: 开发阶段可传 True 重建，生产环境传 False
-    """
+    """获取或创建当前知识库对应的 Collection。"""
     _ensure_orm_connection()
     client = get_milvus_client()
     collection_name = config.milvus_collection_name
 
-    # 如果已存在
     if client.has_collection(collection_name):
         if drop_existing:
-            logger.warning("删除已有 Collection: %s", collection_name)
+            logger.warning("[%s] 删除已有 Collection: %s", config.active_kb_id, collection_name)
             client.drop_collection(collection_name)
         else:
-            logger.info("Collection '%s' 已存在，复用", collection_name)
-            # 用 ORM-style Collection 对象方便后续操作(load/search)
+            logger.info("[%s] Collection '%s' 已存在，直接复用", config.active_kb_id, collection_name)
             return Collection(collection_name)
 
-    # ---- 定义字段 ----
     fields = [
         FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
         FieldSchema(name="doc_id", dtype=DataType.VARCHAR, max_length=256),
-        # text: 文档切片原文 或 QA 合并搜索文本，BM25 索引在此字段
-        FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=4000,
-                    enable_analyzer=True, enable_match=True),
-        # QA 专用字段（文档切片时为空串）
+        FieldSchema(
+            name="text",
+            dtype=DataType.VARCHAR,
+            max_length=4000,
+            enable_analyzer=True,
+            enable_match=True,
+        ),
         FieldSchema(name="question", dtype=DataType.VARCHAR, max_length=512),
         FieldSchema(name="answer", dtype=DataType.VARCHAR, max_length=1024),
         FieldSchema(name="reason", dtype=DataType.VARCHAR, max_length=1024),
@@ -57,7 +48,7 @@ def get_or_create_collection(drop_existing: bool = False) -> Collection:
         FieldSchema(name="sparse_vector", dtype=DataType.SPARSE_FLOAT_VECTOR),
     ]
 
-    schema = CollectionSchema(fields=fields, description="四大名著知识库 - 文档切片 + QA 问答对")
+    schema = CollectionSchema(fields=fields, description=config.current_kb.collection_description)
     schema.add_function(
         Function(
             name="text_bm25",
@@ -67,32 +58,21 @@ def get_or_create_collection(drop_existing: bool = False) -> Collection:
         )
     )
 
-    # ---- 创建 Collection ----
     collection = Collection(name=collection_name, schema=schema)
-    logger.info("Collection '%s' 创建成功", collection_name)
-
-    # ---- 建索引 ----
-    _create_indexes(collection)
-
+    logger.info("[%s] Collection '%s' 创建成功", config.active_kb_id, collection_name)
+    _create_indexes(collection_name)
     return collection
 
 
-def _create_indexes(collection: Collection) -> None:
-    """为 dense 和 sparse 向量字段创建索引"""
-    collection_name = config.milvus_collection_name
+def _create_indexes(collection_name: str) -> None:
+    """为当前 Collection 创建 dense 和 sparse 索引。"""
     client = get_milvus_client()
 
-    # 稠密向量：AUTOINDEX + COSINE
     dense_index_params = client.prepare_index_params()
-    dense_index_params.add_index(
-        field_name="dense_vector",
-        index_type="AUTOINDEX",
-        metric_type="COSINE",
-    )
+    dense_index_params.add_index(field_name="dense_vector", index_type="AUTOINDEX", metric_type="COSINE")
     client.create_index(collection_name, dense_index_params)
-    logger.info("dense_vector 索引(AUTOINDEX/COSINE) 创建完成")
+    logger.info("[%s] dense_vector 索引创建完成", config.active_kb_id)
 
-    # 稀疏向量：BM25 倒排索引
     sparse_index_params = client.prepare_index_params()
     sparse_index_params.add_index(
         field_name="sparse_vector",
@@ -100,10 +80,10 @@ def _create_indexes(collection: Collection) -> None:
         metric_type="BM25",
     )
     client.create_index(collection_name, sparse_index_params)
-    logger.info("sparse_vector 索引(SPARSE_INVERTED_INDEX/BM25) 创建完成")
+    logger.info("[%s] sparse_vector 索引创建完成", config.active_kb_id)
 
 
 def load_collection(collection: Collection) -> None:
-    """加载 Collection 到内存，建立可检索状态"""
+    """把 Collection 加载进内存，确保检索链路可用。"""
     collection.load()
-    logger.info("Collection '%s' 已加载到内存", collection.name)
+    logger.info("[%s] Collection '%s' 已加载到内存", config.active_kb_id, collection.name)
