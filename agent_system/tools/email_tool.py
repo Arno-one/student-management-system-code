@@ -41,6 +41,11 @@ class EmailTool(BaseTool):
                 "error": f"收件人 {receiver} 不在允许列表内，当前仅支持发送至: {', '.join(ALLOWED_RECIPIENTS)}",
             }
 
+        # Supervisor 多 Agent 协作场景下，邮件工具可以读取上游通勤结果，把路线摘要带入邮件正文生成。
+        commute_context = _build_commute_context(ctx.upstream_results.get("commute_plan_tool"))
+        if commute_context:
+            prompt = f"{prompt}\n\n请在邮件中结合以下通勤规划结果：\n{commute_context}"
+
         # 调用 LLM 生成邮件内容
         try:
             content = generate_email_content(prompt)
@@ -58,3 +63,22 @@ class EmailTool(BaseTool):
                 "receiver": receiver,
             },
         }
+
+
+def _build_commute_context(result: dict | None) -> str:
+    """把通勤工具结果压缩成邮件可读摘要，避免把整段 JSON 塞给 LLM。"""
+    if not isinstance(result, dict) or not result.get("success"):
+        return ""
+    lines = [
+        f"起点：{result.get('origin_text', '')}",
+        f"终点：{result.get('destination_text', '')}",
+    ]
+    for route in result.get("routes", [])[:3]:
+        if route.get("success"):
+            lines.append(
+                f"{route.get('label', route.get('mode', '路线'))}："
+                f"{route.get('duration_text', '耗时未知')}，{route.get('distance_text', '距离未知')}"
+            )
+    if result.get("weather_reminder"):
+        lines.append(f"天气提醒：{result['weather_reminder']}")
+    return "\n".join(item for item in lines if item.strip("："))

@@ -49,9 +49,29 @@ _FALLBACK_PLANS = {
         need_llm_summary=True,
         summary_instruction="用友好的语气向用户播报天气情况",
     ),
+    "commute_plan": ExecutionPlan(
+        intent="commute_plan",
+        steps=[PlanStep(step_id=1, tool_name="commute_plan_tool")],
+        need_llm_summary=True,
+        summary_instruction="结合路线结果和天气辅助信息，给出简洁、可执行的通勤建议",
+    ),
+    "nearby_service": ExecutionPlan(
+        intent="nearby_service",
+        steps=[PlanStep(step_id=1, tool_name="nearby_service_tool")],
+        need_llm_summary=True,
+        summary_instruction="结合周边地点列表，说明查询中心、范围和结果数量；不做最好、最安全、最便宜等绝对判断",
+    ),
     "email_draft": ExecutionPlan(
         intent="email_draft",
         steps=[PlanStep(step_id=1, tool_name="email_tool")],
+        need_llm_summary=False,
+    ),
+    "supervisor_multi_agent": ExecutionPlan(
+        intent="supervisor_multi_agent",
+        steps=[
+            PlanStep(step_id=1, tool_name="commute_plan_tool"),
+            PlanStep(step_id=2, tool_name="email_tool", inputs_from=["commute_plan_tool"]),
+        ],
         need_llm_summary=False,
     ),
 }

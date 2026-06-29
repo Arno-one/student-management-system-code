@@ -13,18 +13,29 @@
         <div class="float-agent-header-left">
           <span class="float-agent-header-icon">🤖</span>
           <div>
-            <strong>{{ currentPersona?.name || 'Agent 助手' }}</strong>
-            <small>快捷提问 · 随时收起</small>
+            <strong>{{ personaTitle(currentPersona) }}</strong>
+            <small>{{ currentPersona?.description || emptyHint }}</small>
           </div>
         </div>
-        <button class="float-agent-minimize" @click="open = false" title="收起">✕</button>
+        <div class="float-agent-header-actions">
+          <select
+            v-model="selectedPersona"
+            class="float-agent-persona-select"
+            :disabled="loading || personaOptions.length === 0"
+            title="切换 Agent 角色"
+            @change="savePersonaPreference"
+          >
+            <option v-for="item in personaOptions" :key="item.value" :value="item.value">{{ item.label }}</option>
+          </select>
+          <button class="float-agent-minimize" @click="open = false" title="收起">✕</button>
+        </div>
       </div>
 
       <!-- 消息列表 -->
       <div class="float-agent-msgs" ref="msgListRef">
         <div class="float-agent-empty" v-if="messages.length === 0 && !loading">
-          <p>有问题随时问我</p>
-          <p class="float-agent-empty-sub">查成绩 · 问天气 · 发邮件 · 聊学习</p>
+          <p>{{ emptyTitle }}</p>
+          <p class="float-agent-empty-sub">{{ emptyHint }}</p>
         </div>
 
         <div
@@ -52,10 +63,23 @@
 
             <div class="float-agent-cards" v-if="msg.cards?.length">
               <WeatherCard
-                v-for="(card, ci) in msg.cards.filter(c => c.type === 'weather')"
-                :key="ci"
+                v-for="(card, ci) in msg.cards.filter(c => c.type === 'weather' && isCardVersionSupported(c))"
+                :key="'weather-' + ci"
                 :card="card"
                 compact
+              />
+              <RouteCard
+                v-for="(card, ci) in msg.cards.filter(c => c.type === 'route' && isCardVersionSupported(c))"
+                :key="'route-' + ci"
+                :card="card"
+                compact
+              />
+              <PoiListCard
+                v-for="(card, ci) in msg.cards.filter(c => c.type === 'poi_list' && isCardVersionSupported(c))"
+                :key="'poi-list-' + ci"
+                :card="card"
+                compact
+                @plan-route="fillRouteDraft"
               />
             </div>
 
@@ -143,11 +167,14 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, nextTick, onMounted } from 'vue'
+import { reactive, ref, computed, nextTick, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { marked } from 'marked'
 import { request, getBaseUrl, getAuthHeader, isLoggedIn } from '../api'
 import WeatherCard from './WeatherCard.vue'
+import RouteCard from './RouteCard.vue'
+import PoiListCard from './PoiListCard.vue'
+import { fallbackAgentPersonas } from '../config/agentPersonas'
 
 const props = defineProps({ themeClass: { type: String, default: 'theme-dark' } })
 
@@ -158,22 +185,43 @@ function renderMarkdown(text) {
   return marked.parse(text)
 }
 
+function isCardVersionSupported(card) {
+  return !card?.card_version || card.card_version === 1
+}
+
 const route = useRoute()
 const isPublicPage = computed(() => !!route.meta?.public)
 const open = ref(false)
 const loading = ref(false)
 const messages = ref([])
 const currentSessionId = ref(null)
-const personas = ref([])
+const personas = ref([...fallbackAgentPersonas])
+const selectedPersona = ref(localStorage.getItem('floating-agent-persona') || 'academic_mentor')
 const msgListRef = ref(null)
 const form = reactive({ message: '' })
 
-const currentPersona = computed(() => personas.value[0] || null)
+const currentPersona = computed(() => personas.value.find(item => item.id === selectedPersona.value) || personas.value[0] || null)
+const personaOptions = computed(() => personas.value.map(item => ({ value: item.id, label: personaTitle(item) })))
+const emptyTitle = computed(() => {
+  if (selectedPersona.value === 'companion_head_teacher') return '慢慢说，我在这儿'
+  if (selectedPersona.value === 'xinge') return '好兄弟，昕哥在'
+  return '有问题随时问我'
+})
+const emptyHint = computed(() => {
+  if (selectedPersona.value === 'companion_head_teacher') return '可以聊压力、拖延、考试焦虑，也可以一起拆一个小计划'
+  if (selectedPersona.value === 'xinge') return '复盘错误、鼓劲打气、拆下一步，嘿嘿'
+  return '查成绩 · 问天气 · 发邮件 · 聊学习'
+})
 
 function toggle() { open.value = !open.value }
+function savePersonaPreference() { localStorage.setItem('floating-agent-persona', selectedPersona.value) }
+function personaTitle(persona) {
+  if (!persona) return '🎓 学业导师'
+  return [persona.icon, persona.name].filter(Boolean).join(' ')
+}
 
 function toolLabel(name) {
-  const map = { score_tool: '成绩', rag_tool: '检索', nl2sql_tool: '数据', student_tool: '身份', weather_tool: '天气', email_tool: '邮件' }
+  const map = { score_tool: '成绩', rag_tool: '检索', nl2sql_tool: '数据', student_tool: '身份', weather_tool: '天气', email_tool: '邮件', commute_plan_tool: '通勤', nearby_service_tool: '周边' }
   return map[name] || name
 }
 
@@ -190,13 +238,20 @@ function createFeedback(taskId = null) {
 }
 
 async function loadPersonas() {
-  if (!isLoggedIn()) return
+  if (!isLoggedIn()) {
+    personas.value = [...fallbackAgentPersonas]
+    return
+  }
   try {
     const r = await request('GET', '/agent/personas')
-    if (r.ok && r.data?.code === 200) {
-      personas.value = r.data.data || []
+    if (r.ok && r.data?.code === 200 && Array.isArray(r.data.data) && r.data.data.length > 0) {
+      personas.value = r.data.data
+      if (personas.value.length && !personas.value.some(item => item.id === selectedPersona.value)) {
+        selectedPersona.value = personas.value[0].id
+        savePersonaPreference()
+      }
     }
-  } catch (_) { /* 静默 */ }
+  } catch (_) { /* 静默失败，保留前端兜底角色 */ }
 }
 
 async function doSend() {
@@ -213,7 +268,7 @@ async function doSend() {
 
   const body = JSON.stringify({
     message: text,
-    persona: 'academic_mentor',
+    persona: selectedPersona.value,
     ...(currentSessionId.value ? { session_id: currentSessionId.value } : {}),
   })
 
@@ -257,6 +312,10 @@ async function doSend() {
   }
 }
 
+function fillRouteDraft(destination) {
+  form.message = `从 [请补充起点] 到 ${destination} 怎么去？`
+}
+
 function handleSSE(event, data, currentMsg) {
   if (!currentMsg()) return
   switch (event) {
@@ -290,6 +349,7 @@ function handleSSE(event, data, currentMsg) {
     case 'awaiting_confirmation':
       currentMsg().hitl = {
         tool_name: data.tool_name,
+        stepId: data.step_id || 1,
         preview: data.preview || {},
         riskLevel: data.risk_level || 'medium',
         timeoutSeconds: data.timeout_seconds || 600,
@@ -362,7 +422,7 @@ async function confirmHitl(msg) {
   msg.hitl.loading = true
   try {
     const r = await request('POST', '/agent/step/confirm', {
-      body: { task_id: String(currentSessionId.value || 'default'), step_id: 1, confirmed: true,
+      body: { task_id: String(currentSessionId.value || 'default'), step_id: msg.hitl.stepId || 1, confirmed: true,
         modified_params: { subject: msg.hitl.preview.subject, body: msg.hitl.preview.body, receiver: msg.hitl.preview.receiver } }
     })
     msg.hitl.resolved = true
@@ -379,7 +439,7 @@ async function confirmHitl(msg) {
 async function cancelHitl(msg) {
   if (!msg.hitl || msg.hitl.resolved) return
   msg.hitl.loading = true
-  try { await request('POST', '/agent/step/confirm', { body: { task_id: String(currentSessionId.value || 'default'), step_id: 1, confirmed: false } }) } catch (_) { }
+  try { await request('POST', '/agent/step/confirm', { body: { task_id: String(currentSessionId.value || 'default'), step_id: msg.hitl.stepId || 1, confirmed: false } }) } catch (_) { }
   msg.hitl.resolved = true; msg.hitl.resultStatus = 'cancelled'; msg.hitl.resultMsg = '已取消'; msg.hitl.loading = false
 }
 
@@ -390,6 +450,7 @@ function scrollBottom() {
   })
 }
 
+watch(selectedPersona, savePersonaPreference)
 onMounted(() => { loadPersonas() })
 </script>
 
@@ -429,10 +490,37 @@ onMounted(() => { loadPersonas() })
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 16px; border-bottom: 1px solid var(--line); flex-shrink: 0;
 }
-.float-agent-header-left { display: flex; align-items: center; gap: 10px; }
+.float-agent-header-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .float-agent-header-icon { font-size: 24px; }
 .float-agent-header-left strong { display: block; font-size: 14px; color: var(--text); }
-.float-agent-header-left small { font-size: 11px; color: var(--text-muted); }
+.float-agent-header-left small {
+  display: block;
+  max-width: 170px;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.float-agent-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.float-agent-persona-select {
+  width: 112px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--panel-2);
+  color: var(--text-soft);
+  font-size: 11px;
+  outline: none;
+}
+.float-agent-persona-select:focus { border-color: var(--gold); }
+.float-agent-persona-select:disabled { opacity: 0.55; cursor: not-allowed; }
 .float-agent-minimize {
   width: 28px; height: 28px; border-radius: 50%; border: none;
   background: var(--panel-2); color: var(--text-dim); font-size: 13px; cursor: pointer;
@@ -597,4 +685,12 @@ onMounted(() => { loadPersonas() })
   color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; flex-shrink: 0;
 }
 .float-agent-input button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+@media (max-width: 520px) {
+  .float-agent-header { padding: 10px 12px; gap: 8px; }
+  .float-agent-header-icon { display: none; }
+  .float-agent-header-left small { max-width: 120px; }
+  .float-agent-header-actions { gap: 6px; }
+  .float-agent-persona-select { width: 96px; padding: 0 6px; }
+}
 </style>

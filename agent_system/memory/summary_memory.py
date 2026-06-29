@@ -1,6 +1,8 @@
 """Agent 摘要记忆 — 会话级摘要压缩，不做跨会话长期记忆。"""
 from __future__ import annotations
 
+import re
+
 from sqlalchemy.orm import Session
 from langchain_core.messages import HumanMessage, SystemMessage
 
@@ -18,14 +20,14 @@ SUMMARY_PROVIDER = "deepseek"
 
 _SUMMARY_PROMPT = """你是学生管理系统 Agent 的会话摘要器。
 
-请把历史对话压缩成一段简洁摘要，供后续 Agent 理解上下文。
+请把历史对话压缩成一个很短的会话标题，供历史列表展示和后续 Agent 理解主题。
 
 规则：
-1. 只保留用户目标、已经查询/建议过的关键结论、仍待跟进的问题。
+1. 只保留用户最核心的目标或主题，不写完整过程复盘。
 2. 不跨用户、不跨会话推断长期画像。
-3. 对陪伴班主任或情绪支持类对话，只记录主题和已给出的温和建议，不记录具体敏感细节。
+3. 对陪伴班主任或情绪支持类对话，只记录主题，不记录具体敏感细节。
 4. 不记录身份证、手机号、邮箱、详细住址、隐私病史等敏感内容。
-5. 120 字以内，直接输出摘要文本。"""
+5. 24 字以内，直接输出标题文本，不要句号，不要“用户询问/本轮对话”等套话。"""
 
 
 def should_refresh_summary(session_id: int, db: Session) -> bool:
@@ -44,6 +46,14 @@ def refresh_summary_if_needed(session_id: int, persona: str, db: Session) -> Non
             refresh_summary(session_id=session_id, persona=persona, db=db)
     except Exception as exc:
         logger.warning("会话摘要刷新失败，已跳过: session=%s, error=%s", session_id, exc)
+
+
+def refresh_summary_safely(session_id: int, persona: str, db: Session) -> None:
+    """每轮对话后立即刷新摘要；失败只记录日志，不影响用户拿到回复。"""
+    try:
+        refresh_summary(session_id=session_id, persona=persona, db=db)
+    except Exception as exc:
+        logger.warning("会话摘要即时刷新失败，已跳过: session=%s, error=%s", session_id, exc)
 
 
 def refresh_summary(session_id: int, persona: str, db: Session) -> str | None:
@@ -82,6 +92,10 @@ def build_summary_context(session_id: int, db: Session) -> list[dict[str, str]]:
 
 def _summarize_history(history: list[dict[str, str]], current_summary: str, persona: str) -> str:
     """调用 LLM 摘要；失败时使用保守的规则摘要兜底。"""
+    user_turns = [item for item in history if item.get("role") == "user" and item.get("content")]
+    if len(user_turns) <= 5:
+        return _short_title_from_first_turn(user_turns)
+
     lines = []
     for item in history:
         role = _role_label(item.get("role"))
@@ -110,17 +124,18 @@ def _summarize_history(history: list[dict[str, str]], current_summary: str, pers
 def _fallback_summary(history: list[dict[str, str]]) -> str:
     """LLM 不可用时的保守摘要，确保功能降级但不中断。"""
     user_items = [item["content"] for item in history if item.get("role") == "user" and item.get("content")]
-    last_user = user_items[-1] if user_items else ""
-    if not last_user:
-        return "本轮会话围绕学生管理系统的常规咨询展开。"
-    return f"用户最近关注：{last_user[:80]}。后续回复需结合最近上下文继续处理。"
+    if not user_items:
+        return "常规咨询"
+    return _compact_title(user_items[-1])
 
 
 def _sanitize_summary(summary: str) -> str:
     """做轻量隐私截断和清洗，避免摘要保存过细敏感内容。"""
     text = " ".join(summary.replace("\n", " ").split())
-    if len(text) > 160:
-        text = text[:157] + "..."
+    text = re.sub(r"^(用户|同学)?(想要|希望|询问|咨询|查询|了解|需要|本轮对话|本次对话)[:：，,\s]*", "", text)
+    text = text.strip(" 。；;，,、")
+    if len(text) > 36:
+        text = text[:33] + "..."
     return text
 
 
@@ -129,6 +144,24 @@ def _build_summary_title(summary: str) -> str:
     if len(summary) <= 32:
         return summary
     return summary[:29] + "..."
+
+
+def _short_title_from_first_turn(user_turns: list[dict[str, str]]) -> str:
+    """5 轮以内固定用第一轮用户问题生成短标题，避免短会话被总结成全文复盘。"""
+    first_user = str(user_turns[0].get("content", "")).strip() if user_turns else ""
+    return _compact_title(first_user)
+
+
+def _compact_title(text: str) -> str:
+    """把用户原问题压缩成历史列表可扫读的短标题。"""
+    cleaned = " ".join(str(text or "").replace("\n", " ").split())
+    cleaned = re.sub(r"^(请|帮我|麻烦|能不能|可以|我想|我想要|我需要|帮忙)", "", cleaned)
+    cleaned = cleaned.strip(" 。？?！!；;，,、")
+    if not cleaned:
+        return "常规咨询"
+    if len(cleaned) > 24:
+        return cleaned[:21] + "..."
+    return cleaned
 
 
 def _infer_style(persona: str) -> str:

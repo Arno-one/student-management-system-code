@@ -13,7 +13,7 @@ from agent_system.prompts.persona_prompt import PERSONA_REGISTRY
 from agent_system.tools.base import ToolContext
 from agent_system.tools import (
     ScoreTool, StudentTool, RagTool, Nl2sqlTool, WeatherTool, EmailTool,
-    _resolve_student,
+    CommutePlanTool, NearbyServiceTool, _resolve_student,
 )
 from agent_system.hitl.escalation_rules import build_hitl_payload, get_hitl_rule
 from agent_system.hitl.hitl_manager import pause_execution
@@ -31,6 +31,8 @@ _TOOL_REGISTRY: dict[str, object] = {
     "student_tool": StudentTool(),
     "weather_tool": WeatherTool(),
     "email_tool": EmailTool(),
+    "commute_plan_tool": CommutePlanTool(),
+    "nearby_service_tool": NearbyServiceTool(),
 }
 
 # 读操作工具名集合（仅这些工具参与 session 级缓存）
@@ -83,6 +85,8 @@ def _build_summarize_messages(context: dict, instruction: str, persona: str) -> 
         f"如果数据中有成绩信息，用清晰的方式呈现分数和趋势。"
         f"如果是知识检索结果，回答时引用来源编号（如 [来源 1]），并结合内容回答用户问题。"
         f"如果是天气数据，用口语化的方式播报。"
+        f"如果是通勤规划结果，说明起点、终点、出行方式、预计耗时、距离和天气辅助提醒。"
+        f"如果是周边服务结果，说明查询中心、范围和结果数量，不要做最好、最安全、最便宜等绝对判断。"
     )
     return system_prompt, f"工具返回数据：\n{ctx_text}"
 
@@ -226,6 +230,14 @@ def _execute_step(step, tool, ctx: ToolContext, user: dict) -> dict:
     return tool.run(ctx)
 
 
+def _result_status(result: dict) -> str:
+    """保留工具返回的 partial_success/empty/awaiting_confirmation 等业务状态。"""
+    status = result.get("status")
+    if status in {"partial_success", "awaiting_confirmation", "clarification", "empty"}:
+        return status
+    return "success" if result.get("success", False) else "error"
+
+
 # ==================== 流式主执行函数 ====================
 
 def run_plan_stream(
@@ -283,7 +295,7 @@ def run_plan_stream(
         try:
             ctx = _build_tool_context(step, user, db, db_readonly, executed, target_student_no)
             # 工具的"自然语言输入"类参数（question/prompt/location_text 等）如果未填充，默认注入原始消息
-            _NL_PARAM_NAMES = {"question", "prompt", "location_text"}
+            _NL_PARAM_NAMES = {"question", "prompt", "location_text", "request_text"}
             for field_name in _NL_PARAM_NAMES:
                 if field_name in tool.inputs_schema and not ctx.params.get(field_name):
                     ctx.params[field_name] = original_message or ""
@@ -303,13 +315,13 @@ def run_plan_stream(
             else:
                 result = _execute_step(step, tool, ctx, user)
 
-            ok = result.get("success", False)
+            status = _result_status(result)
             summary = _tool_summary(step.tool_name, result)
             tool_records.append(ToolCallRecord(
-                tool_name=step.tool_name, status="success" if ok else "error", summary=summary,
+                tool_name=step.tool_name, status=status, summary=summary,
             ))
             yield _sse_event("tool_end", {
-                "tool_name": step.tool_name, "status": "success" if ok else "error", "summary": summary,
+                "tool_name": step.tool_name, "status": status, "summary": summary,
             })
             executed[step.tool_name] = result
 
@@ -320,7 +332,7 @@ def run_plan_stream(
                 expires_at = time.time() + rule.timeout_seconds
                 yield _sse_event(
                     "awaiting_confirmation",
-                    build_hitl_payload(step.tool_name, preview, rule, expires_at),
+                    build_hitl_payload(step.tool_name, preview, rule, expires_at, step_id=step.step_id),
                 )
                 # 保存暂停状态供后续恢复
                 pause_execution(
@@ -380,12 +392,14 @@ def run_plan_stream(
         if tool_records else None
     )
     cards = _extract_cards(executed)
+    tool_monitoring = _extract_tool_monitoring(executed)
     done_data = {
         "intent": plan.intent,
         "persona": plan.persona,
         "tool_calls": tc_list,
         "sources": sources,
         "cards": cards,
+        "tool_monitoring": tool_monitoring,
         "reply": full_reply,
     }
     yield _sse_event("done", done_data)
@@ -485,12 +499,14 @@ def run_plan(
                 ctx.params["question"] = original_message or ""
             if "prompt" in tool.inputs_schema and "prompt" not in ctx.params:
                 ctx.params["prompt"] = original_message or ""
+            if "request_text" in tool.inputs_schema and "request_text" not in ctx.params:
+                ctx.params["request_text"] = original_message or ""
 
             result = _execute_step(step, tool, ctx, user)
-            ok = result.get("success", False)
+            status = _result_status(result)
             tool_records.append(ToolCallRecord(
                 tool_name=step.tool_name,
-                status="success" if ok else "error",
+                status=status,
                 summary=_tool_summary(step.tool_name, result),
             ))
             executed[step.tool_name] = result
@@ -531,6 +547,7 @@ def run_plan(
         reply = _format_raw_results(executed)
         sources = _extract_sources(executed)
     cards = _extract_cards(executed)
+    tool_monitoring = _extract_tool_monitoring(executed)
 
     logger.info("执行完成: intent=%s, tools=%s, reply_len=%s",
                 plan.intent, [r.tool_name for r in tool_records], len(reply))
@@ -538,7 +555,7 @@ def run_plan(
     return AgentChatResponse(
         reply=reply, intent=plan.intent, persona=plan.persona,
         tool_calls=tool_records if tool_records else None,
-        sources=sources, cards=cards, session_id=0,
+        sources=sources, cards=cards, tool_monitoring=tool_monitoring, session_id=0,
     )
 
 
@@ -567,6 +584,21 @@ def _tool_summary(tool_name: str, result: dict) -> str:
             base = f"已查询 {loc} 天气信息" if loc else "天气查询完成"
         else:
             base = f"天气查询失败: {result.get('error', '')}"
+    elif tool_name == "commute_plan_tool":
+        if result.get("success"):
+            ok_count = sum(1 for item in result.get("routes", []) if item.get("success"))
+            total = len(result.get("routes", []))
+            suffix = "，部分方式失败" if result.get("status") == "partial_success" else ""
+            base = f"已规划 {result.get('origin_text', '')} 到 {result.get('destination_text', '')} 的通勤路线（{ok_count}/{total}）{suffix}"
+        else:
+            base = f"通勤规划失败: {result.get('error', '')}"
+    elif tool_name == "nearby_service_tool":
+        if result.get("status") == "empty":
+            base = f"未查到 {result.get('center_name', '')} 附近的 {result.get('query', '')}"
+        elif result.get("success"):
+            base = f"已查询 {result.get('center_name', '')} 附近的 {result.get('query', '')}，返回 {result.get('result_count', 0)} 条"
+        else:
+            base = f"周边服务查询失败: {result.get('error', '')}"
     elif tool_name == "email_tool":
         if result.get("status") == "awaiting_confirmation":
             preview = result.get("preview", {})
@@ -601,6 +633,7 @@ def _extract_cards(context: dict) -> list[dict] | None:
         # 卡片保留原始天气结构，前端组件负责兼容 REST/MCP 的不同字段形态。
         cards.append({
             "type": "weather",
+            "card_version": 1,
             "data": {
                 "provider": weather_result.get("provider"),
                 "fallback_reason": weather_result.get("fallback_reason"),
@@ -612,7 +645,59 @@ def _extract_cards(context: dict) -> list[dict] | None:
                 "weather": weather_result.get("weather", {}),
             },
         })
+    commute_result = context.get("commute_plan_tool")
+    if isinstance(commute_result, dict) and commute_result.get("success"):
+        cards.append({
+            "type": "route",
+            "card_version": 1,
+            "data": {
+                "provider": commute_result.get("provider"),
+                "status": commute_result.get("status"),
+                "origin_text": commute_result.get("origin_text"),
+                "destination_text": commute_result.get("destination_text"),
+                "origin": commute_result.get("origin"),
+                "destination": commute_result.get("destination"),
+                "travel_modes": commute_result.get("travel_modes", []),
+                "departure_time_text": commute_result.get("departure_time_text"),
+                "routes": commute_result.get("routes", []),
+                "weather_reminder": commute_result.get("weather_reminder"),
+            },
+        })
+    nearby_result = context.get("nearby_service_tool")
+    if isinstance(nearby_result, dict) and nearby_result.get("success"):
+        cards.append({
+            "type": "poi_list",
+            "card_version": 1,
+            "data": {
+                "query": nearby_result.get("query"),
+                "center": nearby_result.get("center"),
+                "radius_meters": nearby_result.get("radius_meters"),
+                "provider": nearby_result.get("provider"),
+                "fallback_used": nearby_result.get("fallback_used", False),
+                "items": nearby_result.get("items", []),
+            },
+        })
     return cards or None
+
+
+def _extract_tool_monitoring(context: dict) -> dict | None:
+    """提取轻量监控字段，后续监控面板直接消费这份结构。"""
+    monitoring = {}
+    nearby_result = context.get("nearby_service_tool")
+    if isinstance(nearby_result, dict):
+        monitoring["nearby_service_tool"] = {
+            "intent": "nearby_service",
+            "status": nearby_result.get("status"),
+            "provider": nearby_result.get("provider"),
+            "fallback_used": nearby_result.get("fallback_used", False),
+            "query": nearby_result.get("query"),
+            "center_name": nearby_result.get("center_name"),
+            "radius_meters": nearby_result.get("radius_meters"),
+            "result_count": nearby_result.get("result_count", 0),
+            "error_code": nearby_result.get("error_code", ""),
+            "error_message": nearby_result.get("error_message", ""),
+        }
+    return monitoring or None
 
 
 def _format_raw_results(context: dict) -> str:
@@ -642,11 +727,28 @@ def _format_raw_results(context: dict) -> str:
                 weather = val.get("weather", {})
                 for label, data in weather.items():
                     parts.append(f"【{label}】{json.dumps(data, ensure_ascii=False, indent=2)}")
+            elif key == "commute_plan_tool":
+                parts.append(f"通勤规划：{val.get('origin_text', '')} → {val.get('destination_text', '')}")
+                for route in val.get("routes", []):
+                    if route.get("success"):
+                        parts.append(f"- {route.get('label')}: {route.get('duration_text')}，{route.get('distance_text')}")
+                    else:
+                        parts.append(f"- {route.get('label', route.get('mode'))}: 规划失败，{route.get('error', '未知原因')}")
+                if val.get("weather_reminder"):
+                    parts.append(val["weather_reminder"])
+            elif key == "nearby_service_tool":
+                parts.append(f"周边服务：{val.get('center_name', '')} 附近的 {val.get('query', '')}")
+                for item in val.get("items", [])[:10]:
+                    distance = item.get("distance_meters")
+                    distance_text = f"{distance} 米" if distance is not None else "距离暂不可用"
+                    parts.append(f"- {item.get('name', '未命名地点')}：{distance_text}，{item.get('address', '')}")
             elif key == "email_tool" and val.get("status") == "awaiting_confirmation":
                 preview = val.get("preview", {})
                 parts.append(f"收件人: {preview.get('receiver', '')}")
                 parts.append(f"主题: {preview.get('subject', '')}")
                 parts.append(f"正文:\n{preview.get('body', '')}")
+        elif key == "nearby_service_tool" and val.get("status") == "empty":
+            parts.append(val.get("empty_message") or "指定范围内暂时没有找到相关地点，可以扩大范围或换个关键词。")
         else:
             # 工具执行失败，展示错误信息
             err = val.get("error", "未知错误")

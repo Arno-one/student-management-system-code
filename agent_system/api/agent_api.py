@@ -19,7 +19,14 @@ from agent_system.hitl.hitl_schema import HitlConfirmRequest
 from agent_system.hitl.hitl_manager import get_paused_state, clear_paused_state
 from agent_system.tools.email_whitelist import ALLOWED_RECIPIENTS
 from agent_system.tools.mcp_client import tencent_map_mcp_client
-from DAO.agent_dao import get_admin_tasks, get_feedbacks_by_task_ids, get_task_by_id, update_task, upsert_feedback
+from DAO.agent_dao import (
+    create_feedback,
+    get_admin_tasks,
+    get_feedback_by_task_tool,
+    get_feedbacks_by_task_ids,
+    get_task_by_id,
+    update_task,
+)
 
 logger = get_logger(__name__)
 
@@ -70,10 +77,87 @@ def _parse_tool_calls(raw: str | None) -> list[dict]:
     return []
 
 
+def _parse_steps_payload(raw: str | None) -> dict:
+    """解析 AgentTask.steps_json，兼容旧版直接存 tool_calls 列表的格式。"""
+    if not raw:
+        return {}
+    try:
+        data = json.loads(raw)
+    except (TypeError, json.JSONDecodeError):
+        return {}
+    if isinstance(data, dict):
+        return data
+    if isinstance(data, list):
+        return {"tool_calls": [item for item in data if isinstance(item, dict)]}
+    return {}
+
+
+def _parse_tool_monitoring(raw: str | None) -> dict:
+    """读取工具轻量监控字段，主要用于地图 provider、兜底和结果数量统计。"""
+    payload = _parse_steps_payload(raw)
+    monitoring = payload.get("tool_monitoring")
+    return monitoring if isinstance(monitoring, dict) else {}
+
+
+def _parse_cards(raw: str | None) -> list[dict]:
+    """读取结构化卡片摘要；旧任务没有 cards 时返回空列表。"""
+    payload = _parse_steps_payload(raw)
+    cards = payload.get("cards")
+    return [item for item in cards if isinstance(item, dict)] if isinstance(cards, list) else []
+
+
+def _provider_summary(monitoring: dict) -> str:
+    """把 provider 监控压成表格可读摘要。"""
+    parts = []
+    for tool_name, item in monitoring.items():
+        if not isinstance(item, dict):
+            continue
+        provider = item.get("provider") or "unknown"
+        fallback = "，兜底" if item.get("fallback_used") else ""
+        result_count = item.get("result_count")
+        count_text = f"，{result_count}条" if result_count is not None else ""
+        parts.append(f"{tool_name}: {provider}{fallback}{count_text}")
+    return "；".join(parts)
+
+
+def _card_summary(cards: list[dict]) -> str:
+    """把卡片类型压成摘要，便于监控表快速定位卡片产出。"""
+    if not cards:
+        return ""
+    bucket: dict[str, int] = {}
+    for card in cards:
+        key = str(card.get("type") or "unknown")
+        bucket[key] = bucket.get(key, 0) + 1
+    return "；".join(f"{key}×{count}" for key, count in bucket.items())
+
+
+_NEGATIVE_REASON_KEYWORDS = [
+    ("地图定位", ["定位", "地址", "经纬度", "宝安", "龙岗", "地图", "路线"]),
+    ("结果为空", ["没有", "未查到", "空", "查不到", "无结果"]),
+    ("答案错误", ["错", "错误", "不对", "不准确", "乱说"]),
+    ("工具失败", ["失败", "异常", "报错", "不能用", "不可用"]),
+    ("响应慢", ["慢", "卡", "等太久", "超时"]),
+    ("体验问题", ["不好用", "看不懂", "啰嗦", "格式", "排版"]),
+]
+
+
+def _negative_reason_label(comment: str | None) -> str:
+    """用轻量关键词把差评原因归类，不做复杂 NLP，避免误判成本过高。"""
+    text = (comment or "").strip()
+    if not text:
+        return "未填写原因"
+    for label, keywords in _NEGATIVE_REASON_KEYWORDS:
+        if any(keyword in text for keyword in keywords):
+            return label
+    return "其他"
+
+
 def _task_to_admin_row(task, feedback_map: dict[int, object]) -> dict:
     """把 AgentTask 转成前端监控表格需要的扁平结构"""
     feedback = feedback_map.get(task.id)
     tool_calls = _parse_tool_calls(task.steps_json)
+    monitoring = _parse_tool_monitoring(task.steps_json)
+    cards = _parse_cards(task.steps_json)
     return {
         "id": task.id,
         "create_time": task.create_time.isoformat() if task.create_time else None,
@@ -83,10 +167,14 @@ def _task_to_admin_row(task, feedback_map: dict[int, object]) -> dict:
         "status": task.status,
         "total_duration_ms": task.total_duration_ms or 0,
         "tool_calls": tool_calls,
+        "tool_monitoring": monitoring,
+        "cards": cards,
         "tool_summary": "；".join(
             f"{item.get('tool_name', '-')}: {item.get('status', '-')}"
             for item in tool_calls
         ),
+        "provider_summary": _provider_summary(monitoring),
+        "card_summary": _card_summary(cards),
         "feedback_rating": feedback.rating if feedback else None,
         "feedback_comment": feedback.comment if feedback else None,
         "original_message": (task.original_message or "")[:120],
@@ -189,6 +277,7 @@ def get_messages(
         raise HTTPException(status_code=404, detail="会话不存在")
     logger.info("获取 Agent 会话消息: session=%s, user=%s", session_id, current_user["username"])
     msgs = talk_dao.get_messages_by_session(session_id, db)
+    task_ids = []
     result = []
     for m in msgs:
         item = {
@@ -202,9 +291,38 @@ def get_messages(
                 data = json.loads(m.ai_content)
                 item["reply"] = data.get("reply", m.ai_content)
                 item["metadata"] = {k: v for k, v in data.items() if k != "reply"}
+                task_id = item["metadata"].get("task_id") if item["metadata"] else None
+                if task_id:
+                    try:
+                        task_ids.append(int(task_id))
+                    except (TypeError, ValueError):
+                        pass
             except (json.JSONDecodeError, TypeError):
                 item["reply"] = m.ai_content
         result.append(item)
+
+    feedback_map = {}
+    for feedback in get_feedbacks_by_task_ids(db, task_ids):
+        # v2.2 仍以任务级反馈为主；工具级反馈后续扩展时单独处理。
+        if feedback.tool_name is None:
+            feedback_map[feedback.task_id] = feedback
+
+    for item in result:
+        metadata = item.get("metadata") or {}
+        try:
+            task_id = int(metadata.get("task_id")) if metadata.get("task_id") else None
+        except (TypeError, ValueError):
+            task_id = None
+        feedback = feedback_map.get(task_id)
+        if feedback:
+            metadata["feedback"] = {
+                "submitted": True,
+                "rating": feedback.rating,
+                "comment": feedback.comment,
+                "tool_name": feedback.tool_name,
+                "feedback_id": feedback.id,
+            }
+            item["metadata"] = metadata
     return success(result)
 
 
@@ -212,7 +330,12 @@ def get_messages(
 def list_personas():
     personas = []
     for key, entry in PERSONA_REGISTRY.items():
-        personas.append({"id": key, "name": entry["name"], "description": entry["description"]})
+        personas.append({
+            "id": key,
+            "name": entry["name"],
+            "icon": entry.get("icon", ""),
+            "description": entry["description"],
+        })
     return success(personas)
 
 
@@ -227,10 +350,14 @@ def submit_feedback(
     if not task or task.user_id != current_user["username"]:
         raise HTTPException(status_code=404, detail="Agent 任务不存在或无权反馈")
 
-    # v2.1 以任务级反馈为主；tool_name 仅作为后续步骤级反馈扩展点保留。
+    # v2.2 约定：同一轮任务反馈只能提交一次，历史回放也必须保持锁定。
     tool_name = req.tool_name.strip() if req.tool_name else None
     comment = req.comment.strip() if req.comment else None
-    fb, updated = upsert_feedback(
+    existing = get_feedback_by_task_tool(db, task_id=req.task_id, tool_name=tool_name)
+    if existing:
+        raise HTTPException(status_code=409, detail="本轮对话已经提交过反馈，不能重复提交")
+
+    fb = create_feedback(
         db=db,
         task_id=req.task_id,
         rating=req.rating,
@@ -242,7 +369,7 @@ def submit_feedback(
         current_user["username"],
         req.task_id,
         req.rating,
-        updated,
+        False,
     )
     return success({
         "feedback_id": fb.id,
@@ -250,7 +377,7 @@ def submit_feedback(
         "rating": fb.rating,
         "comment": fb.comment,
         "tool_name": fb.tool_name,
-        "updated": updated,
+        "updated": False,
     })
 
 
@@ -264,11 +391,14 @@ def admin_metrics(
     tasks, feedback_map, window_days = _load_monitor_context(db, days=days)
     total = len(tasks)
     success_count = sum(1 for task in tasks if task.status == "success")
+    partial_success_count = sum(1 for task in tasks if task.status == "partial_success")
+    clarification_count = sum(1 for task in tasks if task.status == "clarification")
+    empty_count = sum(1 for task in tasks if task.status == "empty")
     error_count = sum(1 for task in tasks if task.status == "error")
     cancelled_count = sum(1 for task in tasks if task.status == "cancelled")
     awaiting_count = sum(1 for task in tasks if task.status == "awaiting_hitl")
     running_count = sum(1 for task in tasks if task.status in {"running", "pending"})
-    completed_total = success_count + error_count
+    completed_total = success_count + partial_success_count + empty_count + error_count
     durations = [task.total_duration_ms or 0 for task in tasks if task.total_duration_ms]
 
     feedbacks = list(feedback_map.values())
@@ -280,11 +410,14 @@ def admin_metrics(
         "total_tasks": total,
         "completed_tasks": completed_total,
         "success_count": success_count,
+        "partial_success_count": partial_success_count,
+        "clarification_count": clarification_count,
+        "empty_count": empty_count,
         "error_count": error_count,
         "cancelled_count": cancelled_count,
         "awaiting_hitl_count": awaiting_count,
         "running_count": running_count,
-        "success_rate": _rate(success_count, completed_total),
+        "success_rate": _rate(success_count + partial_success_count, completed_total),
         "avg_duration_ms": int(sum(durations) / len(durations)) if durations else 0,
         "p50_duration_ms": _percentile(durations, 0.5),
         "p99_duration_ms": _percentile(durations, 0.99),
@@ -350,7 +483,7 @@ def admin_metrics_intents(
         key = task.intent or "unknown"
         item = bucket.setdefault(key, {"intent": key, "count": 0, "success": 0, "error": 0, "_durations": []})
         item["count"] += 1
-        if task.status == "success":
+        if task.status in {"success", "partial_success"}:
             item["success"] += 1
         elif task.status == "error":
             item["error"] += 1
@@ -380,11 +513,26 @@ def admin_metrics_tools(
     for task in tasks:
         for call in _parse_tool_calls(task.steps_json):
             key = call.get("tool_name") or "unknown_tool"
-            item = bucket.setdefault(key, {"tool_name": key, "total": 0, "success": 0, "error": 0})
+            item = bucket.setdefault(key, {
+                "tool_name": key,
+                "total": 0,
+                "success": 0,
+                "partial_success": 0,
+                "empty": 0,
+                "clarification": 0,
+                "error": 0,
+            })
             item["total"] += 1
-            if call.get("status") == "success":
+            status = call.get("status")
+            if status == "success":
                 item["success"] += 1
-            elif call.get("status") == "error":
+            elif status == "partial_success":
+                item["partial_success"] += 1
+            elif status == "empty":
+                item["empty"] += 1
+            elif status == "clarification":
+                item["clarification"] += 1
+            elif status == "error":
                 item["error"] += 1
 
     rows = []
@@ -392,6 +540,89 @@ def admin_metrics_tools(
         item["failure_rate"] = _rate(item["error"], item["total"])
         rows.append(item)
     rows.sort(key=lambda row: (row["failure_rate"], row["total"]), reverse=True)
+    return success(rows)
+
+
+@agent_router.get("/admin/metrics/providers", summary="Agent 地图 provider 分布指标")
+def admin_metrics_providers(
+    days: int = 7,
+    _: dict = Depends(require_role("admin")),
+    db: Session = Depends(get_db),
+):
+    """从 tool_monitoring 中聚合 provider、兜底次数、空结果和错误情况。"""
+    tasks, _, _ = _load_monitor_context(db, days=days)
+    bucket: dict[str, dict] = {}
+    for task in tasks:
+        monitoring = _parse_tool_monitoring(task.steps_json)
+        for tool_name, raw_item in monitoring.items():
+            if not isinstance(raw_item, dict):
+                continue
+            provider = raw_item.get("provider") or "unknown_provider"
+            key = f"{tool_name}:{provider}"
+            item = bucket.setdefault(key, {
+                "tool_name": tool_name,
+                "provider": provider,
+                "total": 0,
+                "success": 0,
+                "partial_success": 0,
+                "empty": 0,
+                "error": 0,
+                "fallback_count": 0,
+                "result_count": 0,
+                "last_error_code": "",
+                "last_error_message": "",
+            })
+            status = raw_item.get("status") or "unknown"
+            item["total"] += 1
+            if status in {"success", "partial_success", "empty", "error"}:
+                item[status] += 1
+            if raw_item.get("fallback_used"):
+                item["fallback_count"] += 1
+            try:
+                item["result_count"] += int(raw_item.get("result_count") or 0)
+            except (TypeError, ValueError):
+                pass
+            if raw_item.get("error_code") or raw_item.get("error_message"):
+                item["last_error_code"] = raw_item.get("error_code") or ""
+                item["last_error_message"] = raw_item.get("error_message") or ""
+
+    rows = []
+    for item in bucket.values():
+        item["fallback_rate"] = _rate(item["fallback_count"], item["total"])
+        item["empty_rate"] = _rate(item["empty"], item["total"])
+        item["failure_rate"] = _rate(item["error"], item["total"])
+        rows.append(item)
+    rows.sort(key=lambda row: (row["failure_rate"], row["fallback_rate"], row["total"]), reverse=True)
+    return success(rows)
+
+
+@agent_router.get("/admin/metrics/feedback-reasons", summary="Agent 差评原因聚合")
+def admin_metrics_feedback_reasons(
+    days: int = 7,
+    _: dict = Depends(require_role("admin")),
+    db: Session = Depends(get_db),
+):
+    """对 1-2 分反馈做轻量关键词归因，帮助管理员快速定位高频问题。"""
+    tasks, feedback_map, _ = _load_monitor_context(db, days=days)
+    task_by_id = {task.id: task for task in tasks}
+    bucket: dict[str, dict] = {}
+    for feedback in feedback_map.values():
+        if feedback.rating > 2:
+            continue
+        label = _negative_reason_label(feedback.comment)
+        item = bucket.setdefault(label, {"reason": label, "count": 0, "examples": []})
+        item["count"] += 1
+        task = task_by_id.get(feedback.task_id)
+        if len(item["examples"]) < 3:
+            item["examples"].append({
+                "task_id": feedback.task_id,
+                "intent": task.intent if task else "",
+                "comment": feedback.comment or "",
+                "message": (task.original_message or "")[:80] if task else "",
+            })
+
+    rows = list(bucket.values())
+    rows.sort(key=lambda row: row["count"], reverse=True)
     return success(rows)
 
 

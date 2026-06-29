@@ -37,10 +37,11 @@ def get_hitl_rule(tool_name: str) -> HitlRule:
     return HITL_RULES.get(tool_name, DEFAULT_HITL_RULE)
 
 
-def build_hitl_payload(tool_name: str, preview: dict, rule: HitlRule, expires_at: float) -> dict:
+def build_hitl_payload(tool_name: str, preview: dict, rule: HitlRule, expires_at: float, step_id: int | None = None) -> dict:
     """构造 SSE awaiting_confirmation 事件数据"""
     return {
         "tool_name": tool_name,
+        "step_id": step_id,
         "preview": preview,
         "risk_level": rule.risk_level,
         "timeout_seconds": rule.timeout_seconds,

@@ -16,7 +16,7 @@ class AgentTask(Base):
     rewritten_message = Column(Text, nullable=True, comment="中间件改写后的消息（如有）")
     plan_json = Column(Text, nullable=True, comment="生成的执行计划 JSON")
     steps_json = Column(Text, nullable=True, comment="各步骤执行结果 JSON")
-    status = Column(String(30), default="pending", comment="状态: pending/running/awaiting_hitl/success/error/cancelled")
+    status = Column(String(30), default="pending", comment="状态: pending/running/awaiting_hitl/success/partial_success/clarification/empty/error/cancelled")
     total_duration_ms = Column(Integer, default=0, comment="总耗时（毫秒）")
     create_time = Column(DateTime, default=datetime.now, comment="创建时间")
     update_time = Column(DateTime, default=datetime.now, onupdate=datetime.now, comment="更新时间")

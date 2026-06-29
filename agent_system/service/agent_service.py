@@ -8,10 +8,9 @@ from agent_system.schemas.agent_request import AgentChatRequest
 from agent_system.schemas.agent_response import AgentChatResponse
 from agent_system.planner import classify_intent, build_plan
 from agent_system.executor import run_plan, run_plan_stream
-from agent_system.memory import get_or_create_session, get_history, refresh_summary_if_needed, save_message
-from agent_system.middleware.input_guard import check as guard_check
-from agent_system.middleware.query_rewriter import check as rewrite_check
-from agent_system.middleware.policy_checker import check as policy_check
+from agent_system.memory import get_or_create_session, get_history, refresh_summary_safely, save_message
+from agent_system.middleware.middleware_graph import run_agent_middleware
+from agent_system.supervisor import build_supervisor_decision
 from DAO.agent_dao import create_task, update_task
 from util.log import get_logger
 
@@ -19,30 +18,98 @@ logger = get_logger(__name__)
 
 
 def _run_middleware(message: str, history: list | None = None) -> dict:
-    """执行中间件管线: guard → rewriter → policy，返回统一结果 dict"""
-    # 1. 输入安全守卫
-    guard = guard_check(message)
-    if guard.decision == "reject":
-        return {"decision": "reject", "reason": guard.reject_reason, "rewritten": None}
-
-    # 2. 查询改写（需对话历史）
-    rewrite = rewrite_check(message, history=history)
-    rewritten = rewrite.rewritten_message
-
-    # 3. 策略核验
-    policy = policy_check(message, rewritten)
-    if policy.decision == "reject":
-        return {"decision": "reject", "reason": policy.reject_reason, "rewritten": rewritten}
-
-    if policy.decision == "rewrite" and rewritten:
-        return {"decision": "rewrite", "reason": None, "rewritten": rewritten}
-
-    return {"decision": "pass", "reason": None, "rewritten": None}
+    """执行 LangGraph 中间件管线，返回统一结果 dict。"""
+    return run_agent_middleware(message, history=history)
 
 
 def _refresh_memory_after_reply(session_id: int, persona: str, db: Session) -> None:
-    """回复保存后刷新会话摘要；失败不影响本次 Agent 回复。"""
-    refresh_summary_if_needed(session_id=session_id, persona=persona, db=db)
+    """回复保存后立即刷新会话摘要；失败不影响本次 Agent 回复。"""
+    refresh_summary_safely(session_id=session_id, persona=persona, db=db)
+
+
+def _task_status_from_tools(tool_calls: list[dict] | None, hitl_data: dict | None = None) -> str:
+    """根据工具状态推导 AgentTask 状态，支持 partial_success/empty。"""
+    if hitl_data:
+        return "awaiting_hitl"
+    if not tool_calls:
+        return "success"
+    statuses = [item.get("status") for item in tool_calls if isinstance(item, dict)]
+    if statuses and all(status == "empty" for status in statuses):
+        return "empty"
+    if any(status == "partial_success" for status in statuses):
+        return "partial_success"
+    if statuses and all(status == "error" for status in statuses):
+        return "error"
+    if any(status == "error" for status in statuses):
+        return "partial_success"
+    return "success"
+
+
+def _intent_from_middleware(metadata: dict) -> str:
+    """从中间件 metadata 中推导业务意图，避免澄清任务全部写成通勤。"""
+    if metadata.get("intent"):
+        return metadata["intent"]
+    if metadata.get("nearby"):
+        return "nearby_service"
+    if metadata.get("commute"):
+        return "commute_plan"
+    return "general_chat"
+
+
+def _intent_override_from_middleware(metadata: dict, current_intent: str) -> str:
+    """中间件已明确识别地图类意图时，优先使用确定性结果。"""
+    middleware_intent = _intent_from_middleware(metadata)
+    if middleware_intent in {"nearby_service", "commute_plan"}:
+        return middleware_intent
+    return current_intent
+
+
+def _handle_clarification(
+    session_id: int,
+    user_id: str,
+    persona: str,
+    original_message: str,
+    reply: str,
+    metadata: dict,
+    db: Session,
+    t0: float,
+) -> AgentChatResponse:
+    """输入不完整时保存澄清回复，不进入 planner 和工具执行。"""
+    intent = _intent_from_middleware(metadata)
+    save_message(session_id, "user", original_message, db=db)
+    task = create_task(
+        db=db,
+        user_id=user_id,
+        persona=persona,
+        intent=intent,
+        original_message=original_message,
+        session_id=session_id,
+    )
+    meta = {
+        "intent": intent,
+        "task_id": task.id,
+        "clarification": True,
+        "middleware": metadata,
+    }
+    save_message(session_id, "assistant", reply, metadata=meta, db=db)
+    _refresh_memory_after_reply(session_id, persona, db)
+    update_task(
+        db,
+        task.id,
+        status="clarification",
+        steps_json=json.dumps({"clarification": metadata}, ensure_ascii=False),
+        total_duration_ms=int((time.time() - t0) * 1000),
+    )
+    return AgentChatResponse(
+        reply=reply,
+        intent=intent,
+        persona=persona,
+        tool_calls=None,
+        sources=None,
+        cards=None,
+        session_id=session_id,
+        task_id=task.id,
+    )
 
 
 def handle_agent_chat(
@@ -60,12 +127,29 @@ def handle_agent_chat(
     mw = _run_middleware(req.message, history=history)
     if mw["decision"] == "reject":
         return {"code": 400, "msg": mw["reason"], "data": None}
+    if mw["decision"] == "clarification":
+        result = _handle_clarification(
+            session_id=session.id,
+            user_id=current_user["username"],
+            persona=req.persona,
+            original_message=req.message,
+            reply=mw["clarification"] or "请补充完整信息后再试。",
+            metadata=mw.get("metadata") or {},
+            db=db,
+            t0=t0,
+        )
+        return {"code": 200, "msg": "ok", "data": result.model_dump(), "total": None}
     effective_message = mw["rewritten"] or req.message
 
-    intent_result = classify_intent(effective_message)
-    intent = intent_result["intent"]
+    supervisor_decision = build_supervisor_decision(effective_message, persona=req.persona)
+    if supervisor_decision:
+        intent = supervisor_decision.intent
+        plan = supervisor_decision.plan
+    else:
+        intent_result = classify_intent(effective_message)
+        intent = _intent_override_from_middleware(mw.get("metadata") or {}, intent_result["intent"])
+        plan = build_plan(message=effective_message, intent=intent, persona=req.persona, history=history)
     save_message(session.id, "user", req.message, db=db)
-    plan = build_plan(message=effective_message, intent=intent, persona=req.persona, history=history)
 
     # 创建 AgentTask 记录
     task = create_task(
@@ -82,12 +166,18 @@ def handle_agent_chat(
     )
     result.session_id = session.id
     result.task_id = task.id
+    if supervisor_decision:
+        result.supervisor = supervisor_decision.to_metadata()
     tool_meta = None
     if result.tool_calls:
         tool_meta = [{"tool_name": t.tool_name, "status": t.status, "summary": t.summary} for t in result.tool_calls]
     meta = {"intent": result.intent, "tool_calls": tool_meta, "task_id": task.id}
     if result.cards:
         meta["cards"] = result.cards
+    if result.tool_monitoring:
+        meta["tool_monitoring"] = result.tool_monitoring
+    if supervisor_decision:
+        meta["supervisor"] = supervisor_decision.to_metadata()
     save_message(
         session.id,
         "assistant",
@@ -99,8 +189,13 @@ def handle_agent_chat(
 
     # 更新 AgentTask
     update_task(db, task.id,
-        status="success", plan_json=plan.model_dump_json(),
-        steps_json=json.dumps(tool_meta, ensure_ascii=False),
+        status=_task_status_from_tools(tool_meta), plan_json=plan.model_dump_json(),
+        steps_json=json.dumps({
+            "tool_calls": tool_meta,
+            "tool_monitoring": result.tool_monitoring,
+            "cards": result.cards,
+            "supervisor": supervisor_decision.to_metadata() if supervisor_decision else None,
+        }, ensure_ascii=False),
         total_duration_ms=int((time.time() - t0) * 1000),
     )
 
@@ -137,23 +232,56 @@ def handle_agent_chat_stream(
         yield _sse("error", {"message": mw["reason"]})
         return
     yield _sse("guard_pass", {"status": "ok"})
+    yield _sse("session", {"session_id": session.id})
+    if mw["decision"] == "clarification":
+        result = _handle_clarification(
+            session_id=session.id,
+            user_id=current_user["username"],
+            persona=req.persona,
+            original_message=req.message,
+            reply=mw["clarification"] or "请补充完整信息后再试。",
+            metadata=mw.get("metadata") or {},
+            db=db,
+            t0=t0,
+        )
+        yield _sse("intent", {"intent": result.intent, "confidence": 1.0})
+        yield _sse("chunk", {"text": result.reply})
+        yield _sse("done", {
+            "intent": result.intent,
+            "persona": result.persona,
+            "tool_calls": None,
+            "sources": None,
+            "cards": None,
+            "reply": result.reply,
+            "task_id": result.task_id,
+        })
+        return
     effective_message = mw["rewritten"] or req.message
     if mw["rewritten"]:
         yield _sse("rewritten", {"original": req.message, "rewritten": mw["rewritten"]})
 
-    # 1-3. 意图 → 会话 → 历史
-    intent_result = classify_intent(effective_message)
-    intent = intent_result["intent"]
-    logger.info("Agent 意图: %s (confidence=%.2f)", intent, intent_result["confidence"])
-    yield _sse("intent", {"intent": intent, "confidence": intent_result["confidence"]})
-
-    yield _sse("session", {"session_id": session.id})
+    # 1-3. Supervisor 路由优先识别明确跨域请求；未命中再走原单 Agent 意图分类。
+    supervisor_decision = build_supervisor_decision(effective_message, persona=req.persona)
+    if supervisor_decision:
+        intent = supervisor_decision.intent
+        logger.info("Supervisor 接管跨域请求: intent=%s, handoffs=%s", intent, len(supervisor_decision.handoffs))
+        yield _sse("intent", {"intent": intent, "confidence": 1.0})
+        yield _sse("supervisor", supervisor_decision.to_metadata())
+    else:
+        intent_result = classify_intent(effective_message)
+        intent = _intent_override_from_middleware(mw.get("metadata") or {}, intent_result["intent"])
+        logger.info("Agent 意图: %s (confidence=%.2f)", intent, intent_result["confidence"])
+        yield _sse("intent", {"intent": intent, "confidence": intent_result["confidence"]})
 
     history = get_history(session.id, db)
     save_message(session.id, "user", req.message, db=db)
 
     # 4. 计划
-    plan = build_plan(message=effective_message, intent=intent, persona=req.persona, history=history)
+    plan = (
+        supervisor_decision.plan
+        if supervisor_decision
+        else build_plan(message=effective_message, intent=intent, persona=req.persona, history=history)
+    )
     yield _sse("plan", {"intent": plan.intent, "steps": [s.tool_name for s in plan.steps], "need_llm_summary": plan.need_llm_summary})
 
     # 创建 AgentTask 记录
@@ -169,7 +297,9 @@ def handle_agent_chat_stream(
     tool_calls_data = None
     sources_data = None
     cards_data = None
+    tool_monitoring_data = None
     hitl_data = None  # HITL 预览数据，需持久化以便历史消息回显
+    hitl_step_id = None
 
     for event_str in run_plan_stream(
         plan=plan, user=current_user, db=db, db_readonly=db_readonly,
@@ -182,6 +312,7 @@ def handle_agent_chat_stream(
                 line = event_str.split("\n")[1]
                 if line.startswith("data: "):
                     hitl_data = json.loads(line[6:])
+                    hitl_step_id = hitl_data.get("step_id") or 1
             except (IndexError, json.JSONDecodeError):
                 pass
 
@@ -203,9 +334,12 @@ def handle_agent_chat_stream(
                     meta = json.loads(line[6:])
                     # 前端反馈按钮依赖 task_id，把本次 AgentTask 主键透传到 done 事件。
                     meta["task_id"] = task.id
+                    if supervisor_decision:
+                        meta["supervisor"] = supervisor_decision.to_metadata()
                     tool_calls_data = meta.get("tool_calls")
                     sources_data = meta.get("sources")
                     cards_data = meta.get("cards")
+                    tool_monitoring_data = meta.get("tool_monitoring")
                     # executor 在 done 事件中直接携带完整回复，避免重复拼接
                     if meta.get("reply"):
                         full_reply = meta["reply"]
@@ -221,9 +355,14 @@ def handle_agent_chat_stream(
         meta["sources"] = sources_data
     if cards_data:
         meta["cards"] = cards_data
+    if tool_monitoring_data:
+        meta["tool_monitoring"] = tool_monitoring_data
+    if supervisor_decision:
+        meta["supervisor"] = supervisor_decision.to_metadata()
     if hitl_data:
         meta["hitl"] = {
             "tool_name": hitl_data.get("tool_name"),
+            "step_id": hitl_step_id or hitl_data.get("step_id") or 1,
             "preview": hitl_data.get("preview", {}),
             "risk_level": hitl_data.get("risk_level"),
             "timeout_seconds": hitl_data.get("timeout_seconds"),
@@ -242,13 +381,19 @@ def handle_agent_chat_stream(
     # HITL 场景下，把消息 ID 注入执行状态以便 confirm 端点回写结果
     if hitl_data and saved_msg:
         from agent_system.hitl.hitl_manager import set_hitl_agent_task_id, set_hitl_message_id
-        set_hitl_message_id(str(session.id), 1, saved_msg.id)
-        set_hitl_agent_task_id(str(session.id), 1, task.id)
+        step_id = int(hitl_step_id or hitl_data.get("step_id") or 1)
+        set_hitl_message_id(str(session.id), step_id, saved_msg.id)
+        set_hitl_agent_task_id(str(session.id), step_id, task.id)
 
     # 更新 AgentTask
     update_task(db, task.id,
-        status="awaiting_hitl" if hitl_data else "success", plan_json=plan.model_dump_json(),
-        steps_json=json.dumps(tool_calls_data, ensure_ascii=False),
+        status=_task_status_from_tools(tool_calls_data, hitl_data), plan_json=plan.model_dump_json(),
+        steps_json=json.dumps({
+            "tool_calls": tool_calls_data,
+            "tool_monitoring": tool_monitoring_data,
+            "cards": cards_data,
+            "supervisor": supervisor_decision.to_metadata() if supervisor_decision else None,
+        }, ensure_ascii=False),
         total_duration_ms=int((time.time() - t0) * 1000),
     )
 

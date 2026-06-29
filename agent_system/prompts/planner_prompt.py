@@ -18,6 +18,8 @@ PLAN_BUILD_PROMPT = """你是一个任务计划生成器。根据用户意图和
 - nl2sql_tool：将自然语言转为SQL查询数据库（用于开放式数据统计问题）
 - student_tool：查询或推导学生基本信息
 - weather_tool：查询指定城市的天气（实时、多日预报、空气质量、预警）
+- commute_plan_tool：规划学生实习或外出通勤路线，要求用户明确起点、终点、出行方式
+- nearby_service_tool：查询指定地点周边的餐饮、医院、打印店、银行、地铁站等生活服务 POI，要求用户明确地点和服务类型
 - email_tool：根据用户需求生成邮件内容预览，需经用户确认后才发送
 
 计划生成规则（非常重要）：
@@ -57,7 +59,17 @@ PLAN_BUILD_PROMPT = """你是一个任务计划生成器。根据用户意图和
    need_llm_summary: true（把原始天气数据转化为易读的总结）
    summary_instruction: "用友好的语气向用户播报天气情况，包括温度、天气状况、空气质量、预警等关键信息"
 
-8. 意图为 email_draft 时：
+8. 意图为 commute_plan 时：
+   steps: [{"step_id": 1, "tool_name": "commute_plan_tool"}]
+   need_llm_summary: true
+   summary_instruction: "结合路线结果和天气辅助信息，给出简洁、可执行的通勤建议。说明起点、终点、出行方式、预计耗时、距离；如果天气不可用，只提示天气建议暂不可用，不影响路线。"
+
+9. 意图为 nearby_service 时：
+   steps: [{"step_id": 1, "tool_name": "nearby_service_tool"}]
+   need_llm_summary: true
+   summary_instruction: "结合周边地点列表，用简洁可信的方式说明查询中心、范围和结果数量。不要做最好、最安全、最便宜等绝对判断；如果无结果，建议用户扩大范围或换关键词。"
+
+10. 意图为 email_draft 时：
    steps: [{"step_id": 1, "tool_name": "email_tool"}]
    need_llm_summary: false（邮件预览由前端展示，不需要 LLM 额外总结）
    summary_instruction: null

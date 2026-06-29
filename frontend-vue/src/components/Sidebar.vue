@@ -120,7 +120,11 @@ function getTargetSub(item) {
 
 function handleNavigate(item) {
   if (hasChildren(item)) {
-    expandedPage.value = expandedPage.value === item.page ? '' : item.page
+    // 有二级功能的模块也要能直接进入，避免侧栏折叠或子菜单未渲染时入口失效。
+    if (!props.collapsed) {
+      expandedPage.value = expandedPage.value === item.page ? '' : item.page
+    }
+    emit('navigate', { page: item.page, sub: getTargetSub(item) })
     return
   }
   emit('navigate', { page: item.page, sub: getTargetSub(item) })

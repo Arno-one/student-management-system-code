@@ -40,6 +40,18 @@
       </div>
     </div>
 
+    <div class="agent-weather-hourly" v-if="hourlyItems.length">
+      <div class="agent-weather-section-title">逐时预报</div>
+      <div class="agent-weather-hours">
+        <article class="agent-weather-hour" v-for="hour in hourlyItems" :key="hour.key">
+          <span>{{ hour.time }}</span>
+          <strong>{{ hour.temperature }}℃</strong>
+          <div>{{ weatherEmoji(hour.weather) }}</div>
+          <small>{{ hour.weather || '--' }}</small>
+        </article>
+      </div>
+    </div>
+
     <footer class="agent-weather-foot" v-if="footerText">{{ footerText }}</footer>
   </section>
 </template>
@@ -65,6 +77,7 @@ function unwrapPayload(payload) {
 
 const nowPayload = computed(() => unwrapPayload(weatherBlocks.value['实时天气']))
 const futurePayload = computed(() => unwrapPayload(weatherBlocks.value['多日预报']))
+const hourlyPayload = computed(() => unwrapPayload(weatherBlocks.value['逐时预报']))
 
 const nowItem = computed(() => {
   const realtime = nowPayload.value.realtime
@@ -97,8 +110,25 @@ const forecastDays = computed(() => {
   })
 })
 
+const hourlyItems = computed(() => {
+  const forecastHours = hourlyPayload.value.forecast_hours
+  const first = Array.isArray(forecastHours) && forecastHours.length ? forecastHours[0] : null
+  const infos = first?.infos || []
+  return infos.slice(0, props.compact ? 4 : 8).map((item, idx) => {
+    const info = item.info || {}
+    return {
+      key: `${item.hour || idx}-${info.weather || ''}`,
+      time: displayHour(item.hour),
+      weather: info.weather || '',
+      temperature: displayValue(info.temperature),
+    }
+  })
+})
+
 const locationTitle = computed(() => {
-  const item = nowItem.value || (Array.isArray(futurePayload.value.forecast) ? futurePayload.value.forecast[0] : null)
+  const futureItem = Array.isArray(futurePayload.value.forecast) ? futurePayload.value.forecast[0] : null
+  const hourlyItem = Array.isArray(hourlyPayload.value.forecast_hours) ? hourlyPayload.value.forecast_hours[0] : null
+  const item = nowItem.value || futureItem || hourlyItem
   const loc = [item?.province, item?.city, item?.district].filter(Boolean).join(' · ')
   return loc || weatherData.value.location_text || '天气查询结果'
 })
@@ -106,6 +136,7 @@ const locationTitle = computed(() => {
 const providerLabel = computed(() => {
   if (weatherData.value.provider === 'tencent_mcp') return '腾讯地图 MCP'
   if (weatherData.value.provider === 'tencent_rest_fallback') return '腾讯地图 REST'
+  if (weatherData.value.provider === 'work_weather') return '工作台天气'
   return '天气数据'
 })
 
@@ -126,7 +157,12 @@ const footerText = computed(() => {
   return ''
 })
 
-const hasWeather = computed(() => nowInfo.value || forecastDays.value.length || Object.keys(weatherBlocks.value).length)
+const hasWeather = computed(() => nowInfo.value || forecastDays.value.length || hourlyItems.value.length || Object.keys(weatherBlocks.value).length)
+
+function displayHour(value) {
+  const text = String(value || '')
+  return text.split(' ')[1] || text || '--'
+}
 
 function displayValue(value) {
   return value === null || value === undefined || value === '' ? '--' : value
@@ -259,12 +295,47 @@ function displayValue(value) {
   gap: 8px;
 }
 
+.agent-weather-hours {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
+  gap: 8px;
+}
+
 .agent-weather-day {
   min-width: 0;
   padding: 9px;
   border-radius: 7px;
   background: var(--panel-2);
   border: 1px solid var(--line);
+}
+
+.agent-weather-hour {
+  min-width: 0;
+  padding: 9px;
+  border-radius: 7px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  text-align: center;
+}
+
+.agent-weather-hour span,
+.agent-weather-hour small {
+  display: block;
+  color: var(--text-muted);
+  font-size: 11px;
+  word-break: break-word;
+}
+
+.agent-weather-hour strong {
+  display: block;
+  margin: 5px 0;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.agent-weather-hour div {
+  margin-bottom: 3px;
+  font-size: 22px;
 }
 
 .day-top {
