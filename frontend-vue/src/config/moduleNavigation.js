@@ -1,4 +1,4 @@
-// 统一维护左侧模块与二级子功能，避免侧边栏和页面各写一份配置。
+// 统一维护侧栏模块与二级子功能，避免侧边栏和页面各写一份配置。
 export const moduleNavigation = [
   {
     page: 'student',
@@ -62,7 +62,7 @@ export const moduleNavigation = [
       { value: 'te-create', label: '新增教师' },
       { value: 'te-import', label: '批量导入（Excel）' },
       { value: 'te-query', label: '查询教师' },
-      { value: 'te-op', label: '按 ID 查 / 更新教师' },
+      { value: 'te-op', label: '按 ID 查询 / 更新教师' },
     ],
   },
   {
@@ -74,7 +74,7 @@ export const moduleNavigation = [
     children: [
       { value: 'staGeStu', label: '年龄大于阈值的学生' },
       { value: 'staStuCount', label: '学生总数' },
-      { value: 'staScoreGreater', label: '每次考试 ≥ 阈值分' },
+      { value: 'staScoreGreater', label: '每次考试 >= 阈值分' },
       { value: 'staScoreFails', label: '2 次以上不及格' },
       { value: 'staClassAvg', label: '班级平均分' },
       { value: 'staTallSal', label: '最高薪资排行' },
@@ -108,8 +108,17 @@ export const moduleNavigation = [
       { value: 'ns-history', label: '历史记录' },
     ],
   },
-  { page: 'rag', short: 'RA', label: '四大名著知识库', desc: 'RAG 混合检索 + AI 问答' },
-  { page: 'agent', short: 'AG', label: '智能 Agent 助手', desc: '学业导师 · 成绩查询 · 陪伴对话' },
+  {
+    page: 'rag',
+    short: 'RA',
+    label: 'RAG 知识库工作台',
+    desc: '经典文学问答与工程文档检索',
+    children: [
+      { value: 'rg-novels', label: '经典文学问答' },
+      { value: 'rg-production', label: '工程文档检索' },
+    ],
+  },
+  { page: 'agent', short: 'AG', label: '智能 Agent 助手', desc: '学业导师 / 成绩查询 / 陪伴对话' },
   {
     page: 'system',
     short: 'SM',

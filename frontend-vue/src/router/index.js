@@ -13,14 +13,14 @@ const routes = [
   { path: '/work', name: 'work', component: () => import('../views/WorkView.vue'), meta: { title: 'AI 作业模块', menuCode: 'work:page' } },
   { path: '/email', name: 'email', component: () => import('../views/EmailView.vue'), meta: { title: '邮件管理', menuCode: 'email:page' } },
   { path: '/nl2sql', name: 'nl2sql', component: () => import('../views/NL2SQLView.vue'), meta: { title: 'NL2SQL 智能问数', menuCode: 'nl2sql:page' } },
-  { path: '/rag', name: 'rag', component: () => import('../views/RAGView.vue'), meta: { title: '四大名著 RAG 知识库' } },
+  { path: '/rag', name: 'rag', component: () => import('../views/RAGView.vue'), meta: { title: 'RAG 知识库工作台' } },
   { path: '/agent', name: 'agent', component: () => import('../views/AgentView.vue'), meta: { title: '智能 Agent 助手' } },
-  { path: '/system', name: 'system', component: () => import('../views/SystemView.vue'), meta: { title: '系统管理', menuCode: 'system:page', adminOnly: true } }
+  { path: '/system', name: 'system', component: () => import('../views/SystemView.vue'), meta: { title: '系统管理', menuCode: 'system:page', adminOnly: true } },
 ]
 
 const router = createRouter({
   history: createWebHashHistory(),
-  routes
+  routes,
 })
 
 function getFirstAllowedPath() {
