@@ -484,12 +484,18 @@ input[type='file']::file-selector-button:hover {
 .sidebar.collapsed nav {
   padding: 10px 10px 14px;
   gap: 8px;
+  align-items: center;
 }
 
 .nav-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.sidebar.collapsed .nav-group {
+  width: 100%;
+  align-items: center;
 }
 
 .nav-item {
@@ -517,12 +523,23 @@ input[type='file']::file-selector-button:hover {
 }
 
 .sidebar.collapsed .nav-item {
-  min-height: 62px;
-  padding: 10px;
+  width: 54px;
+  min-width: 54px;
+  min-height: 54px;
+  padding: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  border-radius: 18px;
+  border-radius: 16px;
+}
+
+.sidebar.collapsed .nav-item:hover {
+  transform: translateY(-2px);
+}
+
+.sidebar.collapsed .nav-item.active,
+.sidebar.collapsed .nav-group-active .nav-item:not(.active) {
+  transform: translateY(0);
 }
 
 .nav-item::before {
@@ -609,11 +626,12 @@ input[type='file']::file-selector-button:hover {
 }
 
 .sidebar.collapsed .ico {
-  min-width: 40px;
-  width: 40px;
-  height: 40px;
-  border-radius: 14px;
-  font-size: 12px;
+  min-width: 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 11px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
 }
 
 .sidebar.collapsed .nav-item.active .ico {
