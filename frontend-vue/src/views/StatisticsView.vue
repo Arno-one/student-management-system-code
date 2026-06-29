@@ -1,10 +1,5 @@
 <template>
   <section id="page-statistics" class="page active">
-    <div class="sub-bar">
-      <label>统计项目</label>
-      <CustomSelect v-model="selectedStat" :options="statOptions" />
-    </div>
-
     <div class="card">
       <h3>统计查询</h3>
       <div class="grid">
@@ -26,19 +21,9 @@ import { reactive, ref } from 'vue'
 import { request, qs, pickList } from '../api'
 import ResultBadge from '../components/ResultBadge.vue'
 import DataTable from '../components/DataTable.vue'
-import CustomSelect from '../components/CustomSelect.vue'
+import { useModuleSubPage } from '../composables/useModuleSubPage'
 
-const selectedStat = ref('staGeStu')
-const statOptions = [
-  { value: 'staGeStu', label: '年龄大于阈值的学生' },
-  { value: 'staStuCount', label: '学生总数' },
-  { value: 'staScoreGreater', label: '每次考试≥阈值分' },
-  { value: 'staScoreFails', label: '2次以上不及格' },
-  { value: 'staClassAvg', label: '班级平均分' },
-  { value: 'staTallSal', label: '最高薪资排行' },
-  { value: 'staJobTime', label: '就业时长' },
-  { value: 'staAvgClassJobTime', label: '班级平均就业时长' },
-]
+const { sub: selectedStat } = useModuleSubPage('statistics')
 const loading = ref(false)
 const listData = ref(null)
 const result = reactive({ badge: null, text: '' })

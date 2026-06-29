@@ -1,10 +1,5 @@
 <template>
   <section id="page-teacher" class="page active">
-    <div class="sub-bar">
-      <label>选择功能</label>
-      <CustomSelect v-model="sub" :options="subOptions" @update:model-value="saveSub" />
-    </div>
-
     <!-- 新增教师 -->
     <div id="te-create" class="card subcard" :class="{ show: sub === 'te-create' }">
       <h3>新增教师</h3>
@@ -89,15 +84,10 @@ import { request, qs, clean, pickList, pickOne, fetchBlob } from '../api'
 import ResultBadge from '../components/ResultBadge.vue'
 import DataTable from '../components/DataTable.vue'
 import CustomSelect from '../components/CustomSelect.vue'
+import { useModuleSubPage } from '../composables/useModuleSubPage'
 import { validateFields } from '../utils/helpers'
 
-const sub = ref(localStorage.getItem('sub-teacher') || 'te-create')
-const subOptions = [
-  { value: 'te-create', label: '新增教师' },
-  { value: 'te-import', label: '批量导入（Excel）' },
-  { value: 'te-query', label: '查询教师' },
-  { value: 'te-op', label: '按ID查 / 更新教师' },
-]
+const { sub } = useModuleSubPage('teacher')
 const genderOptions = [
   { value: '男', label: '男' },
   { value: '女', label: '女' },
@@ -136,8 +126,6 @@ const results = reactive({
   create: { badge: null, text: '' }, import: { badge: null, text: '' },
   query: { badge: null, text: '' }, op: { badge: null, text: '' }
 })
-
-function saveSub() { localStorage.setItem('sub-teacher', sub.value) }
 
 function setResult(target, ok, msg) {
   results[target].badge = { ok, text: msg }

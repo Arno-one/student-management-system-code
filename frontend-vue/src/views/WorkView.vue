@@ -1,10 +1,5 @@
 <template>
   <section id="page-work" class="page active">
-    <div class="sub-bar">
-      <label>选择功能</label>
-      <CustomSelect v-model="sub" :options="subOptions" @update:model-value="saveSub" />
-    </div>
-
     <!-- 学生评价 -->
     <div id="wk-eval" class="card subcard" :class="{ show: sub === 'wk-eval' }">
       <h3>学生评价（大模型生成）</h3>
@@ -129,7 +124,12 @@
       </div>
       <div class="actions"><button class="btn" :disabled="loading" @click="workWeather">查天气</button></div>
       <!-- 天气结果区：单独 ref，方便地址联动后滚动定位（对应原生 wk_weather_view） -->
-      <div ref="weatherViewRef" id="wk-weather-view" class="weather-view" v-html="weatherHtml"></div>
+      <div ref="weatherViewRef" id="wk-weather-view" class="weather-view">
+        <WeatherCard v-if="weatherCardData" :data="weatherCardData" />
+        <div v-else-if="weatherError" class="geo-card">
+          <div class="geo-fail">❌ {{ weatherError }}</div>
+        </div>
+      </div>
 
       <!-- 地址解析 -->
       <div class="section-title">地址解析为经纬度</div>
@@ -155,15 +155,11 @@ import { reactive, ref, nextTick } from 'vue'
 import { request, qs, pickApiContent, apiState } from '../api'
 import ResultBadge from '../components/ResultBadge.vue'
 import CustomSelect from '../components/CustomSelect.vue'
-import { validateFields, weatherEmoji, findImageUrl } from '../utils/helpers'
+import WeatherCard from '../components/WeatherCard.vue'
+import { useModuleSubPage } from '../composables/useModuleSubPage'
+import { validateFields, findImageUrl } from '../utils/helpers'
 
-const sub = ref(localStorage.getItem('sub-work') || 'wk-eval')
-const subOptions = [
-  { value: 'wk-eval', label: '学生评价（大模型生成）' },
-  { value: 'wk-img', label: '文生图（通义万相）' },
-  { value: 'wk-talk', label: '多轮记忆对话' },
-  { value: 'wk-weather', label: '天气查询 / 经纬度解析' },
-]
+const { sub } = useModuleSubPage('work')
 const evalStyleOptions = [
   { value: '幽默', label: '幽默' },
   { value: '严肃', label: '严肃' },
@@ -181,7 +177,8 @@ const geoPolicyOptions = [
 ]
 const loading = ref(false)
 const imageUrl = ref('')
-const weatherHtml = ref('')
+const weatherCardData = ref(null)
+const weatherError = ref('')
 const geoHtml = ref('')
 const weatherViewRef = ref(null)
 const geoViewRef = ref(null)
@@ -203,8 +200,6 @@ const talkInputUserId = ref('')
 const results = reactive({
   eval: { badge: null, text: '' }, img: { badge: null, text: '' }
 })
-
-function saveSub() { localStorage.setItem('sub-work', sub.value) }
 
 function setResult(target, ok, msg) {
   results[target].badge = { ok, text: msg }
@@ -389,7 +384,8 @@ async function workWeather() {
     return alert('经纬度或行政编码至少填一个')
   }
   loading.value = true
-  weatherHtml.value = ''
+  weatherCardData.value = null
+  weatherError.value = ''
   try {
     const r = await request('GET', '/work/weather' + qs({
       location: form.weather.location || null,
@@ -400,102 +396,36 @@ async function workWeather() {
       get_md: Number.isFinite(form.weather.getmd) ? form.weather.getmd : null
     }))
     if (r.ok && r.data?.code === 200) {
-      weatherHtml.value = renderWeather(r.data)
+      weatherCardData.value = buildWeatherCardData(r.data)
+      if (!weatherCardData.value) weatherError.value = '未解析到天气数据'
     } else {
-      weatherHtml.value = `<div class="geo-card"><div class="geo-fail">❌ ${r.data?.msg || '天气查询失败，请检查参数或稍后重试'}</div></div>`
+      weatherError.value = r.data?.msg || '天气查询失败，请检查参数或稍后重试'
     }
   } catch (e) {
-    weatherHtml.value = '<div class="geo-card"><div class="geo-fail">❌ 天气查询失败</div></div>'
+    weatherError.value = '天气查询失败'
   } finally { loading.value = false }
 }
 
-function renderWeather(resp) {
-  // 统一响应 { code, msg, data: { status, result, ... } }，与 frontend/app.js 取数路径一致
+function buildWeatherCardData(resp) {
+  // 把工作台接口的统一响应转换成 Agent 天气卡片协议，后续展示只维护 WeatherCard 一份。
   const inner = resp?.data
   const result = inner?.result
-  if (!result) {
-    if (inner?.error) {
-      return `<div class="geo-card"><div class="geo-fail">❌ ${inner.error}</div></div>`
-    }
-    return '<div class="hint">未解析到天气数据</div>'
+  if (!result || typeof result !== 'object') return null
+
+  const weather = {}
+  if (Array.isArray(result.realtime) && result.realtime.length) weather['实时天气'] = { result }
+  if (Array.isArray(result.forecast) && result.forecast.length) weather['多日预报'] = { result }
+  if (Array.isArray(result.forecast_hours) && result.forecast_hours.length) weather['逐时预报'] = { result }
+  if (!Object.keys(weather).length) return null
+
+  const firstItem = result.realtime?.[0] || result.forecast?.[0] || result.forecast_hours?.[0] || {}
+  const locationText = [firstItem.province, firstItem.city, firstItem.district].filter(Boolean).join(' · ')
+  return {
+    provider: 'work_weather',
+    location_text: locationText || form.weather.adcode || form.weather.location || '天气查询结果',
+    adcode: form.weather.adcode || firstItem.adcode || '',
+    weather,
   }
-
-  // 实时天气
-  if (Array.isArray(result.realtime) && result.realtime.length) {
-    return result.realtime.map(item => {
-      const f = item.infos || {}
-      return `<div class="wx-card">
-        ${renderWeatherHead(item)}
-        <div class="wx-main">
-          <div class="wx-emoji">${weatherEmoji(f.weather)}</div>
-          <div>
-            <div class="wx-temp">${f.temperature ?? '--'}<small>℃</small></div>
-            <div class="wx-desc">${f.weather ?? '未知天气'}</div>
-          </div>
-        </div>
-        <div class="wx-metrics">${renderMetrics(f)}</div>
-      </div>`
-    }).join('')
-  }
-
-  // 多日预报
-  if (Array.isArray(result.forecast) && result.forecast.length) {
-    return result.forecast.map(item => {
-      const days = (item.infos || []).map(d => {
-        const day = d.day || {}, night = d.night || {}
-        return `<div class="wx-day">
-          <div class="wx-day-title">${d.week || ''}</div><div class="wx-day-sub">${d.date || ''}</div>
-          <div class="wx-day-emoji">${weatherEmoji(day.weather || night.weather)}</div>
-          <div class="wx-day-temp">${night.temperature ?? '--'}~${day.temperature ?? '--'}℃</div>
-          <div class="wx-day-line">☀️ ${day.weather || '--'}</div>
-          <div class="wx-day-line">🌙 ${night.weather || '--'}</div>
-          <div class="wx-day-line">💨 ${day.wind_direction || ''} ${day.wind_power || ''}</div>
-        </div>`
-      }).join('')
-      return `<div class="card" style="padding:16px">${renderWeatherHead(item)}<div class="wx-section-h">未来天气预报</div><div class="wx-list">${days}</div></div>`
-    }).join('')
-  }
-
-  // 逐时预报
-  if (Array.isArray(result.forecast_hours) && result.forecast_hours.length) {
-    return result.forecast_hours.map(item => {
-      const hours = (item.infos || []).map(h => {
-        const info = h.info || {}
-        const hm = String(h.hour || '').split(' ')[1] || h.hour || ''
-        return `<div class="wx-day">
-          <div class="wx-day-title">${hm}</div>
-          <div class="wx-day-emoji">${weatherEmoji(info.weather)}</div>
-          <div class="wx-day-temp">${info.temperature ?? '--'}℃</div>
-          <div class="wx-day-line">${info.weather || '--'}</div>
-          <div class="wx-day-line">💨 ${info.wind_direction || ''} ${info.wind_power || ''}</div>
-        </div>`
-      }).join('')
-      return `<div class="card" style="padding:16px">${renderWeatherHead(item)}<div class="wx-section-h">24小时逐时预报</div><div class="wx-list">${hours}</div></div>`
-    }).join('')
-  }
-
-  return '<div class="hint">暂无可展示的天气数据</div>'
-}
-
-function renderWeatherHead(item) {
-  const loc = [item.province, item.city, item.district].filter(Boolean).join(' · ')
-  const adcode = item.adcode ? `<span class="wx-adcode">编码 ${item.adcode}</span>` : ''
-  const time = item.update_time ? `<div class="wx-time">🕒 更新于 ${item.update_time}</div>` : ''
-  return `<div class="wx-head"><div class="wx-loc">📍 ${loc}${adcode}</div>${time}</div>`
-}
-
-function renderMetrics(infos) {
-  const items = [
-    ['🧭', '风向', infos.wind_direction, ''],
-    ['💨', '风力', infos.wind_power, ''],
-    ['🍃', '标准风力', infos.wind_power_v2, ''],
-    ['💧', '湿度', infos.humidity, '%'],
-    ['⏲️', '气压', infos.air_pressure, ' 百帕']
-  ]
-  return items.filter(([, , v]) => v != null && v !== '')
-    .map(([ico, lbl, v, unit]) =>
-      `<div class="wx-metric"><span class="ico">${ico}</span><span class="meta"><span class="lbl">${lbl}</span><span class="val">${v}${unit}</span></span></div>`
-    ).join('')
 }
 
 async function workGeocoder() {

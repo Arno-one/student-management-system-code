@@ -1,10 +1,5 @@
 <template>
   <section id="page-nl2sql" class="page active">
-    <div class="sub-bar">
-      <label>选择功能</label>
-      <CustomSelect v-model="sub" :options="subOptions" @update:model-value="saveSub" />
-    </div>
-
     <!-- ====== 智能问数 ====== -->
     <div id="ns-query" class="card subcard" :class="{ show: sub === 'ns-query' }">
       <h3>智能问数（NL2SQL）</h3>
@@ -130,18 +125,12 @@ import { reactive, ref, nextTick, onMounted } from 'vue'
 import { request, apiState } from '../api'
 import ResultBadge from '../components/ResultBadge.vue'
 import DataTable from '../components/DataTable.vue'
-import CustomSelect from '../components/CustomSelect.vue'
 import hljs from 'highlight.js/lib/core'
 import sql from 'highlight.js/lib/languages/sql'
+import { useModuleSubPage } from '../composables/useModuleSubPage'
 
 hljs.registerLanguage('sql', sql)
 
-const sub = ref(localStorage.getItem('sub-nl2sql') || 'ns-query')
-const subOptions = [
-  { value: 'ns-query', label: '智能问数' },
-  { value: 'ns-schema', label: '表结构概览' },
-  { value: 'ns-history', label: '历史记录' },
-]
 const loading = ref(false)
 const schemaLoading = ref(false)
 const sqlCodeRef = ref(null)
@@ -169,6 +158,12 @@ const results = reactive({
 
 const schemaData = ref(null)
 const historySessions = ref([])
+const { sub } = useModuleSubPage('nl2sql', {
+  onChange(nextSub) {
+    if (nextSub === 'ns-schema' && !schemaData.value) loadSchema()
+    if (nextSub === 'ns-history') loadHistory()
+  }
+})
 
 const exampleQuestions = [
   '每个班级有多少学生？',
@@ -177,12 +172,6 @@ const exampleQuestions = [
   '有哪些学生成绩不及格？',
   '列出每个班级的班主任姓名',
 ]
-
-function saveSub() {
-  localStorage.setItem('sub-nl2sql', sub.value)
-  if (sub.value === 'ns-schema' && !schemaData.value) loadSchema()
-  if (sub.value === 'ns-history') loadHistory()
-}
 
 function setResult(target, ok, text) {
   results[target].badge = { ok, text: ok ? text : text }
@@ -334,8 +323,4 @@ async function loadHistory() {
   }
 }
 
-onMounted(() => {
-  if (sub.value === 'ns-schema') loadSchema()
-  if (sub.value === 'ns-history') loadHistory()
-})
 </script>

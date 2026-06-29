@@ -15,24 +15,43 @@
 
     <div class="sidebar-section">Workspace</div>
 
-    <nav>
-      <button
+    <nav class="sidebar-nav">
+      <div
         v-for="(item, index) in visibleNavItems"
         :key="item.page"
-        type="button"
-        class="nav-item"
-        :class="{ active: currentPage === item.page }"
-        :title="collapsed ? item.label : ''"
-        @click="$emit('navigate', item.page)"
+        class="nav-group"
+        :class="{ 'nav-group-active': isActivePage(item.page) }"
       >
-        <span class="nav-index">{{ String(index + 1).padStart(2, '0') }}</span>
-        <span class="ico">{{ item.short }}</span>
-        <span class="nav-copy">
-          <strong>{{ item.label }}</strong>
-          <small>{{ item.desc }}</small>
-        </span>
-        <span class="nav-arrow">↗</span>
-      </button>
+        <button
+          type="button"
+          class="nav-item"
+          :class="{ active: isActivePage(item.page) }"
+          :title="collapsed ? item.label : ''"
+          @click="handleNavigate(item)"
+        >
+          <span class="nav-index">{{ String(index + 1).padStart(2, '0') }}</span>
+          <span class="ico">{{ item.short }}</span>
+          <span class="nav-copy">
+            <strong>{{ item.label }}</strong>
+            <small>{{ item.desc }}</small>
+          </span>
+          <span class="nav-arrow">{{ hasChildren(item) && !collapsed ? '▾' : '↗' }}</span>
+        </button>
+
+        <div v-if="showChildren(item)" class="nav-children">
+          <button
+            v-for="child in item.children"
+            :key="child.value"
+            type="button"
+            class="nav-child"
+            :class="{ active: currentSub === child.value }"
+            @click="$emit('navigate', { page: item.page, sub: child.value })"
+          >
+            <span class="nav-child-dot"></span>
+            <span class="nav-child-label">{{ child.label }}</span>
+          </button>
+        </div>
+      </div>
     </nav>
 
     <div class="sidebar-footer">
@@ -49,37 +68,56 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { getMenuCodes, hasRole } from '../api'
+import { getModuleDefaultSub, getModuleSubStorageKey, isValidModuleSub, moduleNavigation } from '../config/moduleNavigation'
 
 const props = defineProps({
   collapsed: { type: Boolean, default: false },
   currentPage: { type: String, default: 'student' }
 })
-defineEmits(['navigate'])
+const emit = defineEmits(['navigate'])
 
 const route = useRoute()
 const isPublicPage = computed(() => !!route.meta?.public)
 
-const navItems = [
-  { page: 'student', short: 'ST', label: '学生信息管理', desc: '档案录入、查询与状态维护', menuCode: 'student:page' },
-  { page: 'score', short: 'SC', label: '考核成绩管理', desc: '单条、批量与区间查询', menuCode: 'score:page' },
-  { page: 'employment', short: 'EM', label: '就业信息管理', desc: 'offer、薪资与就业跟踪', menuCode: 'employment:page' },
-  { page: 'class', short: 'CL', label: '班级管理', desc: '班级建档与排期信息', menuCode: 'class:page' },
-  { page: 'teacher', short: 'TE', label: '教师管理', desc: '教师资料、导入与检索', menuCode: 'teacher:page' },
-  { page: 'statistics', short: 'BI', label: '统计分析', desc: '关键指标与业务汇总', menuCode: 'statistics:page' },
-  { page: 'work', short: 'AI', label: 'AI 作业模块', desc: '评价生成、对话与天气能力', menuCode: 'work:page' },
-  { page: 'email', short: 'ML', label: '邮件管理', desc: '智能生成与发送邮件', menuCode: 'email:page' },
-  { page: 'nl2sql', short: 'D2', label: 'NL2SQL 智能问数', desc: '自然语言转 SQL 数据查询', menuCode: 'nl2sql:page' },
-  { page: 'rag', short: 'RA', label: '四大名著知识库', desc: 'RAG 混合检索 + AI 问答' },
-  { page: 'agent', short: 'AG', label: '智能 Agent 助手', desc: '学业导师 · 成绩查询 · 陪伴对话' },
-  { page: 'system', short: 'SM', label: '系统管理', desc: '用户、角色与权限分配', menuCode: 'system:page', adminOnly: true }
-]
-
 const visibleNavItems = computed(() => {
   const menuCodes = getMenuCodes()
-  return navItems.filter(item => {
+  return moduleNavigation.filter(item => {
     if (item.adminOnly && !hasRole('admin')) return false
     if (!item.menuCode) return true  // 无权限要求，始终可见
     return menuCodes.has(item.menuCode)
   })
 })
+
+const currentSub = computed(() => {
+  const page = String(route.name || '')
+  const routeSub = String(route.query.sub || '')
+  if (isValidModuleSub(page, routeSub)) return routeSub
+
+  const storedSub = localStorage.getItem(getModuleSubStorageKey(page))
+  if (isValidModuleSub(page, storedSub)) return storedSub
+
+  return getModuleDefaultSub(page)
+})
+
+function isActivePage(page) {
+  return props.currentPage === page
+}
+
+function hasChildren(item) {
+  return Array.isArray(item.children) && item.children.length > 0
+}
+
+function showChildren(item) {
+  return !props.collapsed && isActivePage(item.page) && hasChildren(item)
+}
+
+function getTargetSub(item) {
+  if (!hasChildren(item)) return ''
+  const storedSub = localStorage.getItem(getModuleSubStorageKey(item.page))
+  return isValidModuleSub(item.page, storedSub) ? storedSub : getModuleDefaultSub(item.page)
+}
+
+function handleNavigate(item) {
+  emit('navigate', { page: item.page, sub: getTargetSub(item) })
+}
 </script>

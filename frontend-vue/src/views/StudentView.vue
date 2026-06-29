@@ -1,10 +1,5 @@
 <template>
   <section id="page-student" class="page active">
-    <div class="sub-bar">
-      <label>选择功能</label>
-      <CustomSelect v-model="sub" :options="subOptions" @update:model-value="saveSub" />
-    </div>
-
     <!-- 创建学生 -->
     <div id="st-create" class="card subcard" :class="{ show: sub === 'st-create' }">
       <h3>创建学生</h3>
@@ -166,17 +161,10 @@ import { request, qs, clean, pickList, pickOne } from '../api'
 import ResultBadge from '../components/ResultBadge.vue'
 import DataTable from '../components/DataTable.vue'
 import SmartInput from '../components/SmartInput.vue'
-import CustomSelect from '../components/CustomSelect.vue'
+import { useModuleSubPage } from '../composables/useModuleSubPage'
 import { validateFields } from '../utils/helpers'
 
-const sub = ref(localStorage.getItem('sub-student') || 'st-create')
-const subOptions = [
-  { value: 'st-create', label: '创建学生' },
-  { value: 'st-query', label: '查询学生' },
-  { value: 'st-op', label: '更新 / 删除 / 恢复学生' },
-  { value: 'st-nl', label: '智能录入' },
-  { value: 'st-nl-update', label: '智能修改' },
-]
+const { sub } = useModuleSubPage('student')
 const loading = ref(false)
 const listData = ref(null)
 
@@ -357,8 +345,6 @@ function resetNlUpdate() {
   nlUpdate.badge = null
   nlUpdate.submitBadge = null
 }
-
-function saveSub() { localStorage.setItem('sub-student', sub.value) }
 
 function setResult(target, ok, text) {
   results[target].badge = { ok, text: ok ? `${text}` : text }

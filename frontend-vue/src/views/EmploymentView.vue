@@ -1,10 +1,5 @@
 <template>
   <section id="page-employment" class="page active">
-    <div class="sub-bar">
-      <label>选择功能</label>
-      <CustomSelect v-model="sub" :options="subOptions" @update:model-value="saveSub" />
-    </div>
-
     <!-- 新建 -->
     <div id="em-create" class="card subcard" :class="{ show: sub === 'em-create' }">
       <h3>新建就业信息</h3>
@@ -83,16 +78,10 @@ import { request, qs, clean, pickList, pickOne } from '../api'
 import ResultBadge from '../components/ResultBadge.vue'
 import DataTable from '../components/DataTable.vue'
 import SmartInput from '../components/SmartInput.vue'
-import CustomSelect from '../components/CustomSelect.vue'
+import { useModuleSubPage } from '../composables/useModuleSubPage'
 import { validateFields } from '../utils/helpers'
 
-const sub = ref(localStorage.getItem('sub-employment') || 'em-create')
-const subOptions = [
-  { value: 'em-create', label: '新建就业信息' },
-  { value: 'em-query', label: '查询就业信息' },
-  { value: 'em-op', label: '修改 / 删除 / 恢复就业信息' },
-  { value: 'em-nl', label: '智能录入' },
-]
+const { sub } = useModuleSubPage('employment')
 const loading = ref(false)
 const listData = ref(null)
 
@@ -126,8 +115,6 @@ const employmentFieldMap = {
   company_name: 'company_name',
   salary: 'salary'
 }
-
-function saveSub() { localStorage.setItem('sub-employment', sub.value) }
 
 function setResult(target, ok, msg) {
   results[target].badge = { ok, text: ok ? msg : msg }

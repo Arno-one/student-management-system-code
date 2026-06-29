@@ -1,10 +1,5 @@
 <template>
   <section id="page-score" class="page active">
-    <div class="sub-bar">
-      <label>选择功能</label>
-      <CustomSelect v-model="sub" :options="subOptions" @update:model-value="saveSub" />
-    </div>
-
     <!-- 新增成绩 -->
     <div id="sc-add" class="card subcard" :class="{ show: sub === 'sc-add' }">
       <h3>新增成绩</h3>
@@ -94,16 +89,10 @@ import ResultBadge from '../components/ResultBadge.vue'
 import DataTable from '../components/DataTable.vue'
 import SmartInput from '../components/SmartInput.vue'
 import CustomSelect from '../components/CustomSelect.vue'
+import { useModuleSubPage } from '../composables/useModuleSubPage'
 import { validateFields } from '../utils/helpers'
 
-const sub = ref(localStorage.getItem('sub-score') || 'sc-add')
-const subOptions = [
-  { value: 'sc-add', label: '新增成绩' },
-  { value: 'sc-batch', label: '批量导入成绩' },
-  { value: 'sc-op', label: '修改 / 删除成绩' },
-  { value: 'sc-query', label: '查询成绩' },
-  { value: 'sc-nl', label: '智能录入' },
-]
+const { sub } = useModuleSubPage('score')
 const sortOptions = [
   { value: '', label: '不排序' },
   { value: 'asc', label: '升序' },
@@ -138,8 +127,6 @@ const scoreFieldMap = {
   exam_order: 'exam_order',
   score: 'score'
 }
-
-function saveSub() { localStorage.setItem('sub-score', sub.value) }
 
 function setResult(target, ok, msg) {
   results[target].badge = { ok, text: ok ? msg : msg }

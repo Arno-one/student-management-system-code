@@ -1,10 +1,5 @@
 <template>
   <section id="page-class" class="page active">
-    <div class="sub-bar">
-      <label>选择功能</label>
-      <CustomSelect v-model="sub" :options="subOptions" @update:model-value="saveSub" />
-    </div>
-
     <!-- 新增/修改 -->
     <div id="cl-save" class="card subcard" :class="{ show: sub === 'cl-save' }">
       <h3>新增 / 修改班级</h3>
@@ -42,14 +37,10 @@ import { reactive, ref } from 'vue'
 import { request, qs, pickList, pickOne } from '../api'
 import ResultBadge from '../components/ResultBadge.vue'
 import DataTable from '../components/DataTable.vue'
-import CustomSelect from '../components/CustomSelect.vue'
+import { useModuleSubPage } from '../composables/useModuleSubPage'
 import { validateFields } from '../utils/helpers'
 
-const sub = ref(localStorage.getItem('sub-class') || 'cl-save')
-const subOptions = [
-  { value: 'cl-save', label: '新增 / 修改班级' },
-  { value: 'cl-query', label: '查询 / 删除班级' },
-]
+const { sub } = useModuleSubPage('class')
 const loading = ref(false)
 const listData = ref(null)
 
@@ -61,8 +52,6 @@ const form = reactive({
 const results = reactive({
   save: { badge: null, text: '' }, query: { badge: null, text: '' }
 })
-
-function saveSub() { localStorage.setItem('sub-class', sub.value) }
 
 function setResult(target, ok, msg) {
   results[target].badge = { ok, text: ok ? msg : msg }

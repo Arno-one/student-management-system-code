@@ -1,10 +1,5 @@
 <template>
   <section id="page-system" class="page active">
-    <div class="sub-bar">
-      <label>系统管理</label>
-      <CustomSelect v-model="sub" :options="subOptions" @update:model-value="saveSub" />
-    </div>
-
     <div id="sys-users" class="card subcard" :class="{ show: sub === 'sys-users' }">
       <h3>用户管理</h3>
 
@@ -131,7 +126,7 @@
       <div class="agent-monitor-head">
         <div>
           <h3>Agent 监控</h3>
-          <p class="agent-monitor-sub">调用量、成功率、耗时、工具失败率与用户反馈质量</p>
+          <p class="agent-monitor-sub">调用量、成功率、耗时、地图 provider、工具失败率与用户反馈质量</p>
         </div>
         <div class="agent-monitor-filters">
           <div class="field"><label>时间范围</label><CustomSelect v-model.number="monitorQuery.days" :options="monitorDayOptions" /></div>
@@ -150,7 +145,12 @@
         <div class="agent-monitor-card">
           <span>任务成功率</span>
           <strong>{{ monitorMetrics.success_rate }}%</strong>
-          <small>{{ monitorMetrics.success_count }} 成功 / {{ monitorMetrics.error_count }} 失败</small>
+          <small>{{ monitorMetrics.success_count }} 成功 / {{ monitorMetrics.partial_success_count }} 部分 / {{ monitorMetrics.error_count }} 失败</small>
+        </div>
+        <div class="agent-monitor-card">
+          <span>澄清/空结果</span>
+          <strong>{{ monitorMetrics.clarification_count + monitorMetrics.empty_count }}</strong>
+          <small>{{ monitorMetrics.clarification_count }} 澄清 / {{ monitorMetrics.empty_count }} 空结果</small>
         </div>
         <div class="agent-monitor-card">
           <span>平均耗时</span>
@@ -165,7 +165,17 @@
         <div class="agent-monitor-card">
           <span>反馈数</span>
           <strong>{{ monitorMetrics.feedback_count }}</strong>
-          <small>好评 {{ monitorMetrics.positive_rate }}%</small>
+          <small>好评 {{ monitorMetrics.positive_rate }}% / 差评 {{ monitorMetrics.negative_rate }}%</small>
+        </div>
+        <div class="agent-monitor-card">
+          <span>地图 MCP</span>
+          <strong>{{ mcpHealthLabel }}</strong>
+          <small>{{ monitorMcpHealth.tool_count || 0 }} 个工具 · {{ monitorMcpHealth.last_success_at || '暂无成功调用' }}</small>
+        </div>
+        <div class="agent-monitor-card">
+          <span>地图兜底率</span>
+          <strong>{{ providerFallbackRate }}%</strong>
+          <small>{{ monitorProviders.length }} 个 provider 维度</small>
         </div>
         <div class="agent-monitor-card">
           <span>待确认/取消</span>
@@ -210,17 +220,65 @@
             <div class="agent-rank-row" v-for="item in monitorTools" :key="item.tool_name">
               <div>
                 <strong>{{ toolLabel(item.tool_name) }}</strong>
-                <small>{{ item.success }} 成功 / {{ item.error }} 失败</small>
+                <small>{{ item.success }} 成功 / {{ item.partial_success }} 部分 / {{ item.empty }} 空 / {{ item.error }} 失败</small>
               </div>
               <span :class="{ danger: item.failure_rate > 0 }">{{ item.failure_rate }}%</span>
             </div>
             <div class="agent-monitor-empty" v-if="monitorTools.length === 0">暂无工具调用数据</div>
           </div>
         </div>
+
+        <div class="agent-monitor-panel">
+          <div class="section-title">地图 Provider 分布</div>
+          <div class="agent-rank-list">
+            <div class="agent-rank-row" v-for="item in monitorProviders" :key="item.tool_name + item.provider">
+              <div>
+                <strong>{{ providerLabel(item.provider) }}</strong>
+                <small>{{ toolLabel(item.tool_name) }} · 兜底 {{ item.fallback_rate }}% · 空结果 {{ item.empty_rate }}%</small>
+              </div>
+              <span :class="{ danger: item.failure_rate > 0 }">{{ item.total }}</span>
+            </div>
+            <div class="agent-monitor-empty" v-if="monitorProviders.length === 0">暂无 provider 数据</div>
+          </div>
+        </div>
+
+        <div class="agent-monitor-panel">
+          <div class="section-title">差评原因聚合</div>
+          <div class="agent-rank-list">
+            <div class="agent-rank-row" v-for="item in monitorFeedbackReasons" :key="item.reason">
+              <div>
+                <strong>{{ item.reason }}</strong>
+                <small>{{ feedbackReasonExample(item) }}</small>
+              </div>
+              <span class="danger">{{ item.count }}</span>
+            </div>
+            <div class="agent-monitor-empty" v-if="monitorFeedbackReasons.length === 0">暂无差评原因数据</div>
+          </div>
+        </div>
       </div>
 
       <div class="section-title">最近任务</div>
       <DataTable :data="monitorTasks" />
+      <div class="agent-task-detail" v-if="monitorTaskRaw.length">
+        <div class="agent-task-detail-head">
+          <div class="section-title">任务详情速查</div>
+          <CustomSelect v-model="selectedMonitorTaskId" :options="monitorTaskDetailOptions" />
+        </div>
+        <div class="agent-task-detail-grid">
+          <div>
+            <span>工具步骤</span>
+            <pre>{{ formatJson(selectedMonitorTask?.tool_calls || []) }}</pre>
+          </div>
+          <div>
+            <span>工具监控</span>
+            <pre>{{ formatJson(selectedMonitorTask?.tool_monitoring || {}) }}</pre>
+          </div>
+          <div>
+            <span>卡片摘要</span>
+            <pre>{{ formatJson(selectedMonitorTask?.cards || []) }}</pre>
+          </div>
+        </div>
+      </div>
       <ResultBadge :badge="results.monitor.badge" :text="results.monitor.text" />
     </div>
   </section>
@@ -232,9 +290,9 @@ import { request, qs } from '../api'
 import ResultBadge from '../components/ResultBadge.vue'
 import DataTable from '../components/DataTable.vue'
 import CustomSelect from '../components/CustomSelect.vue'
+import { useModuleSubPage } from '../composables/useModuleSubPage'
 import { validateFields } from '../utils/helpers'
 
-const sub = ref(localStorage.getItem('sub-system') || 'sys-users')
 const loading = ref(false)
 const users = ref([])
 const roles = ref([])
@@ -244,19 +302,36 @@ const monitorMetrics = reactive({
   total_tasks: 0,
   success_rate: 0,
   success_count: 0,
+  partial_success_count: 0,
+  clarification_count: 0,
+  empty_count: 0,
   error_count: 0,
   cancelled_count: 0,
   awaiting_hitl_count: 0,
+  running_count: 0,
   avg_duration_ms: 0,
   p50_duration_ms: 0,
   p99_duration_ms: 0,
   feedback_count: 0,
   positive_rate: 0,
+  negative_rate: 0,
 })
 const monitorTimeseries = ref([])
 const monitorIntents = ref([])
 const monitorTools = ref([])
+const monitorProviders = ref([])
+const monitorFeedbackReasons = ref([])
 const monitorTasks = ref([])
+const monitorTaskRaw = ref([])
+const selectedMonitorTaskId = ref('')
+const monitorMcpHealth = ref({})
+const { sub } = useModuleSubPage('system', {
+  onChange(nextSub) {
+    if (nextSub === 'sys-agent-monitor' && monitorTimeseries.value.length === 0) {
+      loadAgentMonitor()
+    }
+  }
+})
 
 const userQuery = reactive({ username: '', realName: '', status: '', skip: 0, limit: 20 })
 const roleQuery = reactive({ roleName: '', status: '', skip: 0, limit: 20 })
@@ -275,12 +350,6 @@ const results = reactive({
 })
 
 // ── Select 选项数据 ──
-const subOptions = [
-  { value: 'sys-users', label: '用户管理' },
-  { value: 'sys-roles', label: '角色管理' },
-  { value: 'sys-agent-monitor', label: 'Agent监控' },
-]
-
 const monitorDayOptions = [
   { value: 1, label: '近 1 天' },
   { value: 7, label: '近 7 天' },
@@ -290,6 +359,9 @@ const monitorDayOptions = [
 const monitorStatusOptions = [
   { value: '', label: '全部' },
   { value: 'success', label: '成功' },
+  { value: 'partial_success', label: '部分成功' },
+  { value: 'clarification', label: '待补充信息' },
+  { value: 'empty', label: '空结果' },
   { value: 'error', label: '失败' },
   { value: 'awaiting_hitl', label: 'HITL等待' },
   { value: 'cancelled', label: '已取消' },
@@ -332,6 +404,24 @@ const monitorIntentOptions = computed(() => {
   return options
 })
 const maxTrendTotal = computed(() => Math.max(1, ...monitorTimeseries.value.map(item => item.total || 0)))
+const providerFallbackRate = computed(() => {
+  const total = monitorProviders.value.reduce((sum, item) => sum + Number(item.total || 0), 0)
+  const fallback = monitorProviders.value.reduce((sum, item) => sum + Number(item.fallback_count || 0), 0)
+  return total ? Math.round((fallback / total) * 10000) / 100 : 0
+})
+const mcpHealthLabel = computed(() => {
+  if (monitorMcpHealth.value.connected) return '正常'
+  if (monitorMcpHealth.value.enabled) return '降级'
+  return '未启用'
+})
+const monitorTaskDetailOptions = computed(() => monitorTaskRaw.value.map(item => ({
+  value: String(item.id),
+  label: `#${item.id} · ${intentLabel(item.intent)} · ${statusLabel(item.status)}`,
+})))
+const selectedMonitorTask = computed(() => {
+  const id = String(selectedMonitorTaskId.value || '')
+  return monitorTaskRaw.value.find(item => String(item.id) === id) || monitorTaskRaw.value[0] || null
+})
 const permissionGroups = computed(() => {
   const map = new Map()
   for (const item of permissions.value) {
@@ -340,13 +430,6 @@ const permissionGroups = computed(() => {
   }
   return Array.from(map.entries()).map(([module, items]) => ({ module, items }))
 })
-
-function saveSub() {
-  localStorage.setItem('sub-system', sub.value)
-  if (sub.value === 'sys-agent-monitor' && monitorTimeseries.value.length === 0) {
-    loadAgentMonitor()
-  }
-}
 
 function setResult(target, ok, text) {
   results[target].badge = { ok, text }
@@ -402,11 +485,14 @@ async function loadPermissions() {
 
 async function loadAgentMonitor() {
   const days = monitorQuery.days || 7
-  const [metrics, timeseries, intents, tools, tasks] = await Promise.all([
+  const [metrics, timeseries, intents, tools, providers, feedbackReasons, mcpHealth, tasks] = await Promise.all([
     apiCall('monitor', 'GET', '/agent/admin/metrics' + qs({ days })),
     apiCall('monitor', 'GET', '/agent/admin/metrics/timeseries' + qs({ days })),
     apiCall('monitor', 'GET', '/agent/admin/metrics/intents' + qs({ days })),
     apiCall('monitor', 'GET', '/agent/admin/metrics/tools' + qs({ days })),
+    apiCall('monitor', 'GET', '/agent/admin/metrics/providers' + qs({ days })),
+    apiCall('monitor', 'GET', '/agent/admin/metrics/feedback-reasons' + qs({ days })),
+    apiCall('monitor', 'GET', '/agent/admin/mcp/tencent-map/health'),
     apiCall('monitor', 'GET', '/agent/admin/tasks' + qs({
       days,
       status: monitorQuery.status || null,
@@ -419,8 +505,18 @@ async function loadAgentMonitor() {
   if (timeseries.ok) monitorTimeseries.value = timeseries?.data?.data || []
   if (intents.ok) monitorIntents.value = intents?.data?.data || []
   if (tools.ok) monitorTools.value = tools?.data?.data || []
+  if (providers.ok) monitorProviders.value = providers?.data?.data || []
+  if (feedbackReasons.ok) monitorFeedbackReasons.value = feedbackReasons?.data?.data || []
+  if (mcpHealth.ok) monitorMcpHealth.value = mcpHealth?.data?.data || {}
   if (tasks.ok) {
-    monitorTasks.value = (tasks?.data?.data || []).map(item => ({
+    monitorTaskRaw.value = tasks?.data?.data || []
+    if (!selectedMonitorTaskId.value && monitorTaskRaw.value.length) {
+      selectedMonitorTaskId.value = String(monitorTaskRaw.value[0].id)
+    }
+    if (selectedMonitorTaskId.value && !monitorTaskRaw.value.some(item => String(item.id) === String(selectedMonitorTaskId.value))) {
+      selectedMonitorTaskId.value = monitorTaskRaw.value.length ? String(monitorTaskRaw.value[0].id) : ''
+    }
+    monitorTasks.value = monitorTaskRaw.value.map(item => ({
       id: item.id,
       时间: fmtDateTime(item.create_time),
       用户: item.user_id,
@@ -429,11 +525,13 @@ async function loadAgentMonitor() {
       状态: statusLabel(item.status),
       耗时: fmtMs(item.total_duration_ms),
       工具: item.tool_summary || '-',
+      Provider: item.provider_summary || '-',
+      卡片: item.card_summary || '-',
       反馈: item.feedback_rating ? `${item.feedback_rating}分${item.feedback_comment ? '：' + item.feedback_comment : ''}` : '-',
       问题: item.original_message,
     }))
   }
-  if (metrics.ok && timeseries.ok && intents.ok && tools.ok && tasks.ok) {
+  if (metrics.ok && timeseries.ok && intents.ok && tools.ok && providers.ok && feedbackReasons.ok && mcpHealth.ok && tasks.ok) {
     setResult('monitor', true, 'Agent 监控数据加载成功')
   }
 }
@@ -454,6 +552,14 @@ function trendWidth(total) {
   return `${Math.max(4, Math.round(((total || 0) / maxTrendTotal.value) * 100))}%`
 }
 
+function formatJson(value) {
+  try {
+    return JSON.stringify(value || {}, null, 2)
+  } catch (_) {
+    return '{}'
+  }
+}
+
 function intentLabel(value) {
   const map = {
     score_query: '成绩查询',
@@ -461,7 +567,10 @@ function intentLabel(value) {
     knowledge_qa: '知识问答',
     data_query: '数据统计',
     weather_query: '天气查询',
+    commute_plan: '通勤规划',
+    nearby_service: '周边服务',
     email_draft: '邮件撰写',
+    supervisor_multi_agent: '多Agent协作',
     emotional_support: '情绪陪伴',
     daily_chat: '日常闲聊',
   }
@@ -475,14 +584,33 @@ function toolLabel(value) {
     nl2sql_tool: '智能问数',
     student_tool: '学生识别',
     weather_tool: '天气工具',
+    commute_plan_tool: '通勤规划',
+    nearby_service_tool: '周边服务',
     email_tool: '邮件工具',
   }
   return map[value] || value || '未知工具'
 }
 
+function providerLabel(value) {
+  const map = {
+    tencent_mcp: '腾讯地图 MCP',
+    tencent_rest_fallback: '腾讯地图 REST',
+    tencent_map_mcp: '腾讯地图 MCP',
+  }
+  return map[value] || value || '未知 provider'
+}
+
+function feedbackReasonExample(item) {
+  const first = Array.isArray(item.examples) ? item.examples[0] : null
+  if (!first) return '暂无样例'
+  return first.comment || first.message || `任务 ${first.task_id}`
+}
+
 function personaLabel(value) {
   const map = {
     academic_mentor: '学业导师',
+    companion_head_teacher: '陪伴班主任',
+    xinge: '昕哥',
   }
   return map[value] || value || '未知'
 }
@@ -493,6 +621,9 @@ function statusLabel(value) {
     running: '执行中',
     awaiting_hitl: '等待确认',
     success: '成功',
+    partial_success: '部分成功',
+    clarification: '待补充信息',
+    empty: '空结果',
     error: '失败',
     cancelled: '已取消',
   }
@@ -619,7 +750,6 @@ function enabledCount(group) {
 
 onMounted(async () => {
   await Promise.all([loadUsers(), loadRoles(), loadPermissions()])
-  if (sub.value === 'sys-agent-monitor') await loadAgentMonitor()
 })
 </script>
 
@@ -844,9 +974,57 @@ onMounted(async () => {
 }
 .agent-rank-row > span.danger { color: var(--danger); }
 
+.agent-task-detail {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+}
+.agent-task-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.agent-task-detail-head .section-title { margin: 0; }
+.agent-task-detail-head :deep(.custom-select) { min-width: 260px; }
+.agent-task-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.agent-task-detail-grid > div {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-solid);
+  overflow: hidden;
+}
+.agent-task-detail-grid span {
+  display: block;
+  padding: 8px 10px;
+  color: var(--text-dim);
+  font-size: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.agent-task-detail-grid pre {
+  max-height: 180px;
+  margin: 0;
+  padding: 10px;
+  overflow: auto;
+  color: var(--text-soft);
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 @media (max-width: 1200px) {
   .agent-monitor-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .agent-monitor-grid { grid-template-columns: 1fr; }
+  .agent-task-detail-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 760px) {
@@ -854,5 +1032,7 @@ onMounted(async () => {
   .agent-monitor-filters { width: 100%; }
   .agent-monitor-filters .field { width: calc(50% - 5px); }
   .agent-monitor-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .agent-task-detail-head { align-items: stretch; flex-direction: column; }
+  .agent-task-detail-head :deep(.custom-select) { min-width: 0; width: 100%; }
 }
 </style>

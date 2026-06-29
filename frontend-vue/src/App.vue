@@ -50,7 +50,11 @@ const themeClass = computed(() => `theme-${theme.value}`)
 const isPublicPage = computed(() => !!route.meta?.public)
 
 function navigate(page) {
-  router.push({ name: page })
+  const target = typeof page === 'string' ? { page } : page
+  router.push({
+    name: target.page,
+    query: target.sub ? { sub: target.sub } : {}
+  })
 }
 
 function toggleSidebar() {
