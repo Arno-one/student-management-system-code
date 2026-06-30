@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from starlette.exceptions import HTTPException as StarletteHTTPException  # 兜底所有 HTTP 异常
 import uvicorn
+from config import TENCENT_MAP_MCP_STARTUP_MODE
 from database import init_db
 from API.statistical import sta_router
 from API.score_api import router_score
@@ -41,7 +42,12 @@ async def lifespan(app: FastAPI):
     logger.info("应用启动中：开始初始化数据库……")
     init_db()
     # MCP 是增强能力，初始化失败也不能影响主应用启动，业务工具会自动回退原有 REST 链路。
-    await tencent_map_mcp_client.startup()
+    if TENCENT_MAP_MCP_STARTUP_MODE == "eager":
+        await tencent_map_mcp_client.startup()
+    elif TENCENT_MAP_MCP_STARTUP_MODE == "lazy":
+        logger.info("腾讯地图 MCP 已启用延迟初始化：首次调用相关工具时再连接")
+    else:
+        logger.info("腾讯地图 MCP 已关闭：TENCENT_MAP_MCP_STARTUP_MODE=disabled")
     logger.info("数据库初始化完成，应用已就绪")
     try:
         yield

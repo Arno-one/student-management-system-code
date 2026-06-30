@@ -2,8 +2,10 @@ from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 # 数据库连接信息统一从 config（.env）读取，不再硬编码在代码里
 from config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME, \
-    DB_READONLY_USER, DB_READONLY_PASSWORD
-from util.log import register_sqlalchemy_sql_logging
+    DB_READONLY_USER, DB_READONLY_PASSWORD, DB_AUTO_CREATE_TABLES
+from util.log import register_sqlalchemy_sql_logging, get_logger
+
+logger = get_logger(__name__)
 
 user = DB_USER
 password = DB_PASSWORD
@@ -68,6 +70,10 @@ def get_db_readonly():
 
 def init_db():
     """初始化数据库表结构 — 在应用启动时调用一次"""
+    if not DB_AUTO_CREATE_TABLES:
+        logger.info("已跳过启动自动建表和索引检查：DB_AUTO_CREATE_TABLES=false")
+        return
+
     # 导入所有Model以确保它们被注册到Base.metadata
     import model.Student  # noqa: F401
     import model.Class  # noqa: F401

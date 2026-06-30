@@ -9,7 +9,7 @@ import asyncio
 from datetime import datetime
 from typing import Any
 
-from config import TENCENT_MAP_KEY
+from config import TENCENT_MAP_KEY, TENCENT_MAP_MCP_STARTUP_MODE
 from util.log import get_logger
 
 logger = get_logger(__name__)
@@ -24,15 +24,21 @@ class TencentMapMcpClient:
 
     def __init__(self, api_key: str | None = None):
         self.api_key = api_key if api_key is not None else TENCENT_MAP_KEY
+        self.startup_mode = TENCENT_MAP_MCP_STARTUP_MODE
         self.endpoint = f"https://mcp.map.qq.com/mcp?key={self.api_key}&format=0" if self.api_key else ""
-        self.enabled = bool(self.api_key)
+        self.enabled = bool(self.api_key) and self.startup_mode != "disabled"
         self.connected = False
         self.tools: list[dict[str, Any]] = []
-        self.last_error: str | None = None
+        self.last_error: str | None = (
+            "TENCENT_MAP_MCP_STARTUP_MODE=disabled" if self.startup_mode == "disabled" else None
+        )
         self.last_success_at: str | None = None
 
     async def startup(self) -> None:
         """应用启动时探测 MCP 可用性；失败只降级，不向外抛异常。"""
+        if self.startup_mode == "disabled":
+            self._mark_disabled("TENCENT_MAP_MCP_STARTUP_MODE=disabled")
+            return
         if not self.api_key:
             self._mark_disabled("未配置 TENCENT_MAP_KEY")
             return
@@ -60,8 +66,18 @@ class TencentMapMcpClient:
         """应用关闭时标记 MCP 不再可用。"""
         self.connected = False
 
+    async def ensure_connected(self) -> None:
+        """首次使用 MCP 工具时按需连接，避免把远端探测放在应用启动关键路径里。"""
+        if self.connected:
+            return
+        if not self.enabled:
+            return
+        await self.startup()
+
     async def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         """调用指定 MCP tool，统一返回 dict，便于业务工具做兼容处理。"""
+        if not self.connected:
+            await self.ensure_connected()
         if not self.connected:
             raise RuntimeError(self.last_error or "腾讯地图 MCP 未连接")
 
@@ -88,6 +104,7 @@ class TencentMapMcpClient:
             "provider": "tencent_map_mcp",
             "enabled": self.enabled,
             "connected": self.connected,
+            "startup_mode": self.startup_mode,
             "endpoint": "https://mcp.map.qq.com/mcp?key=***&format=0" if self.api_key else "",
             "tool_count": len(self.tools),
             "tools": self.tools,

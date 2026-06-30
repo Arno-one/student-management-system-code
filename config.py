@@ -15,6 +15,20 @@ from dotenv import load_dotenv
 # 只要在程序最早被 import 一次即可，重复调用也没副作用
 load_dotenv()
 
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    """把 .env 中的字符串开关统一转成 bool，避免每个模块重复解析。"""
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _env_choice(name: str, default: str, choices: set[str]) -> str:
+    """读取枚举型配置；写错时回退默认值，保证应用仍可启动。"""
+    value = os.getenv(name, default).strip().lower()
+    return value if value in choices else default
+
 # ==================== 大模型 DeepSeek ====================
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
@@ -24,6 +38,12 @@ DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY")
 
 # ==================== 腾讯地图（天气查询 / 地理编码） ====================
 TENCENT_MAP_KEY = os.getenv("TENCENT_MAP_KEY")
+# 腾讯地图 MCP 初始化模式：eager=启动时连接，lazy=首次调用时连接，disabled=完全关闭 MCP 增强链路
+TENCENT_MAP_MCP_STARTUP_MODE = _env_choice(
+    "TENCENT_MAP_MCP_STARTUP_MODE",
+    "eager",
+    {"eager", "lazy", "disabled"},
+)
 
 # ==================== QQ 邮箱 SMTP ====================
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.qq.com")
@@ -39,6 +59,8 @@ DB_PASSWORD = os.getenv("DB_PASSWORD", "")
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "3306")
 DB_NAME = os.getenv("DB_NAME", "student_management_system")
+# 是否在应用启动时自动 create_all 并补索引；生产/演示环境建议关闭，用迁移脚本维护表结构
+DB_AUTO_CREATE_TABLES = _env_bool("DB_AUTO_CREATE_TABLES", True)
 
 # NL2SQL 只读账号（数据库层面仅授予 SELECT，纵深防御最后一道防线）
 DB_READONLY_USER = os.getenv("DB_READONLY_USER", "")
