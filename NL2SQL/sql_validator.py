@@ -17,6 +17,7 @@ ALLOWED_PREFIXES = ["SELECT", "SHOW", "DESCRIBE", "DESC", "EXPLAIN"]
 
 # 需要加 is_deleted 过滤的业务表
 BUSINESS_TABLES = get_business_table_names()
+SQL_CLAUSE_KEYWORDS = {"where", "group", "order", "limit", "having", "on"}
 
 
 def validate(sql: str) -> tuple[bool, str]:
@@ -108,6 +109,13 @@ def _extract_table_aliases(sql: str) -> dict[str, str | None]:
     for table_name, alias in matches:
         table_name_lower = table_name.lower()
         if table_name_lower in BUSINESS_TABLES:
+            # 兼容“FROM student WHERE ...”这类无别名写法，避免把 WHERE/ORDER 等关键字误识别成表别名。
+            if alias and alias.lower() in SQL_CLAUSE_KEYWORDS:
+                alias = None
+            current_alias = result.get(table_name_lower)
+            # 同一张表可能同时出现在外层查询和子查询里，优先保留已经识别到的真实别名，避免被内层无别名写法覆盖。
+            if current_alias and current_alias != table_name and not alias:
+                continue
             result[table_name_lower] = alias or table_name
     return result
 
