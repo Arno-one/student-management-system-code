@@ -1,0 +1,83 @@
+{
+  "items": [
+    {
+      "id": "formula_engineering_value",
+      "filename": "formula_engineering_value.png",
+      "latex": "E_{Agent}=C_{control}+X_{extend}+O_{observe}+R_{regress}",
+      "display": "block",
+      "color": "#F8FAFC",
+      "background": "#05070D",
+      "transparent": true,
+      "file": "images/formula_engineering_value.png",
+      "dpi": 300,
+      "providers": [
+        "codecogs",
+        "quicklatex",
+        "mathpad",
+        "wikimedia"
+      ],
+      "transparent_tolerance": 12,
+      "provider": "codecogs",
+      "pixel_width": 981,
+      "pixel_height": 50,
+      "ratio": 19.62,
+      "status": "Rendered"
+    },
+    {
+      "id": "formula_tool_risk",
+      "filename": "formula_tool_risk.png",
+      "latex": "Risk_{LLM}=P_{skip}+P_{wrong\\ tool}+P_{repeat}",
+      "display": "block",
+      "color": "#F8FAFC",
+      "background": "#05070D",
+      "transparent": true,
+      "file": "images/formula_tool_risk.png",
+      "dpi": 300,
+      "providers": [
+        "codecogs",
+        "quicklatex",
+        "mathpad",
+        "wikimedia"
+      ],
+      "transparent_tolerance": 12,
+      "provider": "codecogs",
+      "pixel_width": 809,
+      "pixel_height": 50,
+      "ratio": 16.18,
+      "status": "Rendered"
+    },
+    {
+      "id": "formula_acceptance_rate",
+      "filename": "formula_acceptance_rate.png",
+      "latex": "PassRate=\\frac{21}{21}=100\\%",
+      "display": "block",
+      "color": "#F59E0B",
+      "background": "#05070D",
+      "transparent": true,
+      "file": "images/formula_acceptance_rate.png",
+      "dpi": 300,
+      "providers": [
+        "codecogs",
+        "quicklatex",
+        "mathpad",
+        "wikimedia"
+      ],
+      "transparent_tolerance": 12,
+      "provider": "codecogs",
+      "pixel_width": 511,
+      "pixel_height": 101,
+      "ratio": 5.0594,
+      "status": "Rendered"
+    }
+  ],
+  "renderer": {
+    "providers": [
+      "codecogs",
+      "quicklatex",
+      "mathpad",
+      "wikimedia"
+    ],
+    "default_dpi": 300,
+    "output_dir": "images"
+  }
+}

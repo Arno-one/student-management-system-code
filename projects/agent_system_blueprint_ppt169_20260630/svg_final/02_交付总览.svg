@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <g id="background">
+    <rect width="1280" height="720" fill="#05070D" />
+    <path d="M0 120H1280 M0 240H1280 M0 360H1280 M0 480H1280 M0 600H1280 M160 0V720 M320 0V720 M480 0V720 M640 0V720 M800 0V720 M960 0V720 M1120 0V720" stroke="#1C2A3D" stroke-width="1" fill="none" stroke-dasharray="2,10" />
+  </g>
+  <g id="header">
+    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">核心交付已经升级为工程能力矩</text>
+    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">能力、协议治理回归四类资产共同证明：这不是单点功能</text>
+  </g>
+  <g id="kpi-intents">
+    <path fill="#111827" stroke="#2A3A52" stroke-width="1.5" d="M70,154 H318 A6,6 0 0 1 324,160 V324 A6,6 0 0 1 318,330 H70 A6,6 0 0 1 64,324 V160 A6,6 0 0 1 70,154 Z" />
+    
+  <g transform="translate(88, 178) scale(2.125)" fill="#7DD3FC">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M9 0V2H13L16 8.5L13 15H3L0 8.5L3 2H7V0H9ZM4.59794 11.7384L8 12.2618L11.4021 11.7384L11.0979 9.76163L8 10.2382L4.90206 9.76163L4.59794 11.7384ZM7 6.75C7 7.44036 6.44036 8 5.75 8C5.05964 8 4.5 7.44036 4.5 6.75C4.5 6.05964 5.05964 5.5 5.75 5.5C6.44036 5.5 7 6.05964 7 6.75ZM10.25 8C10.9404 8 11.5 7.44036 11.5 6.75C11.5 6.05964 10.9404 5.5 10.25 5.5C9.55964 5.5 9 6.05964 9 6.75C9 7.44036 9.55964 8 10.25 8Z" />
+  </g>
+    <text x="88" y="272" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="76" font-weight="800" fill="#7DD3FC">11</text>
+    <text x="190" y="270" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" fill="#F8FAFC" />
+    <text x="88" y="308" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" fill="#B6C2D2">意图识别</text>
+  </g>
+  <g id="kpi-tools">
+    <path fill="#111827" stroke="#2A3A52" stroke-width="1.5" d="M360,154 H608 A6,6 0 0 1 614,160 V324 A6,6 0 0 1 608,330 H360 A6,6 0 0 1 354,324 V160 A6,6 0 0 1 360,154 Z" />
+    
+  <g transform="translate(378, 178) scale(2.125)" fill="#8B5CF6">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M15 1H1V15H15V1ZM6 5L7.41421 6.41421L5.82843 8L7.41421 9.58579L6 11L3 8L6 5ZM10 5L8.58579 6.41421L10.1716 8L8.58579 9.58579L10 11L13 8L10 5Z" />
+  </g>
+    <text x="378" y="272" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="76" font-weight="800" fill="#8B5CF6">8</text>
+    <text x="448" y="270" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" fill="#F8FAFC" />
+    <text x="378" y="308" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" fill="#B6C2D2">业务工具</text>
+  </g>
+  <g id="kpi-persona">
+    <path fill="#111827" stroke="#2A3A52" stroke-width="1.5" d="M650,154 H898 A6,6 0 0 1 904,160 V324 A6,6 0 0 1 898,330 H650 A6,6 0 0 1 644,324 V160 A6,6 0 0 1 650,154 Z" />
+    
+  <g transform="translate(668, 178) scale(2.125)" fill="#F59E0B">
+    <path d="M8 3.5C8 4.88071 6.88071 6 5.5 6C4.11929 6 3 4.88071 3 3.5C3 2.11929 4.11929 1 5.5 1C6.88071 1 8 2.11929 8 3.5Z" />
+    <path d="M3 8C1.34315 8 0 9.34315 0 11V15H8V8H3Z" />
+    <path d="M13 8H10V15H16V11C16 9.34315 14.6569 8 13 8Z" />
+    <path d="M12 6C13.1046 6 14 5.10457 14 4C14 2.89543 13.1046 2 12 2C10.8954 2 10 2.89543 10 4C10 5.10457 10.8954 6 12 6Z" />
+  </g>
+    <text x="668" y="272" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="76" font-weight="800" fill="#F59E0B">3</text>
+    <text x="738" y="270" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" fill="#F8FAFC" />
+    <text x="668" y="308" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" fill="#B6C2D2">Persona</text>
+  </g>
+  <g id="kpi-cards">
+    <path fill="#111827" stroke="#2A3A52" stroke-width="1.5" d="M940,154 H1188 A6,6 0 0 1 1194,160 V324 A6,6 0 0 1 1188,330 H940 A6,6 0 0 1 934,324 V160 A6,6 0 0 1 940,154 Z" />
+    
+  <g transform="translate(958, 178) scale(2.125)" fill="#22C55E">
+    <path d="M14 0H2V4H14V0Z" />
+    <path d="M2 6H7V10H2V6Z" />
+    <path d="M2 12H7V16H2V12Z" />
+    <path d="M9 12H14V16H9V12Z" />
+    <path d="M14 6H9V10H14V6Z" />
+  </g>
+    <text x="958" y="272" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="76" font-weight="800" fill="#22C55E">3</text>
+    <text x="1028" y="270" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" fill="#F8FAFC" />
+    <text x="958" y="308" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" fill="#B6C2D2">结构化卡</text>
+  </g>
+  <g id="proof-row">
+    <path fill="#111827" stroke="#2A3A52" stroke-width="1.5" d="M70,372 H1188 A6,6 0 0 1 1194,378 V532 A6,6 0 0 1 1188,538 H70 A6,6 0 0 1 64,532 V378 A6,6 0 0 1 70,372 Z" />
+    <text x="96" y="426" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="34" font-weight="800" fill="#F8FAFC">验收证据</text>
+    <text x="96" y="476" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" fill="#B6C2D2">21 项验收条目全部过 · 36 份测试文档沉淢 · 172/172 UI 静检查过 · Playwright 4/4 回归通过</text>
+    <line x1="96" y1="506" x2="1162" y2="506" stroke="#2A3A52" stroke-width="1" />
+    <text x="96" y="558" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="22" fill="#7DD3FC">Capability = Intents + Tools + Personas + Cards + Governance + Regression</text>
+  </g>
+  <g id="footer">
+    <text x="56" y="676" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="16" fill="#7F8EA3">P02 · KPI overview adapted from kpi_cards template</text>
+  </g>
+</svg>

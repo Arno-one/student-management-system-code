@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <g id="background">
+    <rect width="1280" height="720" fill="#05070D" />
+    <path d="M56 132H1224 M56 228H1224 M56 324H1224 M56 420H1224 M56 516H1224 M56 612H1224" stroke="#1C2A3D" stroke-width="1" stroke-dasharray="8,4" />
+    <path d="M110 44V676 M310 44V676 M510 44V676 M710 44V676 M910 44V676 M1110 44V676" stroke="#1C2A3D" stroke-width="1" stroke-opacity="0.48" />
+  </g>
+  <g id="header">
+    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">21 项验收条目全部过，结论可以先</text>
+    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">功能霢求扩展需求与非功能需求均已达成，验收通过率为百分之百</text>
+  </g>
+  <g id="summary-kpi">
+    <path fill="#111827" stroke="#2A3A52" d="M64,148 H370 A6,6 0 0 1 376,154 V274 A6,6 0 0 1 370,280 H64 A6,6 0 0 1 58,274 V154 A6,6 0 0 1 64,148 Z" />
+    
+  <g transform="translate(82, 174) scale(2.75)" fill="#22C55E">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M8 16C12.4183 16 16 12.4183 16 8C16 3.58172 12.4183 0 8 0C3.58172 0 0 3.58172 0 8C0 12.4183 3.58172 16 8 16ZM12.7071 5.70711L11.2929 4.29289L6.5 9.08579L4.70711 7.29289L3.29289 8.70711L6.5 11.9142L12.7071 5.70711Z" />
+  </g>
+    <text x="146" y="202" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="76" font-weight="800" fill="#F59E0B">100%</text>
+    <text x="84" y="250" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="700" fill="#F8FAFC">验收通过</text>
+    <text x="236" y="250" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">21 / 21</text>
+  </g>
+  <g id="acceptance-table">
+    <path fill="#111827" stroke="#2A3A52" d="M64,316 H794 A6,6 0 0 1 800,322 V584 A6,6 0 0 1 794,590 H64 A6,6 0 0 1 58,584 V322 A6,6 0 0 1 64,316 Z" />
+    <path fill="#111827" stroke="#2A3A52" d="M64,316 H794 A6,6 0 0 1 800,322 V364 A6,6 0 0 1 794,370 H64 A6,6 0 0 1 58,364 V322 A6,6 0 0 1 64,316 Z" />
+    <text x="84" y="351" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" font-weight="800" fill="#7DD3FC">验收维度</text>
+    <text x="344" y="351" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" font-weight="800" fill="#7DD3FC">条目</text>
+    <text x="494" y="351" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" font-weight="800" fill="#7DD3FC">达成版本</text>
+    <text x="696" y="351" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" font-weight="800" fill="#7DD3FC">状</text>
+    <line x1="320" y1="316" x2="320" y2="590" stroke="#2A3A52" />
+    <line x1="460" y1="316" x2="460" y2="590" stroke="#2A3A52" />
+    <line x1="630" y1="316" x2="630" y2="590" stroke="#2A3A52" />
+    <path d="M58 424H800 M58 478H800 M58 532H800" stroke="#2A3A52" />
+    <text x="84" y="407" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="700" fill="#F8FAFC">必须完成</text>
+    <text x="360" y="407" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="30" fill="#F8FAFC">5 / 5</text>
+    <text x="494" y="407" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">v1.0 MVP</text>
+    <text x="696" y="407" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#22C55E">通过</text>
+    <text x="84" y="461" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="700" fill="#F8FAFC">推荐完成</text>
+    <text x="360" y="461" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="30" fill="#F8FAFC">5 / 5</text>
+    <text x="494" y="461" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">v1.0 ?v2.3</text>
+    <text x="696" y="461" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#22C55E">通过</text>
+    <text x="84" y="515" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="700" fill="#F8FAFC">可扩</text>
+    <text x="360" y="515" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="30" fill="#F8FAFC">6 / 6</text>
+    <text x="494" y="515" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">v2.0 ?v2.3</text>
+    <text x="696" y="515" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#22C55E">通过</text>
+    <text x="84" y="569" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="700" fill="#F8FAFC">非功</text>
+    <text x="360" y="569" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="30" fill="#F8FAFC">5 / 5</text>
+    <text x="494" y="569" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">全版本支</text>
+    <text x="696" y="569" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#22C55E">通过</text>
+  </g>
+  <g id="formula-proof">
+    <path fill="#111827" stroke="#2A3A52" d="M848,148 H1218 A6,6 0 0 1 1224,154 V584 A6,6 0 0 1 1218,590 H848 A6,6 0 0 1 842,584 V154 A6,6 0 0 1 848,148 Z" />
+    <text x="872" y="196" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="34" font-weight="800" fill="#F8FAFC">结论公式</text>
+    <text x="872" y="235" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">扢有条目进入同丢条证据链，不按演示印象主观判断</text>
+    <image href="data:image/png;base64,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" x="890" y="282.24" width="286" height="56.53" />
+    <path d="M890 384H1176" stroke="#7DD3FC" stroke-width="2" stroke-dasharray="8,4" />
+    
+  <g transform="translate(892, 420) scale(2.625)" fill="#7DD3FC">
+    <path d="M14 0H2V4H14V0Z" />
+    <path d="M2 6H7V10H2V6Z" />
+    <path d="M2 12H7V16H2V12Z" />
+    <path d="M9 12H14V16H9V12Z" />
+    <path d="M14 6H9V10H14V6Z" />
+  </g>
+    <text x="954" y="448" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="700" fill="#F8FAFC">霢求对</text>
+    
+  <g transform="translate(892, 486) scale(2.625)" fill="#F59E0B">
+    <path d="M11 0H5V12H15V4L11 0Z" />
+    <path d="M1 4V16H11V14H3V4H1Z" />
+  </g>
+    <text x="954" y="514" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="700" fill="#F8FAFC">测试沉淀</text>
+    <text x="872" y="566" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">验收结论：功能治理观测回归四条证据同时闭合</text>
+  </g>
+  <g id="footer">
+    <text x="56" y="676" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="16" fill="#7F8EA3">P09 ?consulting table adaptation ?Source: Agent 系统验收说明文档</text>
+  </g>
+</svg>

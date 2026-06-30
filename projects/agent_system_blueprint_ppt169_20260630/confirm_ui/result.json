@@ -1,0 +1,64 @@
+{
+  "canvas": "ppt169",
+  "audience": "项目验收老师、技术答辩评委、课程指导教师，以及需要快速理解 Agent 子系统工程价值的项目组成员。",
+  "content_divergence": "事实、版本、指标和验收结论严格来自两份源文档；允许重组为“结论先行 -> 技术蓝图 -> 能力矩阵 -> 验收证据 -> 演示路径”的汇报叙事。",
+  "mode": "pyramid",
+  "visual_style": "blueprint",
+  "delivery_purpose": "presentation",
+  "page_count": "16",
+  "color": {
+    "name": "",
+    "palette": {
+      "background": "#05070D",
+      "secondary_bg": "#111827",
+      "primary": "#7DD3FC",
+      "accent": "#F59E0B",
+      "secondary_accent": "#8B5CF6",
+      "body_text": "#F8FAFC"
+    }
+  },
+  "icons": "chunk-filled",
+  "typography": {
+    "name": "",
+    "heading": {
+      "cjk": "Microsoft YaHei",
+      "css": "\"Microsoft YaHei\", Arial, sans-serif",
+      "latin": "Arial",
+      "sample_cjk": "Agent 子系统工程蓝图",
+      "sample_latin": "Agent Engineering Blueprint"
+    },
+    "body": {
+      "cjk": "Microsoft YaHei",
+      "css": "\"Microsoft YaHei\", Arial, sans-serif",
+      "latin": "Arial",
+      "sample_cjk": "从可运行能力到可运营体系",
+      "sample_latin": "From runnable capability to operable system"
+    },
+    "body_size": 32,
+    "sizes": {
+      "annotation": 22,
+      "subtitle": 36,
+      "title": 52
+    },
+    "body_size_unit": "px"
+  },
+  "formula_policy": "mixed",
+  "image_usage": [
+    "ai"
+  ],
+  "image_notes": "只生成少量蓝图类主视觉：封面、章节转场和结尾使用 AI 蓝图/系统拓扑背景；架构图、能力矩阵、验收表格、公式全部用原生 SVG 绘制，保证可编辑和可导出。",
+  "image_ai_path": "host-native",
+  "generation_mode": "continuous",
+  "refine_spec": false,
+  "image_strategy": {
+    "name": "蓝图拓扑主视觉",
+    "rendering": "blueprint",
+    "palette": "tech-neon",
+    "visual": "深底网格、细线结构、节点拓扑、工程标注；不出现真实代码截图和长文字。",
+    "color": "背景占主导，青蓝线框承载系统结构，琥珀色只点亮关键结论。",
+    "mood": "学术、克制、可信、带一点未来感"
+  },
+  "stage": "final",
+  "status": "confirmed",
+  "confirmed_at": "2026-06-30T17:04:32"
+}

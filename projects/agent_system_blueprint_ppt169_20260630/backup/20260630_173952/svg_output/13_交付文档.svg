@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <g id="background">
+    <rect width="1280" height="720" fill="#05070D" />
+    <path d="M56 138H1224 M56 234H1224 M56 330H1224 M56 426H1224 M56 522H1224 M56 618H1224" stroke="#1C2A3D" stroke-width="1" stroke-dasharray="8,4" />
+  </g>
+  <g id="header">
+    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">文档、接口模型和测试沉淀让交付可复查</text>
+    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">交付物覆盖需求设计模型接口迭代计划测试和协议规范，验收证据链完整</text>
+  </g>
+  <g id="delivery-table">
+    <rect x="58" y="150" width="1164" height="430" rx="6" fill="#111827" stroke="#2A3A52" />
+    <rect x="58" y="150" width="1164" height="56" rx="6" fill="#111827" stroke="#2A3A52" id="_edit_5" data-edit-target="true" data-edit-annotation="重排此区域：文本超出范围" />
+    <text x="88" y="186" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" font-weight="800" fill="#7DD3FC">交付</text>
+    <text x="276" y="186" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" font-weight="800" fill="#7DD3FC">核心资产</text>
+    <text x="804" y="186" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" font-weight="800" fill="#7DD3FC">验收价值</text>
+    <text x="1154.458" y="187.446" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" font-weight="800" fill="#7DD3FC">状态</text>
+    <line x1="248" y1="150" x2="248" y2="580" stroke="#2A3A52" />
+    <line x1="776" y1="150" x2="776" y2="580" stroke="#2A3A52" />
+    <line x1="1084" y1="150" x2="1084" y2="580" stroke="#2A3A52" />
+    <path d="M58 268H1222 M58 330H1222 M58 392H1222 M58 454H1222 M58 516H1222" stroke="#2A3A52" />
+  </g>
+  <g id="row-requirements">
+    <use data-icon="chunk-filled/book-open" x="88" y="222" width="34" height="34" fill="#7DD3FC" />
+    <text x="136" y="248" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" font-weight="800" fill="#F8FAFC">霢求与迭代</text>
+    <text x="276" y="248" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">v1.0 ?v2.3 霢求架构说明迭代结与下版规</text>
+    <text x="804" y="248" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">证明范围边界清晰，不?MVP 写成通用平台</text>
+    <text x="1140" y="248" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" font-weight="800" fill="#22C55E">完成</text>
+  </g>
+  <g id="row-models">
+    <use data-icon="chunk-filled/database" x="88" y="284" width="34" height="34" fill="#8B5CF6" />
+    <text x="136" y="310" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" font-weight="800" fill="#F8FAFC">数据模型</text>
+    <text x="276" y="310" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="20" fill="#B6C2D2">AgentTask / AgentFeedback / TalkSession / TalkMessage</text>
+    <text x="804" y="310" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">任务、反馈历史对话可落表、可追踪</text>
+    <text x="1140" y="310" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" font-weight="800" fill="#22C55E">完成</text>
+  </g>
+  <g id="row-apis">
+    <use data-icon="chunk-filled/server" x="88" y="346" width="34" height="34" fill="#F59E0B" />
+    <text x="136" y="372" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" font-weight="800" fill="#F8FAFC">接口清单</text>
+    <text x="276" y="372" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="20" fill="#B6C2D2">chat / stream / confirm / feedback / admin / health</text>
+    <text x="804" y="372" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">前后端边界和运营入口均可复查</text>
+    <text x="1140" y="372" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" font-weight="800" fill="#22C55E">完成</text>
+  </g>
+  <g id="row-tests">
+    <use data-icon="chunk-filled/circle-checkmark" x="88" y="408" width="34" height="34" fill="#22C55E" />
+    <text x="136" y="434" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" font-weight="800" fill="#F8FAFC">测试文档</text>
+    <text x="276" y="434" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">36 份测试数据与回归说明，覆盖反馈监控HITL、MCP、Supervisor</text>
+    <text x="804" y="434" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">从能运行”推进到“能回归</text>
+    <text x="1140" y="434" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" font-weight="800" fill="#22C55E">完成</text>
+  </g>
+  <g id="row-protocols">
+    <use data-icon="chunk-filled/files" x="88" y="470" width="34" height="34" fill="#7DD3FC" />
+    <text x="136" y="496" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" font-weight="800" fill="#F8FAFC">协议规范</text>
+    <text x="276" y="496" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">Agent 卡片协议、接入改造设计AI 执行规范</text>
+    <text x="804" y="496" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">结构化展示和工具接入具备统一语言</text>
+    <text x="1140" y="496" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" font-weight="800" fill="#22C55E">完成</text>
+  </g>
+  <g id="row-build">
+    <use data-icon="chunk-filled/bolt" x="88" y="532" width="34" height="34" fill="#F59E0B" />
+    <text x="136" y="558" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" font-weight="800" fill="#F8FAFC">工程验证</text>
+    <text x="276" y="558" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="20" fill="#B6C2D2">compileall / build / UI regression / Playwright</text>
+    <text x="804" y="558" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">编译、构建静态检查与真浏览器回归闭合</text>
+    <text x="1140" y="558" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" font-weight="800" fill="#22C55E">通过</text>
+  </g>
+  <g id="takeaway">
+    <rect x="188" y="610" width="904" height="52" rx="6" fill="#111827" stroke="#2A3A52" />
+    <text x="637.108" y="646.892" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F59E0B">交付不是丢组截图，而是丢条从霢求到回归的可审计证据链</text>
+  </g>
+  <g id="footer">
+    <text x="50.217" y="684.675" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="16" fill="#7F8EA3">P13 ?basic table adaptation ?Source: Agent 系统验收说明文档</text>
+  </g>
+</svg>

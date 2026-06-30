@@ -1,0 +1,180 @@
+{
+  "lang": "zh",
+  "tier": 2,
+  "recommend": {
+    "page_count": "16",
+    "icons": "chunk-filled",
+    "formula_policy": "mixed",
+    "image_usage": ["ai"],
+    "image_ai_path": "host-native",
+    "generation_mode": "continuous"
+  },
+  "page_count": {
+    "value": "16"
+  },
+  "color": {
+    "selected": 0,
+    "candidates": [
+      {
+        "name_zh": "深色学术蓝图",
+        "name_en": "Academic Blueprint Dark",
+        "note_zh": "最贴合“技术蓝图风”：深蓝底、青蓝线框、琥珀色只用于验收通过和关键指标。",
+        "note_en": "Dark academic blueprint with cyan system lines and amber proof points.",
+        "palette": {
+          "background": "#07111F",
+          "secondary_bg": "#0D1C2E",
+          "primary": "#56CCF2",
+          "accent": "#F2C94C",
+          "secondary_accent": "#2F80ED",
+          "body_text": "#EAF4FF"
+        }
+      },
+      {
+        "name_zh": "论文答辩冷白",
+        "name_en": "Defense Paper Light",
+        "note_zh": "更偏学术答辩：浅底、深蓝结构线、绿色标识通过项，投影和打印都更稳。",
+        "note_en": "Light academic defense palette with navy structure lines and green pass markers.",
+        "palette": {
+          "background": "#F7FAFC",
+          "secondary_bg": "#EAF1F8",
+          "primary": "#12355B",
+          "accent": "#00A878",
+          "secondary_accent": "#4A90E2",
+          "body_text": "#14213D"
+        }
+      },
+      {
+        "name_zh": "高对比科技黑金",
+        "name_en": "High-Contrast Tech Gold",
+        "note_zh": "更有发布会气质：黑底、蓝紫结构光、金色结论，视觉冲击更强。",
+        "note_en": "Launch-like dark field with blue-violet structure light and gold conclusions.",
+        "palette": {
+          "background": "#05070D",
+          "secondary_bg": "#111827",
+          "primary": "#7DD3FC",
+          "accent": "#F59E0B",
+          "secondary_accent": "#8B5CF6",
+          "body_text": "#F8FAFC"
+        }
+      }
+    ]
+  },
+  "typography": {
+    "selected": 0,
+    "candidates": [
+      {
+        "name_zh": "工程蓝图无衬线 + 代码等宽",
+        "name_en": "Blueprint Sans + Mono",
+        "note_zh": "中文稳定清晰，英文和代码用等宽字体强化系统图、接口、公式的工程感。",
+        "note_en": "Clear CJK sans with mono accents for architecture, APIs, and formulas.",
+        "sample_heading": "Agent 子系统工程蓝图",
+        "sample_heading_latin": "Agent Engineering Blueprint",
+        "sample_body": "从可运行能力到可运营体系",
+        "sample_body_latin": "From runnable capability to operable system",
+        "heading": {
+          "cjk": "Microsoft YaHei",
+          "latin": "Arial",
+          "css": "\"Microsoft YaHei\", Arial, sans-serif"
+        },
+        "body": {
+          "cjk": "Microsoft YaHei",
+          "latin": "Arial",
+          "css": "\"Microsoft YaHei\", Arial, sans-serif"
+        },
+        "body_size": 32,
+        "sizes": {
+          "title": 52,
+          "subtitle": 36,
+          "annotation": 22
+        }
+      },
+      {
+        "name_zh": "学术衬线标题 + 清爽正文",
+        "name_en": "Academic Serif Headings",
+        "note_zh": "标题更像论文/答辩，正文保持无衬线可读性，适合偏正式验收场景。",
+        "note_en": "Serif-flavored titles with readable sans body for formal defense settings.",
+        "sample_heading": "可控、可扩展、可观测",
+        "sample_heading_latin": "Controllable, Extensible, Observable",
+        "sample_body": "21 项验收条目全部通过",
+        "sample_body_latin": "All 21 acceptance items passed",
+        "heading": {
+          "cjk": "SimSun",
+          "latin": "Georgia",
+          "css": "Georgia, SimSun, serif"
+        },
+        "body": {
+          "cjk": "Microsoft YaHei",
+          "latin": "Arial",
+          "css": "\"Microsoft YaHei\", Arial, sans-serif"
+        },
+        "body_size": 32,
+        "sizes": {
+          "title": 50,
+          "subtitle": 36,
+          "annotation": 22
+        }
+      },
+      {
+        "name_zh": "全等宽技术手册",
+        "name_en": "Technical Manual Mono",
+        "note_zh": "更像系统设计文档和运行日志，适合强调接口、链路、状态和可追踪性。",
+        "note_en": "Manual-like mono rhythm for APIs, traces, states, and auditability.",
+        "sample_heading": "Planner -> Executor -> Tool Registry",
+        "sample_heading_latin": "Planner -> Executor -> Tool Registry",
+        "sample_body": "标准化工具契约降低扩展成本",
+        "sample_body_latin": "Standard tool contracts lower extension cost",
+        "heading": {
+          "cjk": "Microsoft YaHei",
+          "latin": "Consolas",
+          "css": "Consolas, \"Microsoft YaHei\", monospace"
+        },
+        "body": {
+          "cjk": "Microsoft YaHei",
+          "latin": "Consolas",
+          "css": "Consolas, \"Microsoft YaHei\", monospace"
+        },
+        "body_size": 32,
+        "sizes": {
+          "title": 48,
+          "subtitle": 34,
+          "annotation": 21
+        }
+      }
+    ]
+  },
+  "image_notes": {
+    "value": "只生成少量蓝图类主视觉：封面、章节转场和结尾使用 AI 蓝图/系统拓扑背景；架构图、能力矩阵、验收表格、公式全部用原生 SVG 绘制，保证可编辑和可导出。"
+  },
+  "image_strategy": {
+    "selected": 0,
+    "candidates": [
+      {
+        "name": "蓝图拓扑主视觉",
+        "rendering": "blueprint",
+        "palette": "tech-neon",
+        "visual": "深底网格、细线结构、节点拓扑、工程标注；不出现真实代码截图和长文字。",
+        "color": "背景占主导，青蓝线框承载系统结构，琥珀色只点亮关键结论。",
+        "mood": "学术、克制、可信、带一点未来感"
+      },
+      {
+        "name": "数字仪表盘主视觉",
+        "rendering": "digital-dashboard",
+        "palette": "tech-neon",
+        "visual": "数据面板、监控曲线、状态灯、轻微玻璃层；适合监控和验收页。",
+        "color": "深底上使用蓝色 UI 层级，强调色只用于通过率、风险和闭环状态。",
+        "mood": "可观测、可运营、产品化"
+      },
+      {
+        "name": "极简工程插画",
+        "rendering": "vector-illustration",
+        "palette": "cool-corporate",
+        "visual": "扁平结构块、清晰箭头、少阴影；更稳定但视觉张力较弱。",
+        "color": "主色用于模块块面，强调色用于关键路径和验收结论。",
+        "mood": "稳妥、清晰、企业汇报"
+      }
+    ]
+  },
+  "refine_spec": {
+    "value": false
+  }
+}

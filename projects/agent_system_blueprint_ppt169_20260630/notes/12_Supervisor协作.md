@@ -1,0 +1,1 @@
+Supervisor 的价值在于证明多 Agent 协作已经跨域跑通，但它没有急着做大而全的平台。当前用路线规划加邮件通知作为最小闭环，让 Supervisor 负责拆解和汇总，MapAgent 与通信 Agent 复用已有工具，邮件发送前仍由 HITL 兜住风险。
