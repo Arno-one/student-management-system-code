@@ -56,18 +56,22 @@ def _query_data(
             session_id=session_id,
         )
 
+        # 兼容 service 在失败场景下返回 data=None，避免工具层再次对 None 调 .get()。
+        data = result.get("data")
+        if not isinstance(data, dict):
+            data = {}
+
         if result.get("code") != 200:
             logger.warning("NL2SQL 查询失败: question='%s', msg=%s", question[:60], result.get("msg"))
             return {
                 "success": False,
-                "sql": result.get("data", {}).get("sql", ""),
+                "sql": data.get("sql", ""),
                 "columns": [],
                 "rows": [],
                 "row_count": 0,
                 "error": result.get("msg", "查询失败"),
             }
 
-        data = result.get("data", {})
         row_count = data.get("row_count", 0)
         logger.info("NL2SQL 查询成功: question='%s', rows=%s", question[:60], row_count)
         return {
