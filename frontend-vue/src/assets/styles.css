@@ -3391,3 +3391,498 @@ tbody tr:last-child td { border-bottom: 0; }
     flex-direction: column;
   }
 }
+
+/* ===== 方案 C：AI 叙事工作台（黑橙深色主题 + 白蓝浅色主题保留） ===== */
+
+.app-layout.theme-dark {
+  --bg: #050505;
+  --bg-2: #101010;
+  --panel: rgba(18, 18, 18, 0.74);
+  --panel-2: rgba(24, 24, 24, 0.88);
+  --panel-3: #1f1f1f;
+  --panel-solid: #0b0b0b;
+
+  --line: rgba(255, 255, 255, 0.09);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --line-bright: rgba(255, 122, 0, 0.44);
+
+  --text: #fff8ef;
+  --text-soft: #e8ded1;
+  --text-dim: #aaa39a;
+  --text-muted: #766f68;
+
+  --gold: #ff7a00;
+  --gold-2: #ffb000;
+  --gold-3: #a94b00;
+  --gold-bg: rgba(255, 122, 0, 0.14);
+
+  --blue: #46d3ff;
+  --blue-2: #95e8ff;
+  --blue-bg: rgba(70, 211, 255, 0.12);
+
+  --success: #40e0a0;
+  --success-bg: rgba(64, 224, 160, 0.12);
+  --danger: #ff6b6b;
+  --danger-bg: rgba(255, 107, 107, 0.13);
+  --warning: #ffb000;
+  --warning-bg: rgba(255, 176, 0, 0.13);
+
+  --shadow-xs: 0 8px 20px rgba(0, 0, 0, 0.34);
+  --shadow-sm: 0 18px 38px rgba(0, 0, 0, 0.42);
+  --shadow: 0 28px 62px rgba(0, 0, 0, 0.52);
+  --shadow-lg: 0 40px 96px rgba(0, 0, 0, 0.62);
+
+  background:
+    linear-gradient(120deg, transparent 0 68%, rgba(255, 122, 0, 0.18) 68% 72%, transparent 72%),
+    radial-gradient(ellipse at 12% 18%, rgba(255, 122, 0, 0.17) 0, transparent 31%),
+    radial-gradient(ellipse at 82% 8%, rgba(255, 176, 0, 0.11) 0, transparent 28%),
+    linear-gradient(180deg, #050505 0%, #101010 46%, #060606 100%);
+}
+
+/* 浅色主题继续使用白蓝系统，只补一点更清爽的空气感。 */
+.app-layout.theme-light {
+  background:
+    linear-gradient(135deg, rgba(61, 149, 232, 0.08) 0 22%, transparent 22%),
+    radial-gradient(circle at 16% 12%, rgba(87, 171, 244, 0.24) 0, transparent 28%),
+    radial-gradient(circle at 84% 10%, rgba(189, 226, 255, 0.34) 0, transparent 26%),
+    linear-gradient(180deg, #ffffff 0%, #f6fbff 48%, #eaf6ff 100%);
+}
+
+.app-layout.theme-dark .app-backdrop::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.52), transparent 74%);
+  opacity: 0.38;
+}
+
+.app-layout.theme-dark .app-backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 22% 36%, rgba(255, 122, 0, 0.26) 0 1px, transparent 2px),
+    radial-gradient(circle at 72% 28%, rgba(255, 176, 0, 0.22) 0 1px, transparent 2px),
+    radial-gradient(circle at 54% 76%, rgba(70, 211, 255, 0.16) 0 1px, transparent 2px);
+  background-size: 86px 86px, 118px 118px, 142px 142px;
+  opacity: 0.34;
+  animation: aiDustDrift 18s linear infinite;
+}
+
+.app-layout.theme-dark .glow {
+  border-radius: 0;
+  filter: blur(18px);
+  opacity: 0.52;
+  transform: skewX(-18deg);
+}
+
+.app-layout.theme-dark .glow-a {
+  width: 420px;
+  height: 210px;
+  left: -120px;
+  top: 18%;
+  background: linear-gradient(90deg, rgba(255, 122, 0, 0.24), transparent);
+}
+
+.app-layout.theme-dark .glow-b {
+  width: 520px;
+  height: 180px;
+  right: -170px;
+  top: 4%;
+  background: linear-gradient(90deg, transparent, rgba(255, 176, 0, 0.22));
+}
+
+.app-layout.theme-dark .grid-fade {
+  inset: auto 6% 2% auto;
+  width: 520px;
+  height: 230px;
+  border-color: rgba(255, 122, 0, 0.18);
+  background:
+    linear-gradient(135deg, rgba(255, 122, 0, 0.06), transparent 62%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 18px);
+  transform: rotate(-8deg) skewX(-12deg);
+}
+
+.ai-ribbon,
+.ai-signal-line,
+.ai-particle-field {
+  position: absolute;
+  display: none;
+  pointer-events: none;
+}
+
+.app-layout.theme-dark .ai-ribbon,
+.app-layout.theme-dark .ai-signal-line,
+.app-layout.theme-dark .ai-particle-field {
+  display: block;
+}
+
+.ai-ribbon {
+  height: 74px;
+  clip-path: polygon(0 0, 100% 0, 91% 100%, 7% 100%);
+  background: linear-gradient(90deg, #ff5f1f, #ffb000);
+  box-shadow: 0 20px 54px rgba(255, 122, 0, 0.24);
+  opacity: 0.92;
+}
+
+.ai-ribbon-a {
+  top: 0;
+  right: -84px;
+  width: 44vw;
+  transform: rotate(8deg);
+}
+
+.ai-ribbon-b {
+  bottom: -38px;
+  left: -120px;
+  width: 36vw;
+  transform: rotate(-10deg);
+  opacity: 0.72;
+}
+
+.ai-signal-line {
+  top: 34%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background:
+    linear-gradient(90deg, transparent, rgba(255, 122, 0, 0.82), rgba(255, 176, 0, 0.44), transparent);
+  box-shadow: 0 0 20px rgba(255, 122, 0, 0.32);
+  transform: rotate(-7deg);
+}
+
+.ai-signal-line::before {
+  content: '';
+  position: absolute;
+  inset: -18px 0;
+  background:
+    radial-gradient(ellipse at 30% 50%, rgba(255, 122, 0, 0.34), transparent 26%),
+    radial-gradient(ellipse at 70% 50%, rgba(255, 176, 0, 0.22), transparent 24%);
+  filter: blur(10px);
+}
+
+.ai-particle-field {
+  left: 34%;
+  top: 18%;
+  width: 260px;
+  height: 260px;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.24) 0 2px, transparent 2px);
+  background-size: 18px 18px;
+  mask-image: radial-gradient(circle at 50% 50%, black 0 46%, transparent 72%);
+  opacity: 0.35;
+  transform: rotate(-8deg);
+}
+
+.app-layout.theme-dark .sidebar,
+.app-layout.theme-dark .topbar,
+.app-layout.theme-dark .card,
+.app-layout.theme-dark .table-panel,
+.app-layout.theme-dark .result,
+.app-layout.theme-dark .talk-chat,
+.app-layout.theme-dark .talk-session-list {
+  border-color: rgba(255, 122, 0, 0.18);
+  background:
+    linear-gradient(135deg, rgba(255, 122, 0, 0.08), transparent 30%),
+    linear-gradient(180deg, rgba(20, 20, 20, 0.88), rgba(8, 8, 8, 0.78));
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.app-layout.theme-dark .sidebar {
+  border-radius: 24px;
+}
+
+.app-layout.theme-dark .sidebar::before,
+.app-layout.theme-dark .topbar::before,
+.app-layout.theme-dark .card::before {
+  background:
+    linear-gradient(120deg, rgba(255, 122, 0, 0.16), transparent 22%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), transparent 76%);
+}
+
+.app-layout.theme-dark .topbar {
+  position: sticky;
+  overflow: hidden;
+}
+
+.app-layout.theme-dark .topbar > * {
+  position: relative;
+  z-index: 1;
+}
+
+.app-layout.theme-dark .topbar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -42px;
+  width: min(420px, 38vw);
+  height: 44px;
+  clip-path: polygon(12% 0, 100% 0, 86% 100%, 0 100%);
+  background: linear-gradient(90deg, #ff5f1f, #ffb000);
+  opacity: 0.92;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app-layout.theme-dark .title-kicker,
+.app-layout.theme-dark .brand-kicker,
+.app-layout.theme-dark .table-kicker,
+.app-layout.theme-dark .api-box span {
+  color: var(--gold-2);
+  text-shadow: 0 0 18px rgba(255, 122, 0, 0.28);
+}
+
+.app-layout.theme-dark .title-pill,
+.app-layout.theme-dark .table-columns {
+  border-color: rgba(255, 122, 0, 0.24);
+  background: rgba(255, 122, 0, 0.12);
+  color: var(--gold-2);
+}
+
+.app-layout.theme-dark .logo {
+  background: linear-gradient(145deg, #ffb000 0%, #ff7a00 55%, #5c2500 100%);
+  color: #090909;
+  box-shadow:
+    0 18px 36px rgba(255, 122, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.38);
+}
+
+.app-layout.theme-dark .brand-signal,
+.app-layout.theme-dark .dot {
+  background: radial-gradient(circle at 35% 35%, #fff3d0, #ff7a00 62%, #8b3200);
+  box-shadow: 0 0 0 6px rgba(255, 122, 0, 0.1), 0 0 22px rgba(255, 122, 0, 0.44);
+}
+
+.app-layout.theme-dark .nav-item,
+.app-layout.theme-dark .rail-item,
+.app-layout.theme-dark .nav-child {
+  border-radius: 18px;
+}
+
+.app-layout.theme-dark .nav-item:hover,
+.app-layout.theme-dark .rail-item:hover,
+.app-layout.theme-dark .nav-child:hover {
+  border-color: rgba(255, 122, 0, 0.22);
+  background:
+    linear-gradient(135deg, rgba(255, 122, 0, 0.1), rgba(255, 255, 255, 0.035));
+}
+
+.app-layout.theme-dark .nav-item.active,
+.app-layout.theme-dark .rail-item.active,
+.app-layout.theme-dark .nav-child.active,
+.app-layout.theme-dark .nav-group-active .nav-item:not(.active) {
+  border-color: rgba(255, 122, 0, 0.5);
+  background:
+    linear-gradient(110deg, rgba(255, 122, 0, 0.22), rgba(255, 176, 0, 0.08) 48%, rgba(70, 211, 255, 0.08));
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.34),
+    0 0 24px rgba(255, 122, 0, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.app-layout.theme-dark .ico,
+.app-layout.theme-dark .rail-item.active .ico,
+.app-layout.theme-dark .nav-item.active .ico {
+  border-color: rgba(255, 122, 0, 0.24);
+  background: linear-gradient(180deg, rgba(255, 122, 0, 0.16), rgba(255, 255, 255, 0.035));
+  color: var(--gold-2);
+}
+
+.app-layout.theme-dark .nav-child-dot {
+  background: rgba(255, 122, 0, 0.28);
+}
+
+.app-layout.theme-dark .nav-child.active .nav-child-dot {
+  background: var(--gold);
+  box-shadow: 0 0 16px rgba(255, 122, 0, 0.54);
+}
+
+.app-layout.theme-dark .card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+}
+
+.app-layout.theme-dark .card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 132px;
+  height: 42px;
+  clip-path: polygon(22% 0, 100% 0, 100% 100%, 0 100%);
+  background: linear-gradient(90deg, rgba(255, 122, 0, 0), rgba(255, 122, 0, 0.22));
+  pointer-events: none;
+}
+
+.app-layout.theme-dark .card h3 {
+  color: var(--text);
+  text-shadow: 0 0 28px rgba(255, 122, 0, 0.12);
+}
+
+.app-layout.theme-dark .field input,
+.app-layout.theme-dark .field textarea,
+.app-layout.theme-dark .field select,
+.app-layout.theme-dark .api-box input,
+.app-layout.theme-dark .rte,
+.app-layout.theme-dark .nl-input-row input,
+.app-layout.theme-dark .talk-input-row input {
+  border-color: rgba(255, 122, 0, 0.16);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.018)),
+    rgba(0, 0, 0, 0.28);
+  color: var(--text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.app-layout.theme-dark .field input:hover,
+.app-layout.theme-dark .field textarea:hover,
+.app-layout.theme-dark .field select:hover,
+.app-layout.theme-dark .api-box input:hover {
+  border-color: rgba(255, 122, 0, 0.3);
+}
+
+.app-layout.theme-dark .field input:focus,
+.app-layout.theme-dark .field textarea:focus,
+.app-layout.theme-dark .field select:focus,
+.app-layout.theme-dark .api-box input:focus,
+.app-layout.theme-dark .rte:focus-within,
+.app-layout.theme-dark .nl-input-row input:focus {
+  border-color: rgba(255, 122, 0, 0.58);
+  box-shadow: 0 0 0 4px rgba(255, 122, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.app-layout.theme-dark .btn {
+  border-color: rgba(255, 176, 0, 0.58);
+  background:
+    linear-gradient(100deg, #ff5f1f, #ff7a00 52%, #ffb000);
+  color: #090909;
+  box-shadow: 0 16px 30px rgba(255, 122, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.26);
+}
+
+.app-layout.theme-dark .btn:hover {
+  box-shadow: 0 20px 40px rgba(255, 122, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.32);
+}
+
+.app-layout.theme-dark .btn.secondary,
+.app-layout.theme-dark .sidebar-toggle,
+.app-layout.theme-dark .theme-toggle,
+.app-layout.theme-dark .btn-copy {
+  border-color: rgba(255, 122, 0, 0.18);
+  background:
+    linear-gradient(135deg, rgba(255, 122, 0, 0.1), rgba(255, 255, 255, 0.035));
+  color: var(--text-soft);
+}
+
+.app-layout.theme-dark .btn.secondary:hover,
+.app-layout.theme-dark .sidebar-toggle:hover,
+.app-layout.theme-dark .theme-toggle:hover,
+.app-layout.theme-dark .btn-copy:hover {
+  border-color: rgba(255, 122, 0, 0.42);
+  color: var(--gold-2);
+  box-shadow: 0 12px 26px rgba(255, 122, 0, 0.12);
+}
+
+.app-layout.theme-dark .btn.danger {
+  border-color: rgba(255, 107, 107, 0.4);
+  background: linear-gradient(100deg, #a93232, #ff6b6b);
+  color: #fff;
+}
+
+.app-layout.theme-dark .table-head,
+.app-layout.theme-dark thead {
+  background:
+    linear-gradient(90deg, rgba(255, 122, 0, 0.14), rgba(255, 176, 0, 0.04)),
+    rgba(0, 0, 0, 0.24);
+}
+
+.app-layout.theme-dark th {
+  color: var(--gold-2);
+}
+
+.app-layout.theme-dark td {
+  border-color: rgba(255, 255, 255, 0.075);
+}
+
+.app-layout.theme-dark tbody tr:hover {
+  background: rgba(255, 122, 0, 0.08);
+}
+
+.app-layout.theme-dark .badge.ok {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.app-layout.theme-dark .badge.err {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.app-layout.theme-dark .badge.pending {
+  background: var(--gold-bg);
+  color: var(--gold-2);
+}
+
+.app-layout.theme-dark .login-page {
+  position: relative;
+}
+
+.app-layout.theme-dark .login-page::before {
+  content: '';
+  position: absolute;
+  inset: 8% 7% auto auto;
+  width: min(520px, 54vw);
+  height: 230px;
+  clip-path: polygon(0 0, 100% 18%, 78% 100%, 10% 84%);
+  background: linear-gradient(110deg, rgba(255, 95, 31, 0.32), rgba(255, 176, 0, 0.16));
+  filter: blur(1px);
+  opacity: 0.64;
+  pointer-events: none;
+}
+
+.app-layout.theme-dark .float-agent-btn {
+  border-color: rgba(255, 122, 0, 0.72);
+  background: linear-gradient(145deg, #141414, #050505);
+  color: var(--gold-2);
+  box-shadow: 0 14px 36px rgba(255, 122, 0, 0.22);
+}
+
+.app-layout.theme-dark .float-agent-panel {
+  border-color: rgba(255, 122, 0, 0.24);
+  background:
+    linear-gradient(135deg, rgba(255, 122, 0, 0.1), transparent 32%),
+    linear-gradient(180deg, rgba(18, 18, 18, 0.96), rgba(6, 6, 6, 0.94));
+}
+
+@keyframes aiDustDrift {
+  from { background-position: 0 0, 0 0, 0 0; }
+  to { background-position: 86px 86px, -118px 118px, 142px -142px; }
+}
+
+@media (max-width: 960px) {
+  .ai-ribbon-a { width: 68vw; }
+  .ai-ribbon-b { width: 54vw; }
+  .ai-particle-field { left: 44%; top: 12%; opacity: 0.22; }
+  .app-layout.theme-dark .topbar::after { width: 46vw; opacity: 0.5; }
+}
+
+@media (max-width: 720px) {
+  .app-layout.theme-dark .app-backdrop::after,
+  .ai-particle-field,
+  .ai-signal-line {
+    opacity: 0.18;
+  }
+
+  .ai-ribbon {
+    height: 46px;
+  }
+
+  .app-layout.theme-dark .card::after,
+  .app-layout.theme-dark .topbar::after {
+    width: 92px;
+    height: 28px;
+  }
+}

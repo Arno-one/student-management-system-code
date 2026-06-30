@@ -4,6 +4,11 @@
       <span class="glow glow-a"></span>
       <span class="glow glow-b"></span>
       <span class="grid-fade"></span>
+      <!-- 方案 C：黑橙 AI 叙事工作台的舞台背景，只负责视觉氛围，不参与交互。 -->
+      <span class="ai-ribbon ai-ribbon-a"></span>
+      <span class="ai-ribbon ai-ribbon-b"></span>
+      <span class="ai-signal-line"></span>
+      <span class="ai-particle-field"></span>
     </div>
 
     <Sidebar
