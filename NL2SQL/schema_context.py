@@ -1,6 +1,7 @@
 """
 Schema 上下文构建器：动态反射数据库表结构 + 中文注释字典，为 LLM 生成 SQL 提供准确的"数据地图"。
 """
+import re
 from sqlalchemy import inspect
 from database import engine
 
@@ -81,6 +82,40 @@ FIELD_COMMENTS = {
     "teacher.update_time":       "更新时间",
 }
 
+# ---- 字段显示名兜底映射 ----
+# 说明：
+# 1. 优先复用 FIELD_COMMENTS 里的语义信息，避免 Agent 和 NL2SQL 各维护一套中文字段名。
+# 2. 同名字段在多张表里若中文含义一致，可直接复用；若不一致，再走这里的兜底表。
+FIELD_DISPLAY_NAME_FALLBACKS = {
+    "id": "编号",
+    "student_no": "学号",
+    "student_name": "学生姓名",
+    "class_id": "班级ID",
+    "class_name": "班级名称",
+    "class_code": "班级编号",
+    "gender": "性别",
+    "age": "年龄",
+    "native_place": "籍贯",
+    "graduate_school": "毕业院校",
+    "major": "专业",
+    "education": "学历",
+    "admission_time": "入学时间",
+    "graduate_time": "毕业时间",
+    "create_time": "创建时间",
+    "update_time": "更新时间",
+    "exam_order": "考试序次",
+    "score": "成绩",
+    "company_name": "公司名称",
+    "salary": "薪资",
+    "title": "职务",
+    "phone": "联系电话",
+    "email": "邮箱",
+    "birth_date": "出生日期",
+    "hire_date": "入职日期",
+    "offer_send_time": "Offer发送时间",
+    "job_open_time": "就业开放时间",
+}
+
 # ---- 手动标注的 JOIN 路径（外键之外的关键关联） ----
 # 外键反射只能拿到有显式 FK 约束的关系，以下补充所有常用跨表关联路径。
 EXTRA_JOIN_PATHS = [
@@ -125,6 +160,15 @@ def _format_fk(fk, table_name: str) -> str:
     ref_table = fk["referred_table"]
     ref_cols = ", ".join(fk["referred_columns"])
     return f"  FOREIGN KEY ({cols}) → {ref_table}.{ref_cols}"
+
+
+def _strip_field_comment_suffix(text: str) -> str:
+    """把字段注释裁成适合前端展示的短中文名。"""
+    if not text:
+        return ""
+    # 去掉关联说明、枚举说明、括号补充等冗余后缀，只保留最核心的字段中文名。
+    short_text = re.split(r"\s*→\s*|\s*（|\s*\(", text, maxsplit=1)[0].strip()
+    return short_text or text.strip()
 
 
 def build_schema_text() -> str:
@@ -191,3 +235,28 @@ def get_business_column_names() -> list[str]:
         for col in insp.get_columns(t):
             result.append(f"{t}.{col['name']}")
     return result
+
+
+def get_field_display_name(column_name: str) -> str:
+    """
+    根据字段名返回对用户更友好的中文显示名。
+
+    解析顺序：
+    1. 先在 FIELD_COMMENTS 中找“同名字段且中文含义一致”的注释；
+    2. 再使用手工兜底映射；
+    3. 最后退回原始字段名。
+    """
+    if not column_name:
+        return ""
+
+    normalized_name = column_name.strip()
+    matched_names = {
+        _strip_field_comment_suffix(comment)
+        for key, comment in FIELD_COMMENTS.items()
+        if key.split(".", 1)[-1] == normalized_name and comment
+    }
+    matched_names.discard("")
+    if len(matched_names) == 1:
+        return next(iter(matched_names))
+
+    return FIELD_DISPLAY_NAME_FALLBACKS.get(normalized_name, normalized_name)

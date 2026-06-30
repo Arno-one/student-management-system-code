@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from llm_basic import get_model
 from langchain_core.messages import SystemMessage, HumanMessage
 
+from NL2SQL.schema_context import get_field_display_name
 from agent_system.schemas.task_state import ExecutionPlan
 from agent_system.schemas.agent_response import AgentChatResponse, ToolCallRecord
 from agent_system.prompts.persona_prompt import PERSONA_REGISTRY
@@ -47,6 +48,11 @@ def _sse_event(event: str, data: dict | str) -> str:
     if isinstance(data, str):
         data = {"text": data}
     return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+
+def _display_cell_value(value) -> str:
+    """把表格单元格值转换成更适合用户阅读的文本。"""
+    return "未填写" if value is None else str(value)
 
 
 def _get_persona_prompt(persona: str) -> str:
@@ -292,7 +298,7 @@ def _build_data_query_summary_instruction(result: dict, mode: str) -> str:
     """为数据查询结果构造更贴近用户阅读习惯的总结指令。"""
     row_count = int(result.get("row_count", 0) or 0)
     columns = result.get("columns", [])
-    column_text = "、".join(str(col) for col in columns[:8]) if columns else "结果字段"
+    column_text = "、".join(get_field_display_name(str(col)) for col in columns[:8]) if columns else "结果字段"
     raw_suffix = "不要重复输出整张原始表格，系统会在你的总结后附上原始数据供核对。" if mode == "summary_with_raw" else ""
     return (
         f"请把这次数据查询结果整理成自然语言回复。当前共 {row_count} 条数据，主要字段包括：{column_text}。"
@@ -884,9 +890,9 @@ def _format_raw_results(context: dict) -> str:
                     parts.append("数据库中没有符合该条件的数据。建议检查筛选条件或换个问法试试。")
                 else:
                     parts.append(f"查询结果（{len(rows)} 条）：")
-                    parts.append(" | ".join(cols))
+                    parts.append(" | ".join(get_field_display_name(str(col)) for col in cols))
                     for row in rows[:20]:
-                        parts.append(" | ".join(str(c) for c in row))
+                        parts.append(" | ".join(_display_cell_value(c) for c in row))
             elif key == "score_tool":
                 scores = val.get("scores", [])
                 parts.append(f"成绩记录（{len(scores)} 条）：")
