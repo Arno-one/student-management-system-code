@@ -40,6 +40,7 @@ _TOOL_REGISTRY: dict[str, object] = {
 _CACHEABLE_TOOLS = {"score_tool", "student_tool", "rag_tool"}
 # session 级工具结果缓存: {session_id: {cache_key: result_dict}}
 _SESSION_CACHE: dict[str, dict[str, dict]] = {}
+_DATA_QUERY_SUMMARY_ONLY_MAX_ROWS = 10
 
 
 def _sse_event(event: str, data: dict | str) -> str:
@@ -219,6 +220,142 @@ def _llm_reply(message: str, persona: str, fallback_response: str | None = None,
         return fallback_response or "你好！我是学业导师，有什么可以帮你的吗？"
 
 
+def _llm_summarize_with_fallback(
+    context: dict,
+    instruction: str,
+    persona: str,
+    fallback_response: str,
+    provider: str = "deepseek",
+) -> str:
+    """带兜底的同步总结，避免数据查询摘要失败后只剩通用报错。"""
+    system_prompt, user_content = _build_summarize_messages(context, instruction, persona)
+    try:
+        model = get_model(provider)
+        messages = [SystemMessage(content=system_prompt), HumanMessage(content=user_content)]
+        response = model.invoke(messages)
+        content = response.content.strip() if isinstance(response.content, str) else ""
+        return content or fallback_response
+    except Exception as e:
+        logger.exception("LLM 总结失败，回退原始结果: %s", e)
+        return fallback_response
+
+
+def _llm_stream_summarize_with_fallback(
+    context: dict,
+    instruction: str,
+    persona: str,
+    fallback_response: str,
+    provider: str = "deepseek",
+) -> Generator[str, None, str]:
+    """带兜底的流式总结，异常时直接回退到原始结果文本。"""
+    system_prompt, user_content = _build_summarize_messages(context, instruction, persona)
+    try:
+        model = get_model(provider)
+        messages = [SystemMessage(content=system_prompt), HumanMessage(content=user_content)]
+        full = ""
+        for chunk in model.stream(messages):
+            text = chunk.content
+            if isinstance(text, str) and text:
+                full += text
+                yield text
+        if full.strip():
+            return full
+    except Exception as e:
+        logger.exception("LLM 流式总结失败，回退原始结果: %s", e)
+
+    yield fallback_response
+    return fallback_response
+
+
+def _get_data_query_result(context: dict) -> dict | None:
+    """提取成功的 NL2SQL 结果，失败或空结果时返回 None。"""
+    result = context.get("nl2sql_tool")
+    if not isinstance(result, dict) or not result.get("success"):
+        return None
+    rows = result.get("rows") or []
+    return result if rows else None
+
+
+def _get_data_query_reply_mode(plan: ExecutionPlan, context: dict) -> str | None:
+    """根据数据量决定只返回摘要，还是摘要后附原始表格。"""
+    result = _get_data_query_result(context)
+    if plan.intent != "data_query" or result is None:
+        return None
+
+    row_count = int(result.get("row_count", 0) or 0)
+    if row_count <= _DATA_QUERY_SUMMARY_ONLY_MAX_ROWS:
+        return "summary_only"
+    return "summary_with_raw"
+
+
+def _build_data_query_summary_instruction(result: dict, mode: str) -> str:
+    """为数据查询结果构造更贴近用户阅读习惯的总结指令。"""
+    row_count = int(result.get("row_count", 0) or 0)
+    columns = result.get("columns", [])
+    column_text = "、".join(str(col) for col in columns[:8]) if columns else "结果字段"
+    raw_suffix = "不要重复输出整张原始表格，系统会在你的总结后附上原始数据供核对。" if mode == "summary_with_raw" else ""
+    return (
+        f"请把这次数据查询结果整理成自然语言回复。当前共 {row_count} 条数据，主要字段包括：{column_text}。"
+        f"先用 1 句话概括查询结论，再按序号提炼关键信息。"
+        f"字段名尽量翻译成用户易懂的中文，不要机械照抄数据库字段名。"
+        f"遇到空值请说“未填写”或“暂无”。不要编造数据。{raw_suffix}"
+    )
+
+
+def _build_data_query_raw_appendix(context: dict) -> str:
+    """为大结果集补上一段可核对的原始数据。"""
+    raw_text = _format_raw_results({"nl2sql_tool": context.get("nl2sql_tool", {})})
+    return f"为便于核对，原始数据如下：\n{raw_text}"
+
+
+def _build_data_query_reply(context: dict, plan: ExecutionPlan, provider: str) -> str:
+    """同步模式下的数据查询混合回复：小结果直接润色，大结果摘要后附原始表格。"""
+    mode = _get_data_query_reply_mode(plan, context)
+    if mode is None:
+        return _format_raw_results(context)
+
+    result = context["nl2sql_tool"]
+    raw_fallback = _format_raw_results({"nl2sql_tool": result})
+    summary = _llm_summarize_with_fallback(
+        context=context,
+        instruction=_build_data_query_summary_instruction(result, mode),
+        persona=plan.persona,
+        fallback_response=raw_fallback,
+        provider=provider,
+    )
+    if summary == raw_fallback:
+        return raw_fallback
+    if mode == "summary_with_raw":
+        return f"{summary}\n\n{_build_data_query_raw_appendix(context)}"
+    return summary
+
+
+def _stream_data_query_reply(context: dict, plan: ExecutionPlan, provider: str) -> Generator[str, None, str]:
+    """流式模式下的数据查询混合回复：先流式输出摘要，再按需补原始表格。"""
+    mode = _get_data_query_reply_mode(plan, context)
+    if mode is None:
+        raw_text = _format_raw_results(context)
+        yield _sse_event("chunk", raw_text)
+        return raw_text
+
+    result = context["nl2sql_tool"]
+    raw_fallback = _format_raw_results({"nl2sql_tool": result})
+    summary = yield from _llm_stream_summarize_with_fallback(
+        context=context,
+        instruction=_build_data_query_summary_instruction(result, mode),
+        persona=plan.persona,
+        fallback_response=raw_fallback,
+        provider=provider,
+    )
+    if summary == raw_fallback:
+        return raw_fallback
+    if mode == "summary_with_raw":
+        appendix = _build_data_query_raw_appendix(context)
+        yield _sse_event("chunk", f"\n\n{appendix}")
+        return f"{summary}\n\n{appendix}"
+    return summary
+
+
 # ==================== 通用工具执行 ====================
 
 def _execute_step(step, tool, ctx: ToolContext, user: dict) -> dict:
@@ -370,6 +507,13 @@ def run_plan_stream(
         full_reply = "请确认以上邮件预览内容。"
         yield _sse_event("chunk", full_reply)
         sources = None
+    elif _get_data_query_reply_mode(plan, executed):
+        full_reply = yield from _stream_data_query_reply(
+            context=executed,
+            plan=plan,
+            provider=provider,
+        )
+        sources = _extract_sources(executed)
     elif plan.need_llm_summary and plan.steps:
         full_reply = yield from _stream_reply_from_llm(
             plan=plan, context=executed, persona=plan.persona, provider=provider,
@@ -529,6 +673,13 @@ def run_plan(
     if hitl_pending:
         reply = "请确认以上邮件预览内容。"
         sources = None
+    elif _get_data_query_reply_mode(plan, executed):
+        reply = _build_data_query_reply(
+            context=executed,
+            plan=plan,
+            provider=provider,
+        )
+        sources = _extract_sources(executed)
     elif plan.need_llm_summary and plan.steps:
         reply = _llm_summarize(
             context=executed, instruction=plan.summary_instruction or "请总结以上数据",
