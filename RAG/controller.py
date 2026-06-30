@@ -14,14 +14,26 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from RAG.ask_service import ask_question
 from RAG.config import config
-from RAG.ingestion import ingest_documents
 from util.log import get_logger
 
 logger = get_logger(__name__)
 
 rag_router = APIRouter()
+
+
+def _load_ask_question():
+    """按需加载问答服务，避免启动时提前初始化 RAG 客户端和模型 SDK。"""
+    from RAG.ask_service import ask_question
+
+    return ask_question
+
+
+def _load_ingest_documents():
+    """按需加载入库管线，避免启动时导入文本切分和模型相关重依赖。"""
+    from RAG.ingestion import ingest_documents
+
+    return ingest_documents
 
 
 class AskRequest(BaseModel):
@@ -59,6 +71,7 @@ async def ask(request: AskRequest):
 async def ask_by_kb(kb_id: str, request: AskRequest):
     """多知识库问答接口。"""
     try:
+        ask_question = _load_ask_question()
         result = ask_question(
             question=request.question,
             kb_id=kb_id,
@@ -98,6 +111,7 @@ async def ingest_by_kb(kb_id: str, request: IngestRequest):
                 config.max_chapters = request.max_chapters
 
             try:
+                ingest_documents = _load_ingest_documents()
                 result = ingest_documents(drop_existing=request.drop_existing)
             finally:
                 config.max_chapters = original_max_chapters

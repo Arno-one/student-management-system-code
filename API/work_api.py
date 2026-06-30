@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from database import get_db
 from  DAO import student_dao,score_dao, talk_dao
 from enum import Enum
-from service import work_service
 from util import email as email_util
 from util.log import get_logger
 from util.rbac import get_current_user, require_permission
@@ -16,6 +15,13 @@ logger = get_logger(__name__)
 woker = APIRouter()
 # 邮件模块单独用一个路由，方便在 docs 里独立成一个模块
 email_router = APIRouter()
+
+
+def _work_service():
+    """按需加载作业服务，避免应用启动时提前导入大模型和 DashScope SDK。"""
+    from service import work_service
+
+    return work_service
 
 
 class CreateSessionBody(BaseModel):
@@ -49,7 +55,7 @@ def evaluation(student_id: int,style: style,db: Session = Depends(get_db)):
 
     latest_score = scores[0]
     stu_score = latest_score.score
-    result = work_service.evaluation_stu(stu_name, sex, stu_score, style)
+    result = _work_service().evaluation_stu(stu_name, sex, stu_score, style)
     logger.info("生成学生评价成功：student_id=%s", student_id)
     return success(result, "评价生成成功")
 
@@ -62,7 +68,7 @@ def generate_image(prompt: str):
         :return: 接口返回的图片结果（包含图片URL）
     """
     logger.info("文生图：prompt=%s", prompt)
-    result = work_service.generate_image(prompt)
+    result = _work_service().generate_image(prompt)
     if result.get("success"):
         logger.info("文生图成功：prompt=%s", prompt[:50])
     else:
@@ -150,7 +156,7 @@ def talks(body: TalkBody, current_user: dict = Depends(get_current_user), db: Se
     """
     user_id = current_user['username']
     logger.info("多轮对话：user_id=%s, session_id=%s", user_id, body.session_id)
-    reply = work_service.talks(body.session_id, user_id, body.prompt, db)
+    reply = _work_service().talks(body.session_id, user_id, body.prompt, db)
     if isinstance(reply, dict) and "error" in reply:
         logger.warning("多轮对话失败：user_id=%s, session_id=%s, error=%s", user_id, body.session_id, reply["error"])
         raise HTTPException(status_code=400, detail=reply["error"])
@@ -165,7 +171,7 @@ def clear_talks(session_id: int, current_user: dict = Depends(get_current_user),
     """
     user_id = current_user['username']
     logger.info("清空对话消息：user_id=%s, session_id=%s", user_id, session_id)
-    result = work_service.clear_talks(session_id, user_id, db)
+    result = _work_service().clear_talks(session_id, user_id, db)
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("message"))
     return success(result, "消息已清空")
@@ -184,7 +190,7 @@ def query_weather(location: str = None, adcode: str = None, weather_type: str = 
     :return: 天气数据
     """
     logger.info("天气查询：location=%s, adcode=%s, type=%s", location, adcode, weather_type)
-    result = work_service.query_weather(location, adcode, weather_type, added_fields, get_md)
+    result = _work_service().query_weather(location, adcode, weather_type, added_fields, get_md)
     if "error" in result:
         logger.warning("天气查询失败：%s", result["error"])
     return success(result, "天气查询成功")
@@ -199,7 +205,7 @@ def address_to_location(address: str, policy: int = 0):
         :return: 经纬度、结构化地址、行政区划编码等信息
     """
     logger.info("地址解析：address=%s, policy=%s", address, policy)
-    result = work_service.address_to_location(address, policy)
+    result = _work_service().address_to_location(address, policy)
     if "error" in result:
         logger.warning("地址解析失败：%s", result["error"])
     return success(result, "地址解析成功")

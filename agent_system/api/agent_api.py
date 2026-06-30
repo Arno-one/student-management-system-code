@@ -12,7 +12,6 @@ from util.log import get_logger
 from scheme.response_scheme import success
 
 from agent_system.schemas.agent_request import AgentChatRequest
-from agent_system.service.agent_service import handle_agent_chat, handle_agent_chat_stream
 from agent_system.memory import get_history
 from agent_system.prompts.persona_prompt import PERSONA_REGISTRY
 from agent_system.hitl.hitl_schema import HitlConfirmRequest
@@ -31,6 +30,13 @@ from DAO.agent_dao import (
 logger = get_logger(__name__)
 
 agent_router = APIRouter()
+
+
+def _load_agent_service():
+    """按需加载 Agent 服务层，避免应用启动时提前导入 LangGraph 等重依赖。"""
+    from agent_system.service.agent_service import handle_agent_chat, handle_agent_chat_stream
+
+    return handle_agent_chat, handle_agent_chat_stream
 
 
 class AgentFeedbackRequest(BaseModel):
@@ -434,6 +440,7 @@ def chat_stream(
     - done:    {"intent": "...", "tool_calls": [...], "sources": [...]}
     """
     logger.info("Agent SSE 流式请求: user=%s, message=%s", current_user["username"], req.message[:80])
+    _, handle_agent_chat_stream = _load_agent_service()
     return StreamingResponse(
         handle_agent_chat_stream(req=req, current_user=current_user, db=db, db_readonly=db_readonly),
         media_type="text/event-stream",
@@ -454,6 +461,7 @@ def chat(
 ):
     """同步版 Agent 聊天（向后兼容）"""
     logger.info("Agent 聊天请求: user=%s, message=%s", current_user["username"], req.message[:80])
+    handle_agent_chat, _ = _load_agent_service()
     result = handle_agent_chat(req=req, current_user=current_user, db=db, db_readonly=db_readonly)
     return result
 
