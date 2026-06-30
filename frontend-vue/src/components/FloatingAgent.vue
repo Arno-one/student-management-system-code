@@ -44,7 +44,10 @@
           class="float-agent-msg"
           :class="'float-agent-msg-' + msg.role"
         >
-          <div class="float-agent-msg-avatar">{{ msg.role === 'user' ? '我' : 'AI' }}</div>
+          <div
+            class="float-agent-msg-avatar"
+            :class="{ 'float-agent-msg-avatar--emoji': msg.role === 'assistant' && assistantAvatar !== 'AI' }"
+          >{{ msg.role === 'user' ? '我' : assistantAvatar }}</div>
           <div class="float-agent-msg-body">
             <!-- 等待首个 SSE 文本片段时，复用当前 assistant 消息，避免和全局 loading 形成双头像 -->
             <div class="float-agent-loading" v-if="msg.role === 'assistant' && msg._streaming && !msg.content">
@@ -67,6 +70,13 @@
                 :key="'weather-' + ci"
                 :card="card"
                 compact
+              />
+              <ImageCard
+                v-for="(card, ci) in msg.cards.filter(c => c.type === 'image' && isCardVersionSupported(c))"
+                :key="'image-' + ci"
+                :card="card"
+                compact
+                @regenerate="regenerateImage"
               />
               <RouteCard
                 v-for="(card, ci) in msg.cards.filter(c => c.type === 'route' && isCardVersionSupported(c))"
@@ -152,15 +162,23 @@
 
       <!-- 输入区 -->
       <div class="float-agent-input">
-        <textarea
-          v-model="form.message"
-          placeholder="输入你的问题..."
-          :disabled="loading"
-          rows="2"
-          @keydown.ctrl.enter="doSend"
-          @keydown.meta.enter="doSend"
-        ></textarea>
-        <button @click="doSend" :disabled="loading || !form.message.trim()">发送</button>
+        <QuickToolPanel
+          compact
+          :loading="loading"
+          @fill-template="applyQuickToolTemplate"
+          @submit-inline="submitQuickTool"
+        />
+        <div class="float-agent-input-row">
+          <textarea
+            v-model="form.message"
+            placeholder="输入你的问题..."
+            :disabled="loading"
+            rows="2"
+            @keydown.ctrl.enter="doSend"
+            @keydown.meta.enter="doSend"
+          ></textarea>
+          <button @click="doSend" :disabled="loading || !form.message.trim()">发送</button>
+        </div>
       </div>
     </div>
   </div>
@@ -174,7 +192,9 @@ import { request, getBaseUrl, getAuthHeader, isLoggedIn } from '../api'
 import WeatherCard from './WeatherCard.vue'
 import RouteCard from './RouteCard.vue'
 import PoiListCard from './PoiListCard.vue'
-import { fallbackAgentPersonas } from '../config/agentPersonas'
+import ImageCard from './ImageCard.vue'
+import QuickToolPanel from './QuickToolPanel.vue'
+import { fallbackAgentPersonas, createPersonaWelcomeMessage } from '../config/agentPersonas'
 
 const props = defineProps({ themeClass: { type: String, default: 'theme-dark' } })
 
@@ -187,6 +207,17 @@ function renderMarkdown(text) {
 
 function isCardVersionSupported(card) {
   return !card?.card_version || card.card_version === 1
+}
+
+function hasOnlyWelcomeMessage() {
+  return messages.value.length === 1 && messages.value[0]?._welcome
+}
+
+// 悬浮 Agent 的欢迎语同样只存在前端，不落到后端历史里。
+function syncWelcomeMessage(force = false) {
+  if (currentSessionId.value) return
+  if (!force && messages.value.length > 0 && !hasOnlyWelcomeMessage()) return
+  messages.value = [createPersonaWelcomeMessage(selectedPersona.value)]
 }
 
 const route = useRoute()
@@ -202,6 +233,7 @@ const form = reactive({ message: '' })
 
 const currentPersona = computed(() => personas.value.find(item => item.id === selectedPersona.value) || personas.value[0] || null)
 const personaOptions = computed(() => personas.value.map(item => ({ value: item.id, label: personaTitle(item) })))
+const assistantAvatar = computed(() => currentPersona.value?.icon || 'AI')
 const emptyTitle = computed(() => {
   if (selectedPersona.value === 'companion_head_teacher') return '慢慢说，我在这儿'
   if (selectedPersona.value === 'xinge') return '好兄弟，昕哥在'
@@ -221,7 +253,7 @@ function personaTitle(persona) {
 }
 
 function toolLabel(name) {
-  const map = { score_tool: '成绩', rag_tool: '检索', nl2sql_tool: '数据', student_tool: '身份', weather_tool: '天气', email_tool: '邮件', commute_plan_tool: '通勤', nearby_service_tool: '周边' }
+  const map = { score_tool: '成绩', rag_tool: '检索', nl2sql_tool: '数据', student_tool: '身份', weather_tool: '天气', image_tool: '文生图', email_tool: '邮件', commute_plan_tool: '通勤', nearby_service_tool: '周边' }
   return map[name] || name
 }
 
@@ -254,8 +286,7 @@ async function loadPersonas() {
   } catch (_) { /* 静默失败，保留前端兜底角色 */ }
 }
 
-async function doSend() {
-  const text = form.message.trim()
+async function sendMessage(text) {
   if (!text || loading.value) return
 
   messages.value.push({ role: 'user', content: text })
@@ -314,6 +345,26 @@ async function doSend() {
 
 function fillRouteDraft(destination) {
   form.message = `从 [请补充起点] 到 ${destination} 怎么去？`
+}
+
+function regenerateImage(prompt) {
+  const text = String(prompt || '').trim()
+  if (!text) return
+  form.message = `请根据以下提示词重新生成一张图片：${text}`
+  doSend()
+}
+
+function applyQuickToolTemplate(text) {
+  form.message = text
+}
+
+async function submitQuickTool(payload) {
+  await sendMessage(payload?.text || '')
+}
+
+async function doSend() {
+  const text = form.message.trim()
+  await sendMessage(text)
 }
 
 function handleSSE(event, data, currentMsg) {
@@ -450,8 +501,14 @@ function scrollBottom() {
   })
 }
 
-watch(selectedPersona, savePersonaPreference)
-onMounted(() => { loadPersonas() })
+watch(selectedPersona, () => {
+  savePersonaPreference()
+  syncWelcomeMessage()
+})
+onMounted(() => {
+  syncWelcomeMessage(true)
+  loadPersonas()
+})
 </script>
 
 <style scoped>
@@ -537,6 +594,7 @@ onMounted(() => { loadPersonas() })
   justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0;
   background: var(--panel-2); color: var(--text-soft);
 }
+.float-agent-msg-avatar--emoji { font-size: 16px; font-weight: 500; }
 .float-agent-msg-user .float-agent-msg-avatar { background: var(--gold); color: #fff; }
 .float-agent-msg-body { max-width: 85%; min-width: 0; }
 .float-agent-msg-text {
@@ -672,17 +730,34 @@ onMounted(() => { loadPersonas() })
 .float-agent-loading span:nth-child(3) { animation-delay: 0.4s; }
 
 /* 输入 */
-.float-agent-input { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--line); flex-shrink: 0; }
+.float-agent-input {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.float-agent-input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
 .float-agent-input textarea {
-  flex: 1; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2);
+  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2);
   color: var(--text); font-size: 13px; font-family: inherit; line-height: 1.5;
   resize: none; outline: none; padding: 8px 10px; min-height: 38px;
 }
 .float-agent-input textarea:focus { border-color: var(--gold); }
 .float-agent-input textarea::placeholder { color: var(--text-muted); }
 .float-agent-input button {
+  min-width: 72px;
+  height: 38px;
   padding: 8px 16px; border: none; border-radius: 8px; background: var(--gold);
-  color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; flex-shrink: 0;
+  color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; flex-shrink: 0; align-self: flex-end;
 }
 .float-agent-input button:disabled { opacity: 0.35; cursor: not-allowed; }
 
@@ -692,5 +767,13 @@ onMounted(() => { loadPersonas() })
   .float-agent-header-left small { max-width: 120px; }
   .float-agent-header-actions { gap: 6px; }
   .float-agent-persona-select { width: 96px; padding: 0 6px; }
+  .float-agent-input-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .float-agent-input button {
+    width: 100%;
+    align-self: stretch;
+  }
 }
 </style>

@@ -1,5 +1,11 @@
 <template>
   <section class="login-page">
+    <!-- 登录页左侧品牌文案，对应草图中的两行文字，并跟随深浅主题自动换色。 -->
+    <div class="login-hero-copy">
+      <strong class="login-hero-title">学生智能管理系统</strong>
+      <span class="login-hero-subtitle">让AI与你一起</span>
+    </div>
+
     <div class="login-shell card">
       <div class="login-kicker">Campus Operations Suite</div>
       <h1>欢迎登录</h1>
@@ -7,12 +13,12 @@
 
       <div class="field">
         <label>登录账号</label>
-        <input v-model="form.username" placeholder="请输入账号" @keydown.enter="submit" />
+        <input v-model="form.username" placeholder="请输入账号" />
       </div>
 
       <div class="field">
         <label>登录密码</label>
-        <input v-model="form.password" type="password" placeholder="请输入密码" @keydown.enter="submit" />
+        <input v-model="form.password" type="password" placeholder="请输入密码" />
       </div>
 
       <div class="actions login-actions">

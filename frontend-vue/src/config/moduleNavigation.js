@@ -2,6 +2,7 @@
 export const moduleNavigation = [
   {
     page: 'student',
+    emoji: '🧑‍🎓',
     short: 'ST',
     label: '学生信息管理',
     desc: '档案录入、查询与状态维护',
@@ -16,6 +17,7 @@ export const moduleNavigation = [
   },
   {
     page: 'score',
+    emoji: '📝',
     short: 'SC',
     label: '考核成绩管理',
     desc: '单条、批量与区间查询',
@@ -30,6 +32,7 @@ export const moduleNavigation = [
   },
   {
     page: 'employment',
+    emoji: '💼',
     short: 'EM',
     label: '就业信息管理',
     desc: 'offer、薪资与就业跟踪',
@@ -43,6 +46,7 @@ export const moduleNavigation = [
   },
   {
     page: 'class',
+    emoji: '🏫',
     short: 'CL',
     label: '班级管理',
     desc: '班级建档与排期信息',
@@ -54,6 +58,7 @@ export const moduleNavigation = [
   },
   {
     page: 'teacher',
+    emoji: '🧑‍🏫',
     short: 'TE',
     label: '教师管理',
     desc: '教师资料、导入与检索',
@@ -67,6 +72,7 @@ export const moduleNavigation = [
   },
   {
     page: 'statistics',
+    emoji: '📈',
     short: 'BI',
     label: '统计分析',
     desc: '关键指标与业务汇总',
@@ -84,6 +90,7 @@ export const moduleNavigation = [
   },
   {
     page: 'work',
+    emoji: '✨',
     short: 'AI',
     label: 'AI 作业模块',
     desc: '评价生成、对话与天气能力',
@@ -95,9 +102,10 @@ export const moduleNavigation = [
       { value: 'wk-weather', label: '天气查询 / 经纬度解析' },
     ],
   },
-  { page: 'email', short: 'ML', label: '邮件管理', desc: '智能生成与发送邮件', menuCode: 'email:page' },
+  { page: 'email', emoji: '📧', short: 'ML', label: '邮件管理', desc: '智能生成与发送邮件', menuCode: 'email:page' },
   {
     page: 'nl2sql',
+    emoji: '📊',
     short: 'D2',
     label: 'NL2SQL 智能问数',
     desc: '自然语言转 SQL 数据查询',
@@ -110,6 +118,7 @@ export const moduleNavigation = [
   },
   {
     page: 'rag',
+    emoji: '📚',
     short: 'RA',
     label: 'RAG 知识库工作台',
     desc: '经典文学问答与工程文档检索',
@@ -118,9 +127,10 @@ export const moduleNavigation = [
       { value: 'rg-production', label: '工程文档检索' },
     ],
   },
-  { page: 'agent', short: 'AG', label: '智能 Agent 助手', desc: '学业导师 / 成绩查询 / 陪伴对话' },
+  { page: 'agent', emoji: '🤖', short: 'AG', label: '智能 Agent 助手', desc: '学业导师 / 成绩查询 / 陪伴对话' },
   {
     page: 'system',
+    emoji: '⚙️',
     short: 'SM',
     label: '系统管理',
     desc: '用户、角色与权限分配',

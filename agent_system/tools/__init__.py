@@ -3,6 +3,7 @@ from .score_tool import query_student_score, ScoreTool, _query_student_score
 from .rag_tool import search_knowledge, RagTool, _search_knowledge
 from .nl2sql_tool import query_data, Nl2sqlTool, _query_data
 from .weather_tool import WeatherTool
+from .image_tool import ImageTool
 from .email_tool import EmailTool
 from .commute_plan_tool import CommutePlanTool
 from .nearby_service_tool import NearbyServiceTool

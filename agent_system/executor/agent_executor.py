@@ -12,7 +12,7 @@ from agent_system.schemas.agent_response import AgentChatResponse, ToolCallRecor
 from agent_system.prompts.persona_prompt import PERSONA_REGISTRY
 from agent_system.tools.base import ToolContext
 from agent_system.tools import (
-    ScoreTool, StudentTool, RagTool, Nl2sqlTool, WeatherTool, EmailTool,
+    ScoreTool, StudentTool, RagTool, Nl2sqlTool, WeatherTool, ImageTool, EmailTool,
     CommutePlanTool, NearbyServiceTool, _resolve_student,
 )
 from agent_system.hitl.escalation_rules import build_hitl_payload, get_hitl_rule
@@ -30,6 +30,7 @@ _TOOL_REGISTRY: dict[str, object] = {
     "nl2sql_tool": Nl2sqlTool(),
     "student_tool": StudentTool(),
     "weather_tool": WeatherTool(),
+    "image_tool": ImageTool(),
     "email_tool": EmailTool(),
     "commute_plan_tool": CommutePlanTool(),
     "nearby_service_tool": NearbyServiceTool(),
@@ -584,6 +585,11 @@ def _tool_summary(tool_name: str, result: dict) -> str:
             base = f"已查询 {loc} 天气信息" if loc else "天气查询完成"
         else:
             base = f"天气查询失败: {result.get('error', '')}"
+    elif tool_name == "image_tool":
+        if result.get("success"):
+            base = "图片已生成"
+        else:
+            base = f"文生图失败: {result.get('error', '')}"
     elif tool_name == "commute_plan_tool":
         if result.get("success"):
             ok_count = sum(1 for item in result.get("routes", []) if item.get("success"))
@@ -643,6 +649,18 @@ def _extract_cards(context: dict) -> list[dict] | None:
                 "adcode": weather_result.get("adcode"),
                 "geocode": weather_result.get("geocode"),
                 "weather": weather_result.get("weather", {}),
+            },
+        })
+    image_result = context.get("image_tool")
+    if isinstance(image_result, dict) and image_result.get("success") and image_result.get("image_url"):
+        cards.append({
+            "type": "image",
+            "card_version": 1,
+            "data": {
+                "provider": image_result.get("provider"),
+                "model": image_result.get("model"),
+                "prompt": image_result.get("prompt"),
+                "image_url": image_result.get("image_url"),
             },
         })
     commute_result = context.get("commute_plan_tool")
@@ -727,6 +745,11 @@ def _format_raw_results(context: dict) -> str:
                 weather = val.get("weather", {})
                 for label, data in weather.items():
                     parts.append(f"【{label}】{json.dumps(data, ensure_ascii=False, indent=2)}")
+            elif key == "image_tool":
+                prompt = val.get("prompt", "")
+                parts.append("图片已经生成，请查看下方图片卡片。")
+                if prompt:
+                    parts.append(f"提示词：{prompt}")
             elif key == "commute_plan_tool":
                 parts.append(f"通勤规划：{val.get('origin_text', '')} → {val.get('destination_text', '')}")
                 for route in val.get("routes", []):

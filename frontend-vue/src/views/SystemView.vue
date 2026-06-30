@@ -285,7 +285,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted, watch } from 'vue'
 import { request, qs } from '../api'
 import ResultBadge from '../components/ResultBadge.vue'
 import DataTable from '../components/DataTable.vue'
@@ -325,13 +325,7 @@ const monitorTasks = ref([])
 const monitorTaskRaw = ref([])
 const selectedMonitorTaskId = ref('')
 const monitorMcpHealth = ref({})
-const { sub } = useModuleSubPage('system', {
-  onChange(nextSub) {
-    if (nextSub === 'sys-agent-monitor' && monitorTimeseries.value.length === 0) {
-      loadAgentMonitor()
-    }
-  }
-})
+const { sub } = useModuleSubPage('system')
 
 const userQuery = reactive({ username: '', realName: '', status: '', skip: 0, limit: 20 })
 const roleQuery = reactive({ roleName: '', status: '', skip: 0, limit: 20 })
@@ -485,14 +479,8 @@ async function loadPermissions() {
 
 async function loadAgentMonitor() {
   const days = monitorQuery.days || 7
-  const [metrics, timeseries, intents, tools, providers, feedbackReasons, mcpHealth, tasks] = await Promise.all([
-    apiCall('monitor', 'GET', '/agent/admin/metrics' + qs({ days })),
-    apiCall('monitor', 'GET', '/agent/admin/metrics/timeseries' + qs({ days })),
-    apiCall('monitor', 'GET', '/agent/admin/metrics/intents' + qs({ days })),
-    apiCall('monitor', 'GET', '/agent/admin/metrics/tools' + qs({ days })),
-    apiCall('monitor', 'GET', '/agent/admin/metrics/providers' + qs({ days })),
-    apiCall('monitor', 'GET', '/agent/admin/metrics/feedback-reasons' + qs({ days })),
-    apiCall('monitor', 'GET', '/agent/admin/mcp/tencent-map/health'),
+  const [dashboard, tasks] = await Promise.all([
+    apiCall('monitor', 'GET', '/agent/admin/dashboard' + qs({ days })),
     apiCall('monitor', 'GET', '/agent/admin/tasks' + qs({
       days,
       status: monitorQuery.status || null,
@@ -501,13 +489,16 @@ async function loadAgentMonitor() {
     })),
   ])
 
-  if (metrics.ok) Object.assign(monitorMetrics, metrics?.data?.data || {})
-  if (timeseries.ok) monitorTimeseries.value = timeseries?.data?.data || []
-  if (intents.ok) monitorIntents.value = intents?.data?.data || []
-  if (tools.ok) monitorTools.value = tools?.data?.data || []
-  if (providers.ok) monitorProviders.value = providers?.data?.data || []
-  if (feedbackReasons.ok) monitorFeedbackReasons.value = feedbackReasons?.data?.data || []
-  if (mcpHealth.ok) monitorMcpHealth.value = mcpHealth?.data?.data || {}
+  if (dashboard.ok) {
+    const data = dashboard?.data?.data || {}
+    Object.assign(monitorMetrics, data.metrics || {})
+    monitorTimeseries.value = data.timeseries || []
+    monitorIntents.value = data.intents || []
+    monitorTools.value = data.tools || []
+    monitorProviders.value = data.providers || []
+    monitorFeedbackReasons.value = data.feedback_reasons || []
+    monitorMcpHealth.value = data.mcp_health || {}
+  }
   if (tasks.ok) {
     monitorTaskRaw.value = tasks?.data?.data || []
     if (!selectedMonitorTaskId.value && monitorTaskRaw.value.length) {
@@ -531,10 +522,21 @@ async function loadAgentMonitor() {
       问题: item.original_message,
     }))
   }
-  if (metrics.ok && timeseries.ok && intents.ok && tools.ok && providers.ok && feedbackReasons.ok && mcpHealth.ok && tasks.ok) {
+  if (dashboard.ok && tasks.ok) {
     setResult('monitor', true, 'Agent 监控数据加载成功')
   }
 }
+
+watch(
+  () => sub.value,
+  (nextSub) => {
+    // 进入 Agent 监控子功能时，直接加载默认近 7 天数据，避免用户必须先手动点刷新。
+    if (nextSub === 'sys-agent-monitor') {
+      loadAgentMonitor()
+    }
+  },
+  { immediate: true }
+)
 
 function fmtMs(value) {
   const ms = Number(value || 0)

@@ -34,7 +34,6 @@
             <input
               v-model="talkInputUserId"
               placeholder="请输入你的用户ID"
-              @keydown.enter="confirmUserId"
             />
           </div>
           <button class="btn" :disabled="!talkInputUserId.trim()" @click="confirmUserId">
@@ -97,7 +96,6 @@
               <input
                 v-model="form.talk.prompt"
                 placeholder="输入消息，按回车发送..."
-                @keydown.enter="workTalk"
                 :disabled="loading"
               />
               <button class="btn" :disabled="loading || !form.talk.prompt" @click="workTalk">

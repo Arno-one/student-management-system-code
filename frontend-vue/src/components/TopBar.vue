@@ -12,10 +12,10 @@
       </button>
 
       <div class="title-group">
-        <span class="title-kicker">Operations Deck</span>
+        <span class="title-kicker">Campus AI Workspace</span>
         <div class="title-row">
           <div class="title">{{ title }}</div>
-          <span class="title-pill">Live Workspace</span>
+          <span class="title-pill">统一业务工作台</span>
         </div>
       </div>
     </div>

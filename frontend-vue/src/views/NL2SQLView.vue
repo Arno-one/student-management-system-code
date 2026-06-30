@@ -23,7 +23,6 @@
           v-model="form.question"
           placeholder="输入你的问题，例如：张三的平均成绩是多少？"
           :disabled="loading"
-          @keydown.enter="doQuery"
         />
         <button class="btn" :disabled="loading || !form.question.trim()" @click="doQuery">
           {{ loading ? '查询中...' : '查询' }}

@@ -200,6 +200,220 @@ def _load_monitor_context(
     return tasks, feedback_map, window_days
 
 
+def _build_metrics_payload(tasks: list, feedback_map: dict[int, object], window_days: int) -> dict:
+    """汇总监控总览指标。"""
+    total = len(tasks)
+    success_count = sum(1 for task in tasks if task.status == "success")
+    partial_success_count = sum(1 for task in tasks if task.status == "partial_success")
+    clarification_count = sum(1 for task in tasks if task.status == "clarification")
+    empty_count = sum(1 for task in tasks if task.status == "empty")
+    error_count = sum(1 for task in tasks if task.status == "error")
+    cancelled_count = sum(1 for task in tasks if task.status == "cancelled")
+    awaiting_count = sum(1 for task in tasks if task.status == "awaiting_hitl")
+    running_count = sum(1 for task in tasks if task.status in {"running", "pending"})
+    completed_total = success_count + partial_success_count + empty_count + error_count
+    durations = [task.total_duration_ms or 0 for task in tasks if task.total_duration_ms]
+
+    feedbacks = list(feedback_map.values())
+    positive = sum(1 for item in feedbacks if item.rating >= 4)
+    negative = sum(1 for item in feedbacks if item.rating <= 2)
+
+    return {
+        "window_days": window_days,
+        "total_tasks": total,
+        "completed_tasks": completed_total,
+        "success_count": success_count,
+        "partial_success_count": partial_success_count,
+        "clarification_count": clarification_count,
+        "empty_count": empty_count,
+        "error_count": error_count,
+        "cancelled_count": cancelled_count,
+        "awaiting_hitl_count": awaiting_count,
+        "running_count": running_count,
+        "success_rate": _rate(success_count + partial_success_count, completed_total),
+        "avg_duration_ms": int(sum(durations) / len(durations)) if durations else 0,
+        "p50_duration_ms": _percentile(durations, 0.5),
+        "p99_duration_ms": _percentile(durations, 0.99),
+        "feedback_count": len(feedbacks),
+        "positive_feedback_count": positive,
+        "negative_feedback_count": negative,
+        "positive_rate": _rate(positive, len(feedbacks)),
+        "negative_rate": _rate(negative, len(feedbacks)),
+    }
+
+
+def _build_timeseries_payload(tasks: list, window_days: int) -> list[dict]:
+    """按日期统计调用量、失败量和平均耗时。"""
+    today = datetime.now().date()
+    date_keys = [(today - timedelta(days=offset)).isoformat() for offset in range(window_days - 1, -1, -1)]
+    bucket = {key: {"date": key, "total": 0, "error": 0, "avg_duration_ms": 0, "_durations": []} for key in date_keys}
+
+    for task in tasks:
+        if not task.create_time:
+            continue
+        key = task.create_time.date().isoformat()
+        if key not in bucket:
+            continue
+        bucket[key]["total"] += 1
+        if task.status == "error":
+            bucket[key]["error"] += 1
+        if task.total_duration_ms:
+            bucket[key]["_durations"].append(task.total_duration_ms)
+
+    rows = []
+    for key in date_keys:
+        item = bucket[key]
+        durations = item.pop("_durations")
+        item["avg_duration_ms"] = int(sum(durations) / len(durations)) if durations else 0
+        rows.append(item)
+    return rows
+
+
+def _build_intents_payload(tasks: list) -> list[dict]:
+    """按意图统计调用量和耗时。"""
+    bucket: dict[str, dict] = {}
+    for task in tasks:
+        key = task.intent or "unknown"
+        item = bucket.setdefault(key, {"intent": key, "count": 0, "success": 0, "error": 0, "_durations": []})
+        item["count"] += 1
+        if task.status in {"success", "partial_success"}:
+            item["success"] += 1
+        elif task.status == "error":
+            item["error"] += 1
+        if task.total_duration_ms:
+            item["_durations"].append(task.total_duration_ms)
+
+    rows = []
+    for item in bucket.values():
+        durations = item.pop("_durations")
+        item["avg_duration_ms"] = int(sum(durations) / len(durations)) if durations else 0
+        item["p50_duration_ms"] = _percentile(durations, 0.5)
+        item["p99_duration_ms"] = _percentile(durations, 0.99)
+        rows.append(item)
+    rows.sort(key=lambda row: row["count"], reverse=True)
+    return rows
+
+
+def _build_tools_payload(tasks: list) -> list[dict]:
+    """从 steps_json/tool_calls 中解析各工具调用和失败率。"""
+    bucket: dict[str, dict] = {}
+    for task in tasks:
+        for call in _parse_tool_calls(task.steps_json):
+            key = call.get("tool_name") or "unknown_tool"
+            item = bucket.setdefault(key, {
+                "tool_name": key,
+                "total": 0,
+                "success": 0,
+                "partial_success": 0,
+                "empty": 0,
+                "clarification": 0,
+                "error": 0,
+            })
+            item["total"] += 1
+            status = call.get("status")
+            if status == "success":
+                item["success"] += 1
+            elif status == "partial_success":
+                item["partial_success"] += 1
+            elif status == "empty":
+                item["empty"] += 1
+            elif status == "clarification":
+                item["clarification"] += 1
+            elif status == "error":
+                item["error"] += 1
+
+    rows = []
+    for item in bucket.values():
+        item["failure_rate"] = _rate(item["error"], item["total"])
+        rows.append(item)
+    rows.sort(key=lambda row: (row["failure_rate"], row["total"]), reverse=True)
+    return rows
+
+
+def _build_providers_payload(tasks: list) -> list[dict]:
+    """从 tool_monitoring 中聚合 provider、兜底次数、空结果和错误情况。"""
+    bucket: dict[str, dict] = {}
+    for task in tasks:
+        monitoring = _parse_tool_monitoring(task.steps_json)
+        for tool_name, raw_item in monitoring.items():
+            if not isinstance(raw_item, dict):
+                continue
+            provider = raw_item.get("provider") or "unknown_provider"
+            key = f"{tool_name}:{provider}"
+            item = bucket.setdefault(key, {
+                "tool_name": tool_name,
+                "provider": provider,
+                "total": 0,
+                "success": 0,
+                "partial_success": 0,
+                "empty": 0,
+                "error": 0,
+                "fallback_count": 0,
+                "result_count": 0,
+                "last_error_code": "",
+                "last_error_message": "",
+            })
+            status = raw_item.get("status") or "unknown"
+            item["total"] += 1
+            if status in {"success", "partial_success", "empty", "error"}:
+                item[status] += 1
+            if raw_item.get("fallback_used"):
+                item["fallback_count"] += 1
+            try:
+                item["result_count"] += int(raw_item.get("result_count") or 0)
+            except (TypeError, ValueError):
+                pass
+            if raw_item.get("error_code") or raw_item.get("error_message"):
+                item["last_error_code"] = raw_item.get("error_code") or ""
+                item["last_error_message"] = raw_item.get("error_message") or ""
+
+    rows = []
+    for item in bucket.values():
+        item["fallback_rate"] = _rate(item["fallback_count"], item["total"])
+        item["empty_rate"] = _rate(item["empty"], item["total"])
+        item["failure_rate"] = _rate(item["error"], item["total"])
+        rows.append(item)
+    rows.sort(key=lambda row: (row["failure_rate"], row["fallback_rate"], row["total"]), reverse=True)
+    return rows
+
+
+def _build_feedback_reasons_payload(tasks: list, feedback_map: dict[int, object]) -> list[dict]:
+    """对 1-2 分反馈做轻量关键词归因，帮助管理员快速定位高频问题。"""
+    task_by_id = {task.id: task for task in tasks}
+    bucket: dict[str, dict] = {}
+    for feedback in feedback_map.values():
+        if feedback.rating > 2:
+            continue
+        label = _negative_reason_label(feedback.comment)
+        item = bucket.setdefault(label, {"reason": label, "count": 0, "examples": []})
+        item["count"] += 1
+        task = task_by_id.get(feedback.task_id)
+        if len(item["examples"]) < 3:
+            item["examples"].append({
+                "task_id": feedback.task_id,
+                "intent": task.intent if task else "",
+                "comment": feedback.comment or "",
+                "message": (task.original_message or "")[:80] if task else "",
+            })
+
+    rows = list(bucket.values())
+    rows.sort(key=lambda row: row["count"], reverse=True)
+    return rows
+
+
+def _build_dashboard_payload(tasks: list, feedback_map: dict[int, object], window_days: int) -> dict:
+    """一次性返回监控大盘所需的聚合数据，减少前端并发接口数量。"""
+    return {
+        "metrics": _build_metrics_payload(tasks, feedback_map, window_days),
+        "timeseries": _build_timeseries_payload(tasks, window_days),
+        "intents": _build_intents_payload(tasks),
+        "tools": _build_tools_payload(tasks),
+        "providers": _build_providers_payload(tasks),
+        "feedback_reasons": _build_feedback_reasons_payload(tasks, feedback_map),
+        "mcp_health": tencent_map_mcp_client.health(),
+    }
+
+
 @agent_router.post("/chat/stream", summary="Agent 聊天（SSE 流式）")
 def chat_stream(
     req: AgentChatRequest,
@@ -389,44 +603,7 @@ def admin_metrics(
 ):
     """管理员查看 Agent 近 N 天总览指标"""
     tasks, feedback_map, window_days = _load_monitor_context(db, days=days)
-    total = len(tasks)
-    success_count = sum(1 for task in tasks if task.status == "success")
-    partial_success_count = sum(1 for task in tasks if task.status == "partial_success")
-    clarification_count = sum(1 for task in tasks if task.status == "clarification")
-    empty_count = sum(1 for task in tasks if task.status == "empty")
-    error_count = sum(1 for task in tasks if task.status == "error")
-    cancelled_count = sum(1 for task in tasks if task.status == "cancelled")
-    awaiting_count = sum(1 for task in tasks if task.status == "awaiting_hitl")
-    running_count = sum(1 for task in tasks if task.status in {"running", "pending"})
-    completed_total = success_count + partial_success_count + empty_count + error_count
-    durations = [task.total_duration_ms or 0 for task in tasks if task.total_duration_ms]
-
-    feedbacks = list(feedback_map.values())
-    positive = sum(1 for item in feedbacks if item.rating >= 4)
-    negative = sum(1 for item in feedbacks if item.rating <= 2)
-
-    return success({
-        "window_days": window_days,
-        "total_tasks": total,
-        "completed_tasks": completed_total,
-        "success_count": success_count,
-        "partial_success_count": partial_success_count,
-        "clarification_count": clarification_count,
-        "empty_count": empty_count,
-        "error_count": error_count,
-        "cancelled_count": cancelled_count,
-        "awaiting_hitl_count": awaiting_count,
-        "running_count": running_count,
-        "success_rate": _rate(success_count + partial_success_count, completed_total),
-        "avg_duration_ms": int(sum(durations) / len(durations)) if durations else 0,
-        "p50_duration_ms": _percentile(durations, 0.5),
-        "p99_duration_ms": _percentile(durations, 0.99),
-        "feedback_count": len(feedbacks),
-        "positive_feedback_count": positive,
-        "negative_feedback_count": negative,
-        "positive_rate": _rate(positive, len(feedbacks)),
-        "negative_rate": _rate(negative, len(feedbacks)),
-    })
+    return success(_build_metrics_payload(tasks, feedback_map, window_days))
 
 
 @agent_router.get("/admin/mcp/tencent-map/health", summary="腾讯地图 MCP 健康状态")
@@ -445,29 +622,7 @@ def admin_metrics_timeseries(
 ):
     """按日期统计调用量、失败量和平均耗时"""
     tasks, _, window_days = _load_monitor_context(db, days=days)
-    today = datetime.now().date()
-    date_keys = [(today - timedelta(days=offset)).isoformat() for offset in range(window_days - 1, -1, -1)]
-    bucket = {key: {"date": key, "total": 0, "error": 0, "avg_duration_ms": 0, "_durations": []} for key in date_keys}
-
-    for task in tasks:
-        if not task.create_time:
-            continue
-        key = task.create_time.date().isoformat()
-        if key not in bucket:
-            continue
-        bucket[key]["total"] += 1
-        if task.status == "error":
-            bucket[key]["error"] += 1
-        if task.total_duration_ms:
-            bucket[key]["_durations"].append(task.total_duration_ms)
-
-    rows = []
-    for key in date_keys:
-        item = bucket[key]
-        durations = item.pop("_durations")
-        item["avg_duration_ms"] = int(sum(durations) / len(durations)) if durations else 0
-        rows.append(item)
-    return success(rows)
+    return success(_build_timeseries_payload(tasks, window_days))
 
 
 @agent_router.get("/admin/metrics/intents", summary="Agent 意图分布指标")
@@ -478,27 +633,7 @@ def admin_metrics_intents(
 ):
     """按意图统计调用量和耗时"""
     tasks, _, _ = _load_monitor_context(db, days=days)
-    bucket: dict[str, dict] = {}
-    for task in tasks:
-        key = task.intent or "unknown"
-        item = bucket.setdefault(key, {"intent": key, "count": 0, "success": 0, "error": 0, "_durations": []})
-        item["count"] += 1
-        if task.status in {"success", "partial_success"}:
-            item["success"] += 1
-        elif task.status == "error":
-            item["error"] += 1
-        if task.total_duration_ms:
-            item["_durations"].append(task.total_duration_ms)
-
-    rows = []
-    for item in bucket.values():
-        durations = item.pop("_durations")
-        item["avg_duration_ms"] = int(sum(durations) / len(durations)) if durations else 0
-        item["p50_duration_ms"] = _percentile(durations, 0.5)
-        item["p99_duration_ms"] = _percentile(durations, 0.99)
-        rows.append(item)
-    rows.sort(key=lambda row: row["count"], reverse=True)
-    return success(rows)
+    return success(_build_intents_payload(tasks))
 
 
 @agent_router.get("/admin/metrics/tools", summary="Agent 工具失败率指标")
@@ -509,38 +644,7 @@ def admin_metrics_tools(
 ):
     """从 steps_json/tool_calls 中解析各工具调用和失败率"""
     tasks, _, _ = _load_monitor_context(db, days=days)
-    bucket: dict[str, dict] = {}
-    for task in tasks:
-        for call in _parse_tool_calls(task.steps_json):
-            key = call.get("tool_name") or "unknown_tool"
-            item = bucket.setdefault(key, {
-                "tool_name": key,
-                "total": 0,
-                "success": 0,
-                "partial_success": 0,
-                "empty": 0,
-                "clarification": 0,
-                "error": 0,
-            })
-            item["total"] += 1
-            status = call.get("status")
-            if status == "success":
-                item["success"] += 1
-            elif status == "partial_success":
-                item["partial_success"] += 1
-            elif status == "empty":
-                item["empty"] += 1
-            elif status == "clarification":
-                item["clarification"] += 1
-            elif status == "error":
-                item["error"] += 1
-
-    rows = []
-    for item in bucket.values():
-        item["failure_rate"] = _rate(item["error"], item["total"])
-        rows.append(item)
-    rows.sort(key=lambda row: (row["failure_rate"], row["total"]), reverse=True)
-    return success(rows)
+    return success(_build_tools_payload(tasks))
 
 
 @agent_router.get("/admin/metrics/providers", summary="Agent 地图 provider 分布指标")
@@ -551,49 +655,7 @@ def admin_metrics_providers(
 ):
     """从 tool_monitoring 中聚合 provider、兜底次数、空结果和错误情况。"""
     tasks, _, _ = _load_monitor_context(db, days=days)
-    bucket: dict[str, dict] = {}
-    for task in tasks:
-        monitoring = _parse_tool_monitoring(task.steps_json)
-        for tool_name, raw_item in monitoring.items():
-            if not isinstance(raw_item, dict):
-                continue
-            provider = raw_item.get("provider") or "unknown_provider"
-            key = f"{tool_name}:{provider}"
-            item = bucket.setdefault(key, {
-                "tool_name": tool_name,
-                "provider": provider,
-                "total": 0,
-                "success": 0,
-                "partial_success": 0,
-                "empty": 0,
-                "error": 0,
-                "fallback_count": 0,
-                "result_count": 0,
-                "last_error_code": "",
-                "last_error_message": "",
-            })
-            status = raw_item.get("status") or "unknown"
-            item["total"] += 1
-            if status in {"success", "partial_success", "empty", "error"}:
-                item[status] += 1
-            if raw_item.get("fallback_used"):
-                item["fallback_count"] += 1
-            try:
-                item["result_count"] += int(raw_item.get("result_count") or 0)
-            except (TypeError, ValueError):
-                pass
-            if raw_item.get("error_code") or raw_item.get("error_message"):
-                item["last_error_code"] = raw_item.get("error_code") or ""
-                item["last_error_message"] = raw_item.get("error_message") or ""
-
-    rows = []
-    for item in bucket.values():
-        item["fallback_rate"] = _rate(item["fallback_count"], item["total"])
-        item["empty_rate"] = _rate(item["empty"], item["total"])
-        item["failure_rate"] = _rate(item["error"], item["total"])
-        rows.append(item)
-    rows.sort(key=lambda row: (row["failure_rate"], row["fallback_rate"], row["total"]), reverse=True)
-    return success(rows)
+    return success(_build_providers_payload(tasks))
 
 
 @agent_router.get("/admin/metrics/feedback-reasons", summary="Agent 差评原因聚合")
@@ -604,26 +666,18 @@ def admin_metrics_feedback_reasons(
 ):
     """对 1-2 分反馈做轻量关键词归因，帮助管理员快速定位高频问题。"""
     tasks, feedback_map, _ = _load_monitor_context(db, days=days)
-    task_by_id = {task.id: task for task in tasks}
-    bucket: dict[str, dict] = {}
-    for feedback in feedback_map.values():
-        if feedback.rating > 2:
-            continue
-        label = _negative_reason_label(feedback.comment)
-        item = bucket.setdefault(label, {"reason": label, "count": 0, "examples": []})
-        item["count"] += 1
-        task = task_by_id.get(feedback.task_id)
-        if len(item["examples"]) < 3:
-            item["examples"].append({
-                "task_id": feedback.task_id,
-                "intent": task.intent if task else "",
-                "comment": feedback.comment or "",
-                "message": (task.original_message or "")[:80] if task else "",
-            })
+    return success(_build_feedback_reasons_payload(tasks, feedback_map))
 
-    rows = list(bucket.values())
-    rows.sort(key=lambda row: row["count"], reverse=True)
-    return success(rows)
+
+@agent_router.get("/admin/dashboard", summary="Agent 监控聚合大盘")
+def admin_dashboard(
+    days: int = 7,
+    _: dict = Depends(require_role("admin")),
+    db: Session = Depends(get_db),
+):
+    """一次性返回监控大盘需要的聚合数据，降低前端多接口并发成本。"""
+    tasks, feedback_map, window_days = _load_monitor_context(db, days=days)
+    return success(_build_dashboard_payload(tasks, feedback_map, window_days))
 
 
 @agent_router.get("/admin/tasks", summary="Agent 最近任务列表")

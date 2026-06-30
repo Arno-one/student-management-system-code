@@ -67,6 +67,101 @@ export function findImageUrl(obj) {
   return null
 }
 
+const ENTER_SUBMIT_SCOPE_SELECTOR = [
+  '.preview',
+  '.mail-edit',
+  '.smart-input',
+  '.agent-hitl-card',
+  '.float-agent-hitl',
+  '.login-shell',
+  '.card',
+  '.subcard',
+  '.page',
+].join(', ')
+
+const ENTER_SUBMIT_ACTION_SELECTOR = [
+  '.actions',
+  '.talk-input-row',
+  '.nl-input-row',
+  '.agent-hitl-actions',
+  '.float-agent-hitl-actions',
+  '.sys-perm-head-row',
+  '.agent-monitor-filters',
+  '.talk-login-box',
+].join(', ')
+
+const ENTER_SUBMIT_TEXTAREA_SKIP_SELECTOR = [
+  '.rag-input-area',
+  '.agent-input-area',
+  '.float-agent-input',
+  '.agent-feedback-comment',
+  '.float-agent-feedback-comment',
+  '.agent-hitl-textarea',
+  '.rte',
+  '.rte-area',
+].join(', ')
+
+let enterSubmitInitialized = false
+
+function isEnterSubmitTarget(target) {
+  if (!(target instanceof HTMLElement)) return false
+  if (target.closest('[data-enter-submit-skip="true"]')) return false
+  if (target.isContentEditable || target.closest('[contenteditable="true"]')) return false
+
+  const tag = target.tagName
+  if (tag === 'TEXTAREA') {
+    return !target.closest(ENTER_SUBMIT_TEXTAREA_SKIP_SELECTOR)
+  }
+  if (tag !== 'INPUT') return false
+
+  const type = String(target.getAttribute('type') || 'text').toLowerCase()
+  return !['button', 'submit', 'reset', 'file', 'checkbox', 'radio', 'range', 'color'].includes(type)
+}
+
+function isUsableSubmitButton(button) {
+  return button instanceof HTMLButtonElement && !button.disabled && button.getClientRects().length > 0
+}
+
+function isAfterTarget(target, button) {
+  return !!(target.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING)
+}
+
+function findSubmitActionContainer(target, scope) {
+  const current = target.closest(ENTER_SUBMIT_ACTION_SELECTOR)
+  if (current && scope.contains(current)) return current
+
+  const containers = Array.from(scope.querySelectorAll(ENTER_SUBMIT_ACTION_SELECTOR))
+  return containers.find(container => isAfterTarget(target, container)) || containers[0] || null
+}
+
+function pickSubmitButton(container) {
+  const buttons = Array.from(container.querySelectorAll('button')).filter(isUsableSubmitButton)
+  return buttons.find(button => !button.classList.contains('secondary') && !button.classList.contains('danger')) || buttons[0] || null
+}
+
+export function initGlobalEnterSubmit() {
+  if (enterSubmitInitialized || typeof document === 'undefined') return
+  enterSubmitInitialized = true
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' || event.defaultPrevented || event.isComposing) return
+    if (event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) return
+
+    const target = event.target
+    if (!isEnterSubmitTarget(target)) return
+
+    const scope = target.closest(ENTER_SUBMIT_SCOPE_SELECTOR) || document.body
+    const actionContainer = findSubmitActionContainer(target, scope)
+    if (!actionContainer) return
+
+    const submitButton = pickSubmitButton(actionContainer)
+    if (!submitButton) return
+
+    event.preventDefault()
+    submitButton.click()
+  })
+}
+
 // Global listener to clear invalid class on input
 if (typeof document !== 'undefined') {
   document.addEventListener('input', e => {

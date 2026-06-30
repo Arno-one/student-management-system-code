@@ -37,7 +37,10 @@
             class="agent-msg"
             :class="'agent-msg-' + msg.role"
           >
-            <div class="agent-msg-avatar">{{ msg.role === 'user' ? '我' : '师' }}</div>
+            <div
+              class="agent-msg-avatar"
+              :class="{ 'agent-msg-avatar--emoji': msg.role === 'assistant' && assistantAvatar !== 'AI' }"
+            >{{ msg.role === 'user' ? '我' : assistantAvatar }}</div>
             <div class="agent-msg-body">
             <!-- Assistant 等待首个流式片段时，复用当前消息气泡，避免额外生成一条带头像的 loading 消息 -->
             <div class="agent-loading" v-if="msg.role === 'assistant' && msg._streaming && !msg.content">
@@ -64,6 +67,12 @@
                 v-for="(card, ci) in msg.cards.filter(c => c.type === 'weather' && isCardVersionSupported(c))"
                 :key="'weather-' + ci"
                 :card="card"
+              />
+              <ImageCard
+                v-for="(card, ci) in msg.cards.filter(c => c.type === 'image' && isCardVersionSupported(c))"
+                :key="'image-' + ci"
+                :card="card"
+                @regenerate="regenerateImage"
               />
               <RouteCard
                 v-for="(card, ci) in msg.cards.filter(c => c.type === 'route' && isCardVersionSupported(c))"
@@ -165,7 +174,7 @@
         </div>
 
         <!-- ====== 示例问题（无消息时展示） ====== -->
-        <div class="rag-examples" v-if="messages.length === 0">
+        <div class="rag-examples" v-if="hasOnlyWelcomeMessage()">
           <span class="rag-examples-label">试试问</span>
           <button v-for="q in exampleQuestions" :key="q" class="rag-example-chip"
             :disabled="loading" @click="form.message = q; doSend()">{{ q }}</button>
@@ -173,6 +182,11 @@
 
         <!-- ====== 输入区 ====== -->
         <div class="agent-input-area">
+          <QuickToolPanel
+            :loading="loading"
+            @fill-template="applyQuickToolTemplate"
+            @submit-inline="submitQuickTool"
+          />
           <textarea
             v-model="form.message"
             placeholder="输入你想问的..."
@@ -227,14 +241,16 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, nextTick, onMounted } from 'vue'
+import { reactive, ref, computed, nextTick, onMounted, watch } from 'vue'
 import { marked } from 'marked'
 import { request, getBaseUrl, getAuthHeader } from '../api'
 import CustomSelect from '../components/CustomSelect.vue'
 import WeatherCard from '../components/WeatherCard.vue'
 import RouteCard from '../components/RouteCard.vue'
 import PoiListCard from '../components/PoiListCard.vue'
-import { fallbackAgentPersonas } from '../config/agentPersonas'
+import ImageCard from '../components/ImageCard.vue'
+import QuickToolPanel from '../components/QuickToolPanel.vue'
+import { fallbackAgentPersonas, createPersonaWelcomeMessage } from '../config/agentPersonas'
 
 // 配置 marked 不渲染原始 HTML（防止 XSS）
 marked.setOptions({ breaks: true, gfm: true })
@@ -258,6 +274,7 @@ const form = reactive({ message: '' })
 
 const currentPersona = computed(() => personas.value.find(p => p.id === selectedPersona.value))
 const personaOptions = computed(() => personas.value.map(p => ({ value: p.id, label: personaTitle(p) })))
+const assistantAvatar = computed(() => currentPersona.value?.icon || 'AI')
 
 const personaExamples = {
   academic_mentor: [
@@ -302,6 +319,7 @@ function toolLabel(name) {
     nl2sql_tool: '数据查询',
     student_tool: '身份识别',
     weather_tool: '天气查询',
+    image_tool: '文生图',
     commute_plan_tool: '通勤规划',
     nearby_service_tool: '周边服务',
   }
@@ -345,6 +363,17 @@ function sessionSummary(session) {
 
 function isCardVersionSupported(card) {
   return !card?.card_version || card.card_version === 1
+}
+
+function hasOnlyWelcomeMessage() {
+  return messages.value.length === 1 && messages.value[0]?._welcome
+}
+
+// 只在前端空会话里注入欢迎语，不进入后端历史。
+function syncWelcomeMessage(force = false) {
+  if (currentSessionId.value) return
+  if (!force && messages.value.length > 0 && !hasOnlyWelcomeMessage()) return
+  messages.value = [createPersonaWelcomeMessage(selectedPersona.value)]
 }
 
 function createFeedback(taskId = null, saved = null) {
@@ -427,15 +456,29 @@ async function loadSession(sessionId) {
 
 function newChat() {
   currentSessionId.value = null
-  messages.value = []
+  syncWelcomeMessage(true)
 }
 
 function fillRouteDraft(destination) {
   form.message = `从 [请补充起点] 到 ${destination} 怎么去？`
 }
 
-async function doSend() {
-  const text = form.message.trim()
+function regenerateImage(prompt) {
+  const text = String(prompt || '').trim()
+  if (!text) return
+  form.message = `请根据以下提示词重新生成一张图片：${text}`
+  doSend()
+}
+
+function applyQuickToolTemplate(text) {
+  form.message = text
+}
+
+async function submitQuickTool(payload) {
+  await sendMessage(payload?.text || '')
+}
+
+async function sendMessage(text) {
   if (!text || loading.value) return
 
   messages.value.push({ role: 'user', content: text })
@@ -508,6 +551,11 @@ async function doSend() {
     scrollBottom()
     loadSessions({ silent: true })
   }
+}
+
+async function doSend() {
+  const text = form.message.trim()
+  await sendMessage(text)
 }
 
 function handleSSE(event, data, currentMsg, msgIdx) {
@@ -698,8 +746,13 @@ async function loadPersonas() {
 }
 
 onMounted(() => {
+  syncWelcomeMessage(true)
   loadPersonas()
   loadSessions()
+})
+
+watch(selectedPersona, () => {
+  syncWelcomeMessage()
 })
 </script>
 
@@ -900,6 +953,7 @@ onMounted(() => {
   width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center;
   justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0;
 }
+.agent-msg-avatar--emoji { font-size: 18px; font-weight: 500; }
 .agent-msg-user .agent-msg-avatar { background: var(--gold); color: #fff; }
 .agent-msg-assistant .agent-msg-avatar { background: var(--panel-2); color: var(--gold); border: 1px solid var(--gold); }
 

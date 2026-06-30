@@ -49,6 +49,11 @@ _FALLBACK_PLANS = {
         need_llm_summary=True,
         summary_instruction="用友好的语气向用户播报天气情况",
     ),
+    "image_generation": ExecutionPlan(
+        intent="image_generation",
+        steps=[PlanStep(step_id=1, tool_name="image_tool")],
+        need_llm_summary=False,
+    ),
     "commute_plan": ExecutionPlan(
         intent="commute_plan",
         steps=[PlanStep(step_id=1, tool_name="commute_plan_tool")],

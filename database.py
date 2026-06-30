@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 # 数据库连接信息统一从 config（.env）读取，不再硬编码在代码里
 from config import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME, \
@@ -38,6 +38,16 @@ Session = sessionmaker(bind=engine)
 SessionReadonly = sessionmaker(bind=engine_readonly)
 
 
+def _ensure_index(engine_instance, table_name: str, index_name: str, column_sql: str):
+    """为已有数据库补齐关键索引，避免监控类查询退化成全表扫描。"""
+    inspector = inspect(engine_instance)
+    existing = {item.get("name") for item in inspector.get_indexes(table_name)}
+    if index_name in existing:
+        return
+    with engine_instance.begin() as conn:
+        conn.execute(text(f"CREATE INDEX {index_name} ON {table_name} ({column_sql})"))
+
+
 # 生成读写会话
 def get_db():
     db = Session()
@@ -70,3 +80,6 @@ def init_db():
     import model.AgentTask  # noqa: F401
     import model.AgentFeedback  # noqa: F401
     Base.metadata.create_all(engine)
+    _ensure_index(engine, "agent_task", "idx_agent_task_create_time", "create_time")
+    _ensure_index(engine, "agent_task", "idx_agent_task_status", "status")
+    _ensure_index(engine, "agent_task", "idx_agent_task_intent", "intent")

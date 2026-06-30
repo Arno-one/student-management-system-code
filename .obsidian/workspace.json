@@ -8,21 +8,35 @@
         "type": "tabs",
         "children": [
           {
-            "id": "67d6355dac5418f5",
+            "id": "7d6b5a97bd08bf6c",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "docs/Agent系统v2.3迭代总结与下版本规划.md",
+                "file": "docs/Agent系统架构说明文档（v1.0-MVP）.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Agent系统v2.3迭代总结与下版本规划"
+              "title": "Agent系统架构说明文档（v1.0-MVP）"
             }
           },
           {
-            "id": "7d6b5a97bd08bf6c",
+            "id": "84b727c8d0236867",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "docs/Agent系统验收说明文档.md",
+                "mode": "preview",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Agent系统验收说明文档"
+            }
+          },
+          {
+            "id": "5c8b573b13fec8f2",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -198,52 +212,53 @@
       "bases:新建数据库": false
     }
   },
-  "active": "7d6b5a97bd08bf6c",
+  "active": "ca54f7db6eb8426b",
   "lastOpenFiles": [
-    "docs/Agent系统验收说明文档.md.tmp.5836.330580b20258",
-    "docs/Agent系统介绍演讲稿.md.tmp.5836.475bbd22598e",
-    "docs/Agent系统介绍演讲稿.md.tmp.5836.47ae0ff8539c",
+    "frontend-vue/dist/assets/CustomSelect-JnxCft1r.js",
+    "frontend-vue/dist/assets/ResultBadge-CfOul0rb.js",
+    "frontend-vue/dist/assets/SystemView-9iAEBUNB.js",
+    "frontend-vue/dist/assets/DataTable-DYIThPAT.js",
+    "frontend-vue/dist/assets/useModuleSubPage-yRrkELtt.js",
+    "frontend-vue/dist/assets/NL2SQLView-DFmEoVsA.js",
+    "frontend-vue/dist/assets/AgentView-C6l3p-Cw.js",
+    "frontend-vue/dist/assets/RAGView-BDROMldG.js",
+    "frontend-vue/dist/assets/EmailView-COgmKhSe.js",
+    "frontend-vue/dist/assets/WorkView-CAr_HtYt.js",
+    "frontend-vue/dist/assets/StatisticsView-tyDvDGau.js",
+    "frontend-vue/test-results/light-tech-cloud-check.png",
+    "frontend-vue/test-results/方案C-mobile.png",
+    "frontend-vue/test-results/方案C-dashboard-light.png",
+    "frontend-vue/test-results/方案C-dashboard-dark-fixed-2.png",
+    "frontend-vue/test-results/方案C-dashboard-dark-fixed.png",
+    "frontend-vue/test-results/方案C-dashboard-dark.png",
+    "frontend-vue/test-results/方案C-login.png",
+    "RAG/RAG高级架构流程总结.md",
     "docs/Agent系统验收说明文档.md",
+    "docs/Agent系统介绍演讲稿.html.md",
     "docs/Agent系统介绍演讲稿.md",
-    "docs/testing/Agent系统v2.3-系统管理侧栏入口回归测试数据.md",
-    "frontend-vue/vite.config.js.timestamp-1782700443132-e3ffc7bc1d156.mjs",
-    "frontend-vue/vite.config.js.timestamp-1782700431323-df974b05b7209.mjs",
-    "frontend-vue/vite.config.js.timestamp-1782700044160-974ccdc157d42.mjs",
-    "frontend-vue/dist/index.html",
-    "frontend-vue/dist/assets/WorkView-6pmVK8jJ.js",
-    "frontend-vue/dist/assets/useModuleSubPage-D5cvdeY1.js",
-    "frontend-vue/dist/assets/TeacherView-CUFzooKw.js",
-    "frontend-vue/dist/assets/SystemView-DI8gsqJ_.css",
+    "docs/testing/Agent系统v2.3-Agent监控首屏自动加载测试数据.md",
+    "docs/testing/Agent系统v2.3-侧栏折叠记忆与Agent监控性能优化测试数据.md",
     "docs/Agent系统v2.3迭代总结与下版本规划.md",
+    "docs/testing/Agent系统v2.3-工作台品牌语气与角色头像统一测试数据.md",
+    "docs/testing/Agent系统v2.3-侧栏模块Emoji展示测试数据.md",
+    "docs/testing/Agent系统v2.3-Agent快捷工具面板测试数据.md",
+    "docs/testing/Agent系统v2.3-Agent欢迎语注入测试数据.md",
+    "docs/testing/Agent系统v2.3-Agent文生图工具与图片卡片测试数据.md",
+    "docs/Agent系统架构说明文档（v1.0-MVP）.md",
+    "docs/Agent接入改造设计文档（AI执行规范）.md",
+    "RAG/docs/production/工程Q&A（JSON格式）.md",
+    "RAG/docs/production/工程Q&A.md",
+    "RAG/docs/production/工程初步设计Q&A问答对.md",
+    "docs/testing/Agent系统v2.3-全局回车提交机制测试数据.md",
+    "docs/testing/Agent系统v2.3-系统管理侧栏入口回归测试数据.md",
     "docs/Agent系统v2.2迭代总结与下版本规划.md",
     "docs/testing/Agent系统v2.3-卡片协议继续泛化测试数据.md",
     "docs/testing/Agent系统v2.3-WorkView复用WeatherCard测试数据.md",
     "docs/testing/Agent系统v2.3-FloatingAgentPersona记忆测试数据.md",
     "docs/testing/Agent系统v2.3-Supervisor多Agent协作设计一期测试数据.md",
     "docs/testing/Agent系统v2.3-Agent监控面板增强测试数据.md",
-    "docs/testing/Agent系统v2.3-周边服务口语餐饮关键词回归测试.md",
-    "frontend-vue/node_modules/playwright-core/lib/tools/trace/SKILL.md",
-    "docs/testing/Agent系统v2.3-周边生活服务推荐Agent能力测试数据.md",
-    "docs/Agent卡片协议v1.md",
-    "frontend-vue/test-results/ui-regression-悬浮-Agent-渲染卡片时不溢出面板-chromium/error-context.md",
-    "docs/Agent系统v2.1迭代总结与下版本规划.md",
-    "docs/testing/Agent系统v2.2-历史摘要右侧布局回归测试数据.md",
-    "frontend-vue/test-results/ui-regression-Agent-页面在浅色主题下安全渲染-route-weather-卡片-chromium/error-context.md",
     "frontend-vue/node_modules/playwright-core/lib/vite/dashboard/assets/safari-na3_-uQk.svg",
     "frontend-vue/node_modules/playwright-core/lib/vite/traceViewer/playwright-logo.svg",
-    "frontend-vue/node_modules/playwright-core/lib/vite/recorder/playwright-logo.svg",
-    "frontend-vue/node_modules/playwright-core/lib/vite/dashboard/playwright-logo.svg",
-    "frontend-vue/node_modules/playwright-core/lib/vite/dashboard/assets/firefox-nightly-Cp5nfeDT.svg",
-    "frontend-vue/node_modules/playwright-core/lib/vite/dashboard/assets/firefox-beta-k3eOH_eK.svg",
-    "frontend-vue/node_modules/playwright-core/lib/vite/dashboard/assets/firefox-1bWoP6pv.svg",
-    "frontend-vue/node_modules/playwright-core/lib/tools/dashboard/appIcon.png",
-    "frontend-vue/node_modules/playwright-core/README.md",
-    "frontend-vue/node_modules/playwright-core/lib/tools/cli-client/skill/references/tracing.md",
-    "frontend-vue/node_modules/playwright-core/lib/tools/cli-client/skill/references/video-recording.md",
-    "frontend-vue/node_modules/playwright-core/lib/tools/cli-client/skill/references/test-generation.md",
-    "frontend-vue/node_modules/playwright-core/lib/tools/cli-client/skill/references/spec-driven-testing.md",
-    "frontend-vue/node_modules/playwright-core/lib/tools/cli-client/skill/references/storage-state.md",
-    "frontend-vue/node_modules/playwright-core/lib/tools/cli-client/skill/references/session-management.md",
-    "frontend-vue/node_modules/playwright-core/lib/server/chromium/appIcon.png"
+    "frontend-vue/node_modules/playwright-core/lib/vite/recorder/playwright-logo.svg"
   ]
 }

@@ -32,6 +32,18 @@
       </div>
     </div>
 
+    <!-- 登录页没有 TopBar，这里单独提供主题切换入口，保证登录前也能预览两套视觉主题。 -->
+    <button
+      v-if="isPublicPage"
+      type="button"
+      class="public-theme-switch"
+      :aria-label="theme === 'light' ? '切换到深色主题' : '切换到浅色主题'"
+      @click="toggleTheme"
+    >
+      <span class="public-theme-switch__icon" aria-hidden="true">{{ theme === 'light' ? '☀' : '☾' }}</span>
+      <span class="public-theme-switch__text">{{ theme === 'light' ? '浅色主题' : '深色主题' }}</span>
+    </button>
+
     <FloatingAgent />
   </div>
 </template>
@@ -42,6 +54,9 @@ import { useRouter, useRoute } from 'vue-router'
 import Sidebar from './components/Sidebar.vue'
 import TopBar from './components/TopBar.vue'
 import FloatingAgent from './components/FloatingAgent.vue'
+import { initGlobalEnterSubmit } from './utils/helpers'
+
+initGlobalEnterSubmit()
 
 const router = useRouter()
 const route = useRoute()
