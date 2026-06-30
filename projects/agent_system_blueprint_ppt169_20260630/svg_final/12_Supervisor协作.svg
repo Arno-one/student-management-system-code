@@ -13,8 +13,8 @@
     <path d="M420 142V622 M860 142V622" stroke="#2A3A52" stroke-width="1" stroke-dasharray="8,4" />
   </g>
   <g id="header">
-    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">Supervisor 朢小闭环证明多 Agent 协作已经跨域跑</text>
-    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">它没有追求大而全，是通过路线规划加邮件知完成丢条可验收的跨域链路</text>
+    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">Supervisor 最小闭环证明多 Agent 协作已经跨域跑通</text>
+    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">它没有追求大而全，而是通过路线规划加邮件通知完成一条可验收的跨域链路</text>
   </g>
   <g id="client-request">
     <path fill="#111827" stroke="#2A3A52" d="M68,196 H326 A6,6 0 0 1 332,202 V498 A6,6 0 0 1 326,504 H68 A6,6 0 0 1 62,498 V202 A6,6 0 0 1 68,196 Z" />
@@ -26,7 +26,7 @@
     <path d="M12 6C13.1046 6 14 5.10457 14 4C14 2.89543 13.1046 2 12 2C10.8954 2 10 2.89543 10 4C10 5.10457 10.8954 6 12 6Z" />
   </g>
     <text x="92" y="322" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="800" fill="#F8FAFC">用户请求</text>
-    <text font-size="22" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" fill="#B6C2D2" x="92" y="370">从宝安中心到龙岗</text><text font-size="22" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" fill="#B6C2D2" x="92" y="404">怎么走，并顺</text><text font-size="22" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" fill="#B6C2D2" x="92" y="438">写邮件知老师</text><text x="92" y="472" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#7F8EA3">multi-domain task</text>
+    <text fill="#B6C2D2" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" x="92" y="370">从宝安中心到龙岗</text><text fill="#B6C2D2" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" x="92" y="404">怎么走，并顺手</text><text fill="#B6C2D2" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" x="92" y="438">写邮件通知老师</text><text x="92" y="472" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#7F8EA3">multi-domain task</text>
   </g>
   <g id="supervisor-core">
     <path fill="#111827" stroke="#7DD3FC" stroke-width="2" d="M462,188 H818 A6,6 0 0 1 824,194 V304 A6,6 0 0 1 818,310 H462 A6,6 0 0 1 456,304 V194 A6,6 0 0 1 462,188 Z" />
@@ -35,7 +35,7 @@
     <path fill-rule="evenodd" clip-rule="evenodd" d="M9 0V2H13L16 8.5L13 15H3L0 8.5L3 2H7V0H9ZM4.59794 11.7384L8 12.2618L11.4021 11.7384L11.0979 9.76163L8 10.2382L4.90206 9.76163L4.59794 11.7384ZM7 6.75C7 7.44036 6.44036 8 5.75 8C5.05964 8 4.5 7.44036 4.5 6.75C4.5 6.05964 5.05964 5.5 5.75 5.5C6.44036 5.5 7 6.05964 7 6.75ZM10.25 8C10.9404 8 11.5 7.44036 11.5 6.75C11.5 6.05964 10.9404 5.5 10.25 5.5C9.55964 5.5 9 6.05964 9 6.75C9 7.44036 9.55964 8 10.25 8Z" />
   </g>
     <text x="552" y="244" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="34" font-weight="800" fill="#F8FAFC">Supervisor</text>
-    <text x="468.146" y="284.892" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2" id="_edit_19" data-edit-target="true" data-edit-annotation="调整大小：文本超出范围">任务拆解、状态汇总跨 Agent 编排</text>
+    <text x="468.146" y="284.892" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2" id="_edit_19" data-edit-target="true" data-edit-annotation="调整大小：文本超出范围">任务拆解、状态汇总、跨 Agent 编排</text>
   </g>
   <g id="map-agent">
     <path fill="#111827" stroke="#2A3A52" d="M462,394 H732 A6,6 0 0 1 738,400 V510 A6,6 0 0 1 732,516 H462 A6,6 0 0 1 456,510 V400 A6,6 0 0 1 462,394 Z" />
@@ -46,7 +46,7 @@
     <path d="M10 1L6 2V15L10 14V1Z" />
   </g>
     <text x="544" y="452" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="800" fill="#F8FAFC">MapAgent</text>
-    <text x="473.325" y="497.446" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">复用通勤规划和地?MCP 能力</text>
+    <text x="473.325" y="497.446" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">复用通勤规划和地图 MCP 能力</text>
   </g>
   <g id="communication-agent">
     <path fill="#111827" stroke="#2A3A52" d="M786,394 H1056 A6,6 0 0 1 1062,400 V510 A6,6 0 0 1 1056,516 H786 A6,6 0 0 1 780,510 V400 A6,6 0 0 1 786,394 Z" />
@@ -55,7 +55,7 @@
     <path d="M9 0V4H6.24223C6.72086 4.71505 7 5.57493 7 6.5V11H5V6.5C5 5.11929 3.88071 4 2.5 4C1.11929 4 0 5.11929 0 6.5V13H7V16H9V13H16V6.5C16 5.11929 14.8807 4 13.5 4H11V2H13V0H9Z" />
   </g>
     <text x="868" y="452" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="800" fill="#F8FAFC">通信 Agent</text>
-    <text x="781.422" y="497.446" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2" id="_edit_27" data-edit-target="true" data-edit-annotation="调整大小：文本超出范围">复用邮件工具、草稿生成与白名</text>
+    <text x="781.422" y="497.446" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2" id="_edit_27" data-edit-target="true" data-edit-annotation="调整大小：文本超出范围">复用邮件工具、草稿生成与白名单</text>
   </g>
   <g id="external-tools">
     <path fill="#111827" stroke="#2A3A52" d="M1116,218 H1218 A6,6 0 0 1 1224,224 V294 A6,6 0 0 1 1218,300 H1116 A6,6 0 0 1 1110,294 V224 A6,6 0 0 1 1116,218 Z" />
@@ -81,6 +81,6 @@
     <text x="444" y="599" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" font-weight="800" fill="#F8FAFC" id="_edit_41" data-edit-target="true" data-edit-annotation="重排此区域：调整大小：文本超出范围">高风险动作不自动执行：邮件发送前进入 HITL 确认</text>
   </g>
   <g id="footer">
-    <text x="56" y="676" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="16" fill="#7F8EA3">P12 ?client-server flow adaptation ?Source: Agent 系统介绍演讲?+ 验收说明文档</text>
+    <text x="56" y="676" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="16" fill="#7F8EA3">P12 · client-server flow adaptation · Source: Agent 系统介绍演讲稿 + 验收说明文档</text>
   </g>
 </svg>

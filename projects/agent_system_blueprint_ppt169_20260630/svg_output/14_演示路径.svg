@@ -11,8 +11,8 @@
     <path d="M640 148V620" stroke="#2A3A52" stroke-width="3" marker-end="url(#routeArrow)" />
   </g>
   <g id="header">
-    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">现场演示应先给用户体验，再揭示后台治</text>
-    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">朢顺的演示路径是先看用户侧，再看运营侧，最后回到架构价值</text>
+    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">现场演示应先给用户体验，再揭示后台治理</text>
+    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">最顺的演示路径是先看用户侧，再看运营侧，最后回到架构价值</text>
   </g>
   <g id="roadmap-step-1">
     <circle cx="640" cy="176" r="26" fill="#7DD3FC" />
@@ -20,15 +20,15 @@
     <rect x="104" y="144" width="430" height="94" rx="6" fill="#111827" stroke="#2A3A52" />
     <use data-icon="chunk-filled/robot" x="130" y="172" width="34" height="34" fill="#7DD3FC" />
     <text x="178" y="188" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">先讲目标</text>
-    <text x="178" y="220" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">不是聊天框，?Agent 工程体系</text>
+    <text x="178" y="220" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">不是聊天框，是 Agent 工程体系</text>
   </g>
   <g id="roadmap-step-2">
     <circle cx="640" cy="292" r="26" fill="#8B5CF6" />
     <text x="640" y="301" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="24" font-weight="800" fill="#05070D">02</text>
     <rect x="746" y="260" width="430" height="116" rx="6" fill="#111827" stroke="#2A3A52" />
     <use data-icon="chunk-filled/users" x="772" y="288" width="34" height="34" fill="#8B5CF6" />
-    <text x="820" y="304" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">展示用户</text>
-    <text x="796.868" y="348.12" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">主对话页、Persona、结构化卡片、快捷工</text>
+    <text x="820" y="304" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">展示用户侧</text>
+    <text x="796.868" y="348.12" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">主对话页、Persona、结构化卡片、快捷工具</text>
   </g>
   <g id="roadmap-step-3">
     <circle cx="640" cy="426" r="26" fill="#F59E0B" />
@@ -36,17 +36,17 @@
     <rect x="104" y="394" width="430" height="116" rx="6" fill="#111827" stroke="#2A3A52" />
     <use data-icon="chunk-filled/chart-line" x="130" y="422" width="34" height="34" fill="#F59E0B" />
     <text x="178" y="438" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">再看运营</text>
-    <text x="178" y="472" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">反馈闭环、监控面板任务详情MCP 健康</text>
+    <text x="178" y="472" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">反馈闭环、监控面板、任务详情、MCP 健康</text>
   </g>
   <g id="roadmap-step-4">
     <circle cx="640" cy="560" r="26" fill="#22C55E" />
     <text x="640" y="569" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="24" font-weight="800" fill="#05070D">04</text>
     <rect x="746" y="528" width="430" height="116" rx="6" fill="#111827" stroke="#2A3A52" />
     <use data-icon="chunk-filled/layers" x="772" y="556" width="34" height="34" fill="#22C55E" />
-    <text x="820" y="572" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">回到架构价</text>
+    <text x="820" y="572" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">回到架构价值</text>
     <text x="820" y="606" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2" id="_edit_30" data-edit-target="true" data-edit-annotation="调整大小：文本超出范围">Planner、BaseTool、HITL、Supervisor 说明为什么可持续</text>
   </g>
   <g id="takeaway">
-    <text x="640" y="674" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="16" fill="#7F8EA3">P14 ?roadmap vertical adaptation ?建议演示节奏：体验先行治理随后架构收</text>
+    <text x="640" y="674" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="16" fill="#7F8EA3">P14 · roadmap vertical adaptation · 建议演示节奏：体验先行、治理随后、架构收口</text>
   </g>
 </svg>

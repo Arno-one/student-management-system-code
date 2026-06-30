@@ -6,8 +6,8 @@
     <path d="M160 44V676 M320 44V676 M480 44V676 M640 44V676 M800 44V676 M960 44V676 M1120 44V676" stroke="#1C2A3D" stroke-width="1" stroke-opacity="0.42" />
   </g>
   <g id="header">
-    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">可运营来自任务反馈监控和健康状的闭环</text>
-    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">系统好不好用不靠主观判断，由 AgentTask、AgentFeedback、Provider ?MCP 健康状支撑</text>
+    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">可运营来自任务、反馈、监控和健康状态的闭环</text>
+    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">系统好不好用不靠主观判断，由 AgentTask、AgentFeedback、Provider 与 MCP 健康状态支撑</text>
   </g>
   <g id="hub-panel">
     <circle cx="640" cy="372" r="126" fill="#111827" stroke="#7DD3FC" stroke-width="2" />
@@ -37,7 +37,7 @@
     <path d="M8 0C11.3137 0 14 1.34315 14 3C14 4.65685 11.3137 6 8 6C4.68629 6 2 4.65685 2 3C2 1.34315 4.68629 0 8 0Z" />
   </g>
     <text x="176" y="210" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">任务记录</text>
-    <text x="126" y="248" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#B6C2D2">AgentTask / 朢近任</text>
+    <text x="126" y="248" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#B6C2D2">AgentTask / 最近任务</text>
   </g>
   <g id="spoke-feedback">
     <path fill="#111827" stroke="#2A3A52" d="M521,128 H759 A6,6 0 0 1 765,134 V234 A6,6 0 0 1 759,240 H521 A6,6 0 0 1 515,234 V134 A6,6 0 0 1 521,128 Z" />
@@ -59,7 +59,7 @@
     <path d="M15 13C15 14.1046 14.1046 15 13 15C11.8954 15 11 14.1046 11 13C11 11.8954 11.8954 11 13 11C14.1046 11 15 11.8954 15 13Z" />
     <path d="M9 4.5C9 3.67157 9.67157 3 10.5 3C11.3284 3 12 3.67157 12 4.5V9H14V4.5C14 2.567 12.433 1 10.5 1C8.567 1 7 2.567 7 4.5V11.5C7 12.3284 6.32843 13 5.5 13C4.67157 13 4 12.3284 4 11.5V7H2V11.5C2 13.433 3.567 15 5.5 15C7.433 15 9 13.433 9 11.5V4.5Z" />
   </g>
-    <text x="998" y="210" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">意图与工</text>
+    <text x="998" y="210" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">意图与工具</text>
     <text x="948" y="248" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#B6C2D2">intent / tool metrics</text>
   </g>
   <g id="spoke-provider">
@@ -70,7 +70,7 @@
     <path fill-rule="evenodd" clip-rule="evenodd" d="M16 9H0V14H16V9ZM3 12.5C3.55228 12.5 4 12.0523 4 11.5C4 10.9477 3.55228 10.5 3 10.5C2.44772 10.5 2 10.9477 2 11.5C2 12.0523 2.44772 12.5 3 12.5Z" />
   </g>
     <text x="176" y="438" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">Provider 分布</text>
-    <text x="126" y="476" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#B6C2D2">模型调用与路由状</text>
+    <text x="126" y="476" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#B6C2D2">模型调用与路由状态</text>
   </g>
   <g id="spoke-mcp">
     <path fill="#111827" stroke="#2A3A52" d="M932,386 H1170 A6,6 0 0 1 1176,392 V492 A6,6 0 0 1 1170,498 H932 A6,6 0 0 1 926,492 V392 A6,6 0 0 1 932,386 Z" />
@@ -90,10 +90,10 @@
     <path d="M11 0H5V12H15V4L11 0Z" />
     <path d="M1 4V16H11V14H3V4H1Z" />
   </g>
-    <text x="562" y="618" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">任务详情可复</text>
+    <text x="562" y="618" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">任务详情可复盘</text>
     <text x="496.941" y="649.446" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="18" fill="#B6C2D2">从指标回到具体链路，形成定位闭环</text>
   </g>
   <g id="footer">
-    <text x="56" y="676" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="16" fill="#7F8EA3">P11 ?hub-spoke adaptation ?Source: Agent 系统验收说明文档</text>
+    <text x="56" y="676" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="16" fill="#7F8EA3">P11 · hub-spoke adaptation · Source: Agent 系统验收说明文档</text>
   </g>
 </svg>

@@ -6,8 +6,8 @@
     <path d="M80 44V676 M320 44V676 M560 44V676 M800 44V676 M1040 44V676 M1200 44V676" stroke="#1C2A3D" stroke-width="1" stroke-opacity="0.45" />
   </g>
   <g id="header">
-    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">非功能验收证明它不是丢次?Demo</text>
-    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">稳定性可维护性可扩展性安全和用户体验都有对应工程抓手</text>
+    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">非功能验收证明它不是一次 Demo</text>
+    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">稳定性、可维护性、可扩展性、安全和用户体验都有对应工程抓手</text>
   </g>
   <g id="pillar-stability">
     <rect x="58" y="160" width="214" height="418" rx="6" fill="#111827" stroke="#2A3A52" />
@@ -15,10 +15,10 @@
     <use data-icon="chunk-filled/server" x="82" y="194" width="46" height="46" fill="#7DD3FC" />
     <text x="82" y="278" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="800" fill="#F8FAFC">稳定</text>
     <text x="82" y="326" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">
-      <tspan x="82" dy="0">独立子系统边</tspan>
-      <tspan x="82" dy="34">MCP 不可用回逢</tspan>
+      <tspan x="82" dy="0">独立子系统边界</tspan>
+      <tspan x="82" dy="34">MCP 不可用回退</tspan>
       <tspan x="82" dy="34">输入异常前置拦截</tspan>
-      <tspan x="82" dy="34">工具链降级策</tspan>
+      <tspan x="82" dy="34">工具链降级策略</tspan>
     </text>
     <text x="82" y="528" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#7DD3FC">NFR-01 PASS</text>
   </g>
@@ -55,8 +55,8 @@
     <text x="796" y="278" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="800" fill="#F8FAFC">安全</text>
     <text x="796" y="326" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">
       <tspan x="796" dy="0">权限映射约束</tspan>
-      <tspan x="796" dy="34">输入安全棢</tspan>
-      <tspan x="796" dy="34">邮件白名</tspan>
+      <tspan x="796" dy="34">输入安全网</tspan>
+      <tspan x="796" dy="34">邮件白名单</tspan>
       <tspan x="796" dy="34">HITL 人工确认</tspan>
     </text>
     <text x="796" y="528" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#22C55E">NFR-04 PASS</text>
@@ -69,16 +69,16 @@
     <text x="1034" y="326" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">
       <tspan x="1034" dy="0">SSE 流式回复</tspan>
       <tspan x="1034" dy="34">全局 Agent 入口</tspan>
-      <tspan x="1034" dy="34">结构化卡</tspan>
-      <tspan x="1034" dy="34">反馈与历史摘</tspan>
+      <tspan x="1034" dy="34">结构化卡片</tspan>
+      <tspan x="1034" dy="34">反馈与历史摘要</tspan>
     </text>
     <text x="1034" y="528" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#7DD3FC">NFR-05 PASS</text>
   </g>
   <g id="takeaway">
     <rect x="156" y="608" width="968" height="54" rx="6" fill="#111827" stroke="#2A3A52" />
-    <text x="640" y="643" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="800" fill="#F59E0B" id="_edit_56" data-edit-target="true" data-edit-annotation="调整大小：文本超出范围">非功能验收的意义：证明系统可以长期运行持续扩展被治理和被回归</text>
+    <text x="640" y="643" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="800" fill="#F59E0B" id="_edit_56" data-edit-target="true" data-edit-annotation="调整大小：文本超出范围">非功能验收的意义：证明系统可以长期运行、持续扩展、被治理和被回归</text>
   </g>
   <g id="footer">
-    <text x="56" y="676" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="16" fill="#7F8EA3">P10 ?vertical pillars adaptation ?Source: Agent 系统验收说明文档</text>
+    <text x="56" y="676" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="16" fill="#7F8EA3">P10 · vertical pillars adaptation · Source: Agent 系统验收说明文档</text>
   </g>
 </svg>

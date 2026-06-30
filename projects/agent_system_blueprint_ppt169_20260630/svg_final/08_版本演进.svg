@@ -6,13 +6,13 @@
     <path d="M80 160H1200 M80 560H1200" stroke="#1C2A3D" stroke-width="1" stroke-dasharray="8,4" />
   </g>
   <g id="header">
-    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">四轮演进让系统从“可运行”走向可运营</text>
-    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">每一版不是单纯加功能，是在补丢块长期运行所霢的工程底座</text>
+    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">四轮演进让系统从“可运行”走向“可运营”</text>
+    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">每一版不是单纯加功能，而是在补一块长期运行所需的工程底座</text>
   </g>
   <g id="milestone-v10">
     <circle cx="120" cy="360" r="22" fill="#7DD3FC" />
     <text x="120" y="300" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="26" font-weight="700" fill="#7DD3FC">v1.0</text>
-    <text x="120" y="430" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" font-weight="700" fill="#F8FAFC">朢小闭</text>
+    <text x="120" y="430" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" font-weight="700" fill="#F8FAFC">最小闭环</text>
     <text x="120" y="468" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">RAG / 多轮 / SSE</text>
   </g>
   <g id="milestone-v20">
@@ -24,7 +24,7 @@
   <g id="milestone-v21">
     <circle cx="640" cy="360" r="22" fill="#F59E0B" />
     <text x="640" y="300" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="26" font-weight="700" fill="#F59E0B">v2.1</text>
-    <text x="640" y="430" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" font-weight="700" fill="#F8FAFC">可观测运</text>
+    <text x="640" y="430" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" font-weight="700" fill="#F8FAFC">可观测运营</text>
     <text x="640" y="468" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">反馈 / 监控 / MCP</text>
   </g>
   <g id="milestone-v22">
@@ -41,6 +41,6 @@
   </g>
   <g id="takeaway">
     <path fill="#111827" stroke="#2A3A52" d="M256,585 H1024 A6,6 0 0 1 1030,591 V643 A6,6 0 0 1 1024,649 H256 A6,6 0 0 1 250,643 V591 A6,6 0 0 1 256,585 Z" />
-    <text x="640" y="626" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="700" fill="#F59E0B" id="_edit_26" data-edit-target="true" data-edit-annotation="调整大小：文本超出范围">主线：先跑闭环，再统丢底座，最后把能力收口为可运营系统</text>
+    <text x="640" y="626" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="700" fill="#F59E0B" id="_edit_26" data-edit-target="true" data-edit-annotation="调整大小：文本超出范围">主线：先跑闭环，再统一底座，最后把能力收口为可运营系统</text>
   </g>
 </svg>

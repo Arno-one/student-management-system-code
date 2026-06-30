@@ -5,8 +5,8 @@
     <path d="M80 155H1200 M80 600H1200" stroke="#1C2A3D" stroke-width="1" stroke-dasharray="8,4" />
   </g>
   <g id="header">
-    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">v2.0 的真正转折是统一底座，不是堆新工</text>
-    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">扩展新工具不再改 Executor 主干，是进入同一套工具契约</text>
+    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">v2.0 的真正转折是统一底座，不是堆新工具</text>
+    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">扩展新工具不再改 Executor 主干，而是进入同一套工具契约</text>
   </g>
   <g id="pillar-basetool">
     <path fill="#111827" stroke="#7DD3FC" d="M76,180 H324 A6,6 0 0 1 330,186 V564 A6,6 0 0 1 324,570 H76 A6,6 0 0 1 70,564 V186 A6,6 0 0 1 76,180 Z" />
@@ -28,7 +28,7 @@
     <path fill-rule="evenodd" clip-rule="evenodd" d="M16 9H0V14H16V9ZM3 12.5C3.55228 12.5 4 12.0523 4 11.5C4 10.9477 3.55228 10.5 3 10.5C2.44772 10.5 2 10.9477 2 11.5C2 12.0523 2.44772 12.5 3 12.5Z" />
   </g>
     <text x="388" y="292" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="28" font-weight="700" fill="#8B5CF6">ToolContext</text>
-    <text x="388" y="348" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" fill="#F8FAFC">运行时封</text>
+    <text x="388" y="348" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" fill="#F8FAFC">运行时封装</text>
     <text x="388" y="392" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">db session</text>
     <text x="388" y="430" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">user / role / session</text>
     <text x="377.88" y="497.108" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#F59E0B">收益：依赖传递标准化</text>
@@ -44,8 +44,8 @@
     <text x="680" y="292" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="28" font-weight="700" fill="#F59E0B">Registry</text>
     <text x="680" y="348" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" fill="#F8FAFC">查表分发</text>
     <text x="680" y="392" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">替代 if / elif</text>
-    <text x="680" y="430" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">新增工具低改</text>
-    <text x="659.759" y="500" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#F59E0B">收益：Executor 不膨胢</text>
+    <text x="680" y="430" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">新增工具低改动</text>
+    <text x="659.759" y="500" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#F59E0B">收益：Executor 不膨胀</text>
   </g>
   <g id="pillar-planstep">
     <path fill="#111827" stroke="#22C55E" d="M952,180 H1200 A6,6 0 0 1 1206,186 V564 A6,6 0 0 1 1200,570 H952 A6,6 0 0 1 946,564 V186 A6,6 0 0 1 952,180 Z" />
@@ -56,12 +56,12 @@
     <path d="M9 4.5C9 3.67157 9.67157 3 10.5 3C11.3284 3 12 3.67157 12 4.5V9H14V4.5C14 2.567 12.433 1 10.5 1C8.567 1 7 2.567 7 4.5V11.5C7 12.3284 6.32843 13 5.5 13C4.67157 13 4 12.3284 4 11.5V7H2V11.5C2 13.433 3.567 15 5.5 15C7.433 15 9 13.433 9 11.5V4.5Z" />
   </g>
     <text x="972" y="292" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="28" font-weight="700" fill="#22C55E">PlanStep</text>
-    <text x="972" y="348" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" fill="#F8FAFC">链式传</text>
+    <text x="972" y="348" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" fill="#F8FAFC">链式传值</text>
     <text x="972" y="392" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">params</text>
     <text x="972" y="430" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">inputs_from</text>
     <text x="961.88" y="500" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#F59E0B">收益：跨工具协作可控</text>
   </g>
   <g id="takeaway">
-    <text x="640" y="646" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="34" font-weight="700" fill="#F59E0B">统一底座让加工具”变成注册新能力，不是重写执行器</text>
+    <text x="640" y="646" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="34" font-weight="700" fill="#F59E0B">统一底座让“加工具”变成注册新能力，而不是重写执行器</text>
   </g>
 </svg>

@@ -14,7 +14,7 @@
   </g>
   <g id="title-block">
     <text x="74" y="138" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#7DD3FC" letter-spacing="2">AGENT SYSTEM BLUEPRINT · v1.0 MVP -&gt; v2.3</text>
-    <text font-size="82" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" fill="#F8FAFC" font-weight="800" x="72" y="250">学生管理系统</text><text font-size="82" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" fill="#F8FAFC" font-weight="800" x="72" y="342">Agent 子系</text><text font-size="82" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" fill="#7DD3FC" font-weight="800" x="72" y="434">工程化蓝</text><text x="76" y="545" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="34" fill="#B6C2D2">从系统里加一个聊天框”到“落地一套可运营?Agent 工程体系</text>
+    <text fill="#F8FAFC" font-weight="800" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="82" x="72" y="250">学生管理系统</text><text fill="#F8FAFC" font-weight="800" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="82" x="72" y="342">Agent 子系统</text><text fill="#7DD3FC" font-weight="800" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="82" x="72" y="434">工程化蓝图</text><text x="76" y="545" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="34" fill="#B6C2D2">从“系统里加一个聊天框”到“落地一套可运营的 Agent 工程体系”</text>
   </g>
   <g id="proof-tags">
     <path fill="#111827" stroke="#2A3A52" d="M80,596 H238 A6,6 0 0 1 244,602 V636 A6,6 0 0 1 238,642 H80 A6,6 0 0 1 74,636 V602 A6,6 0 0 1 80,596 Z" />
@@ -28,16 +28,16 @@
   <g transform="translate(282, 607) scale(1.5)" fill="#7DD3FC">
     <path fill-rule="evenodd" clip-rule="evenodd" d="M9 0V2H13L16 8.5L13 15H3L0 8.5L3 2H7V0H9ZM4.59794 11.7384L8 12.2618L11.4021 11.7384L11.0979 9.76163L8 10.2382L4.90206 9.76163L4.59794 11.7384ZM7 6.75C7 7.44036 6.44036 8 5.75 8C5.05964 8 4.5 7.44036 4.5 6.75C4.5 6.05964 5.05964 5.5 5.75 5.5C6.44036 5.5 7 6.05964 7 6.75ZM10.25 8C10.9404 8 11.5 7.44036 11.5 6.75C11.5 6.05964 10.9404 5.5 10.25 5.5C9.55964 5.5 9 6.05964 9 6.75C9 7.44036 9.55964 8 10.25 8Z" />
   </g>
-    <text x="316" y="626" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="18" fill="#F8FAFC">8个工具链</text>
+    <text x="316" y="626" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="18" fill="#F8FAFC">8个业务工具</text>
     <path fill="#111827" stroke="#2A3A52" d="M460,596 H638 A6,6 0 0 1 644,602 V636 A6,6 0 0 1 638,642 H460 A6,6 0 0 1 454,636 V602 A6,6 0 0 1 460,596 Z" />
     
   <g transform="translate(472, 607) scale(1.5)" fill="#F59E0B">
     <path d="M1 1V15H15V13H3V1H1Z" />
     <path d="M5 7L7 5L10 8L15 3V11H5V7Z" />
   </g>
-    <text x="506" y="626" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="18" fill="#F8FAFC">可观测运</text>
+    <text x="506" y="626" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="18" fill="#F8FAFC">可观测运营</text>
   </g>
   <g id="footer">
-    <text x="74" y="684" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="16" fill="#7F8EA3">Source: Agent系统介绍演讲?html.md + Agent系统验收说明文档.md</text>
+    <text x="74" y="684" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="16" fill="#7F8EA3">Source: Agent系统介绍演讲稿.html.md + Agent系统验收说明文档.md</text>
   </g>
 </svg>

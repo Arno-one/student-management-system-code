@@ -5,8 +5,8 @@
     <path d="M0 120H1280 M0 240H1280 M0 360H1280 M0 480H1280 M0 600H1280 M160 0V720 M320 0V720 M480 0V720 M640 0V720 M800 0V720 M960 0V720 M1120 0V720" stroke="#1C2A3D" stroke-width="1" fill="none" stroke-dasharray="2,10" />
   </g>
   <g id="header">
-    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">核心交付已经升级为工程能力矩</text>
-    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">能力、协议治理回归四类资产共同证明：这不是单点功能</text>
+    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">核心交付已经升级为工程能力矩阵</text>
+    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">能力、协议、治理、回归四类资产共同证明：这不是单点功能</text>
   </g>
   <g id="kpi-intents">
     <rect x="64" y="154" width="260" height="176" rx="6" fill="#111827" stroke="#2A3A52" stroke-width="1.5" />
@@ -34,12 +34,12 @@
     <use data-icon="chunk-filled/table" x="960.892" y="170.771" width="34" height="34" fill="#22C55E" />
     <text x="958" y="272" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="76" font-weight="800" fill="#22C55E">3</text>
     <text x="1028" y="270" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" fill="#F8FAFC" />
-    <text x="958" y="308" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" fill="#B6C2D2">结构化卡</text>
+    <text x="958" y="308" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" fill="#B6C2D2">结构化卡片</text>
   </g>
   <g id="proof-row">
     <rect x="64" y="372" width="1130" height="166" rx="6" fill="#111827" stroke="#2A3A52" stroke-width="1.5" />
     <text x="96" y="426" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="34" font-weight="800" fill="#F8FAFC">验收证据</text>
-    <text x="68.531" y="481.783" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" fill="#B6C2D2" id="_edit_26" data-edit-target="true" data-edit-annotation="调整大小：文本超出内容框范围了">21 项验收条目全部过 · 36 份测试文档沉淢 · 172/172 UI 静检查过 · Playwright 4/4 回归通过</text>
+    <text x="68.531" y="481.783" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" fill="#B6C2D2" id="_edit_26" data-edit-target="true" data-edit-annotation="调整大小：文本超出内容框范围了">21 项验收条目全部通过 · 36 份测试文档沉淀 · 172/172 UI 静态检查通过 · Playwright 4/4 回归通过</text>
     <line x1="96" y1="506" x2="1162" y2="506" stroke="#2A3A52" stroke-width="1" />
     <text x="96" y="558" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="22" fill="#7DD3FC">Capability = Intents + Tools + Personas + Cards + Governance + Regression</text>
   </g>

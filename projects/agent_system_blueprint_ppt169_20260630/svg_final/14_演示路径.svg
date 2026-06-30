@@ -11,8 +11,8 @@
     <path d="M640 148V620" stroke="#2A3A52" stroke-width="3" marker-end="url(#routeArrow)" />
   </g>
   <g id="header">
-    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">现场演示应先给用户体验，再揭示后台治</text>
-    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">朢顺的演示路径是先看用户侧，再看运营侧，最后回到架构价值</text>
+    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">现场演示应先给用户体验，再揭示后台治理</text>
+    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">最顺的演示路径是先看用户侧，再看运营侧，最后回到架构价值</text>
   </g>
   <g id="roadmap-step-1">
     <circle cx="640" cy="176" r="26" fill="#7DD3FC" />
@@ -23,7 +23,7 @@
     <path fill-rule="evenodd" clip-rule="evenodd" d="M9 0V2H13L16 8.5L13 15H3L0 8.5L3 2H7V0H9ZM4.59794 11.7384L8 12.2618L11.4021 11.7384L11.0979 9.76163L8 10.2382L4.90206 9.76163L4.59794 11.7384ZM7 6.75C7 7.44036 6.44036 8 5.75 8C5.05964 8 4.5 7.44036 4.5 6.75C4.5 6.05964 5.05964 5.5 5.75 5.5C6.44036 5.5 7 6.05964 7 6.75ZM10.25 8C10.9404 8 11.5 7.44036 11.5 6.75C11.5 6.05964 10.9404 5.5 10.25 5.5C9.55964 5.5 9 6.05964 9 6.75C9 7.44036 9.55964 8 10.25 8Z" />
   </g>
     <text x="178" y="188" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">先讲目标</text>
-    <text x="178" y="220" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">不是聊天框，?Agent 工程体系</text>
+    <text x="178" y="220" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">不是聊天框，是 Agent 工程体系</text>
   </g>
   <g id="roadmap-step-2">
     <circle cx="640" cy="292" r="26" fill="#8B5CF6" />
@@ -36,8 +36,8 @@
     <path d="M13 8H10V15H16V11C16 9.34315 14.6569 8 13 8Z" />
     <path d="M12 6C13.1046 6 14 5.10457 14 4C14 2.89543 13.1046 2 12 2C10.8954 2 10 2.89543 10 4C10 5.10457 10.8954 6 12 6Z" />
   </g>
-    <text x="820" y="304" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">展示用户</text>
-    <text x="796.868" y="348.12" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">主对话页、Persona、结构化卡片、快捷工</text>
+    <text x="820" y="304" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">展示用户侧</text>
+    <text x="796.868" y="348.12" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">主对话页、Persona、结构化卡片、快捷工具</text>
   </g>
   <g id="roadmap-step-3">
     <circle cx="640" cy="426" r="26" fill="#F59E0B" />
@@ -49,7 +49,7 @@
     <path d="M5 7L7 5L10 8L15 3V11H5V7Z" />
   </g>
     <text x="178" y="438" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">再看运营</text>
-    <text x="178" y="472" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">反馈闭环、监控面板任务详情MCP 健康</text>
+    <text x="178" y="472" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">反馈闭环、监控面板、任务详情、MCP 健康</text>
   </g>
   <g id="roadmap-step-4">
     <circle cx="640" cy="560" r="26" fill="#22C55E" />
@@ -61,10 +61,10 @@
     <path d="M8 16L1 13V11L8 14L15 11V13L8 16Z" />
     <path d="M1 9L8 12L15 9V7L8 10L1 7V9Z" />
   </g>
-    <text x="820" y="572" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">回到架构价</text>
+    <text x="820" y="572" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">回到架构价值</text>
     <text x="820" y="606" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2" id="_edit_30" data-edit-target="true" data-edit-annotation="调整大小：文本超出范围">Planner、BaseTool、HITL、Supervisor 说明为什么可持续</text>
   </g>
   <g id="takeaway">
-    <text x="640" y="674" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="16" fill="#7F8EA3">P14 ?roadmap vertical adaptation ?建议演示节奏：体验先行治理随后架构收</text>
+    <text x="640" y="674" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="16" fill="#7F8EA3">P14 · roadmap vertical adaptation · 建议演示节奏：体验先行、治理随后、架构收口</text>
   </g>
 </svg>

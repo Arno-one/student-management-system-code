@@ -13,14 +13,14 @@
     <path d="M72 104H1190 M72 616H1190 M104 72V648 M1176 72V648" stroke="#1C2A3D" stroke-width="1" stroke-dasharray="8,4" />
   </g>
   <g id="main-title">
-    <text x="76" y="110" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">朢小闭环已经闭上，下一步重点是治理复杂</text>
+    <text x="76" y="110" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">最小闭环已经闭上，下一步重点是治理复杂度</text>
     <text x="78" y="158" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">后续优化不应只横向加功能，应提升能力治理、冷启动、观测和回归效率</text>
   </g>
   <g id="governance-formula">
     <text x="82" y="284" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="34" font-weight="800" fill="#7DD3FC" id="_edit_10" data-edit-target="true" data-edit-annotation="调整大小：文本超出范围">G_agent = Catalog + Startup + Observe + Regression</text>
     <path d="M84 316H958" stroke="#7DD3FC" stroke-width="2" stroke-dasharray="8,4" />
     <text x="84" y="374" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="34" font-weight="800" fill="#F59E0B">治理的目标不是让功能更多，是让复杂度可被管理</text>
-    <text font-size="22" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" fill="#B6C2D2" x="84" y="426">当前系统已经把能力协议体验和观测收口</text><text font-size="22" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" fill="#B6C2D2" x="84" y="462">下一步要让能力目录卡片协议测试数据和监控面板继续沉淀成长期资产</text></g>
+    <text fill="#B6C2D2" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" x="84" y="426">当前系统已经把能力、协议、体验和观测收口</text><text fill="#B6C2D2" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" x="84" y="462">下一步要让能力目录、卡片协议、测试数据和监控面板继续沉淀成长期资产</text></g>
   <g id="next-roadmap">
     <path d="M94 548H1066" stroke="#2A3A52" stroke-width="3" />
     <circle cx="142" cy="548" r="16" fill="#7DD3FC" />
@@ -39,10 +39,10 @@
     <path d="M9 7L10 0H8L2 7V9H7L6 16H8L14 9L14 7H9Z" />
   </g>
     <text x="1093" y="350" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="800" fill="#F8FAFC">下一阶段</text>
-    <text x="1093" y="392" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">从定位问</text>
+    <text x="1093" y="392" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">从定位问题</text>
     <text x="1093" y="424" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">走向辅助决策</text>
   </g>
   <g id="footer">
-    <text x="76" y="676" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="16" fill="#7F8EA3">P15 ?breathing page ?Formula + roadmap split</text>
+    <text x="76" y="676" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="16" fill="#7F8EA3">P15 · breathing page · Formula + roadmap split</text>
   </g>
 </svg>
