@@ -17,50 +17,32 @@
   <g id="roadmap-step-1">
     <circle cx="640" cy="176" r="26" fill="#7DD3FC" />
     <text x="640" y="185" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="24" font-weight="800" fill="#05070D">01</text>
-    <path fill="#111827" stroke="#2A3A52" d="M110,144 H528 A6,6 0 0 1 534,150 V232 A6,6 0 0 1 528,238 H110 A6,6 0 0 1 104,232 V150 A6,6 0 0 1 110,144 Z" />
-    
-  <g transform="translate(130, 172) scale(2.125)" fill="#7DD3FC">
-    <path fill-rule="evenodd" clip-rule="evenodd" d="M9 0V2H13L16 8.5L13 15H3L0 8.5L3 2H7V0H9ZM4.59794 11.7384L8 12.2618L11.4021 11.7384L11.0979 9.76163L8 10.2382L4.90206 9.76163L4.59794 11.7384ZM7 6.75C7 7.44036 6.44036 8 5.75 8C5.05964 8 4.5 7.44036 4.5 6.75C4.5 6.05964 5.05964 5.5 5.75 5.5C6.44036 5.5 7 6.05964 7 6.75ZM10.25 8C10.9404 8 11.5 7.44036 11.5 6.75C11.5 6.05964 10.9404 5.5 10.25 5.5C9.55964 5.5 9 6.05964 9 6.75C9 7.44036 9.55964 8 10.25 8Z" />
-  </g>
+    <rect x="104" y="144" width="430" height="94" rx="6" fill="#111827" stroke="#2A3A52" />
+    <use data-icon="chunk-filled/robot" x="130" y="172" width="34" height="34" fill="#7DD3FC" />
     <text x="178" y="188" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">先讲目标</text>
     <text x="178" y="220" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">不是聊天框，?Agent 工程体系</text>
   </g>
   <g id="roadmap-step-2">
     <circle cx="640" cy="292" r="26" fill="#8B5CF6" />
     <text x="640" y="301" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="24" font-weight="800" fill="#05070D">02</text>
-    <path fill="#111827" stroke="#2A3A52" d="M752,260 H1170 A6,6 0 0 1 1176,266 V370 A6,6 0 0 1 1170,376 H752 A6,6 0 0 1 746,370 V266 A6,6 0 0 1 752,260 Z" />
-    
-  <g transform="translate(772, 288) scale(2.125)" fill="#8B5CF6">
-    <path d="M8 3.5C8 4.88071 6.88071 6 5.5 6C4.11929 6 3 4.88071 3 3.5C3 2.11929 4.11929 1 5.5 1C6.88071 1 8 2.11929 8 3.5Z" />
-    <path d="M3 8C1.34315 8 0 9.34315 0 11V15H8V8H3Z" />
-    <path d="M13 8H10V15H16V11C16 9.34315 14.6569 8 13 8Z" />
-    <path d="M12 6C13.1046 6 14 5.10457 14 4C14 2.89543 13.1046 2 12 2C10.8954 2 10 2.89543 10 4C10 5.10457 10.8954 6 12 6Z" />
-  </g>
+    <rect x="746" y="260" width="430" height="116" rx="6" fill="#111827" stroke="#2A3A52" />
+    <use data-icon="chunk-filled/users" x="772" y="288" width="34" height="34" fill="#8B5CF6" />
     <text x="820" y="304" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">展示用户</text>
     <text x="796.868" y="348.12" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">主对话页、Persona、结构化卡片、快捷工</text>
   </g>
   <g id="roadmap-step-3">
     <circle cx="640" cy="426" r="26" fill="#F59E0B" />
     <text x="640" y="435" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="24" font-weight="800" fill="#05070D">03</text>
-    <path fill="#111827" stroke="#2A3A52" d="M110,394 H528 A6,6 0 0 1 534,400 V504 A6,6 0 0 1 528,510 H110 A6,6 0 0 1 104,504 V400 A6,6 0 0 1 110,394 Z" />
-    
-  <g transform="translate(130, 422) scale(2.125)" fill="#F59E0B">
-    <path d="M1 1V15H15V13H3V1H1Z" />
-    <path d="M5 7L7 5L10 8L15 3V11H5V7Z" />
-  </g>
+    <rect x="104" y="394" width="430" height="116" rx="6" fill="#111827" stroke="#2A3A52" />
+    <use data-icon="chunk-filled/chart-line" x="130" y="422" width="34" height="34" fill="#F59E0B" />
     <text x="178" y="438" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">再看运营</text>
     <text x="178" y="472" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">反馈闭环、监控面板任务详情MCP 健康</text>
   </g>
   <g id="roadmap-step-4">
     <circle cx="640" cy="560" r="26" fill="#22C55E" />
     <text x="640" y="569" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="24" font-weight="800" fill="#05070D">04</text>
-    <path fill="#111827" stroke="#2A3A52" d="M752,528 H1170 A6,6 0 0 1 1176,534 V638 A6,6 0 0 1 1170,644 H752 A6,6 0 0 1 746,638 V534 A6,6 0 0 1 752,528 Z" />
-    
-  <g transform="translate(772, 556) scale(2.125)" fill="#22C55E">
-    <path d="M1 5V3L8 0L15 3V5L8 8L1 5Z" />
-    <path d="M8 16L1 13V11L8 14L15 11V13L8 16Z" />
-    <path d="M1 9L8 12L15 9V7L8 10L1 7V9Z" />
-  </g>
+    <rect x="746" y="528" width="430" height="116" rx="6" fill="#111827" stroke="#2A3A52" />
+    <use data-icon="chunk-filled/layers" x="772" y="556" width="34" height="34" fill="#22C55E" />
     <text x="820" y="572" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">回到架构价</text>
     <text x="820" y="606" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2" id="_edit_30" data-edit-target="true" data-edit-annotation="调整大小：文本超出范围">Planner、BaseTool、HITL、Supervisor 说明为什么可持续</text>
   </g>

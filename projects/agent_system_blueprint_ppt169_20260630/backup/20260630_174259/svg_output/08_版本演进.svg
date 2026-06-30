@@ -40,7 +40,7 @@
     <text x="1160" y="468" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">周边 / Supervisor</text>
   </g>
   <g id="takeaway">
-    <path fill="#111827" stroke="#2A3A52" d="M256,585 H1024 A6,6 0 0 1 1030,591 V643 A6,6 0 0 1 1024,649 H256 A6,6 0 0 1 250,643 V591 A6,6 0 0 1 256,585 Z" />
+    <rect x="250" y="585" width="780" height="64" rx="6" fill="#111827" stroke="#2A3A52" />
     <text x="640" y="626" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="700" fill="#F59E0B" id="_edit_26" data-edit-target="true" data-edit-annotation="调整大小：文本超出范围">主线：先跑闭环，再统丢底座，最后把能力收口为可运营系统</text>
   </g>
 </svg>

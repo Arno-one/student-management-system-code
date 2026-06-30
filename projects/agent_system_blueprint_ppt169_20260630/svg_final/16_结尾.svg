@@ -14,7 +14,7 @@
   </g>
   <g id="closing-title">
     <text x="80" y="156" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#7DD3FC" letter-spacing="2">FINAL TAKEAWAY ?FROM DEMO TO ENGINEERING SYSTEM</text>
-    <text fill="#F8FAFC" font-size="60" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-weight="800" x="78" y="278">我们做的不是丢个会聊天的功能，</text><text fill="#7DD3FC" font-size="60" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-weight="800" x="78" y="354">而是丢套能长期运行?Agent 子系统</text></g>
+    <text font-size="60" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" fill="#F8FAFC" font-weight="800" x="78" y="278">我们做的不是丢个会聊天的功能，</text><text font-size="60" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" fill="#7DD3FC" font-weight="800" x="78" y="354">而是丢套能长期运行?Agent 子系统</text></g>
   <g id="closing-proof-line">
     <path d="M84 430H1000" stroke="#7DD3FC" stroke-width="2" />
     <circle cx="124" cy="430" r="10" fill="#22C55E" />

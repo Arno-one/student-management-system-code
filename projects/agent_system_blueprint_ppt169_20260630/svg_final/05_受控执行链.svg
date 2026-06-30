@@ -41,7 +41,7 @@
   </g>
   <g id="step-persona">
     <path fill="#111827" stroke="#8B5CF6" d="M1006,410 H1184 A6,6 0 0 1 1190,416 V522 A6,6 0 0 1 1184,528 H1006 A6,6 0 0 1 1000,522 V416 A6,6 0 0 1 1006,410 Z" />
-    <text x="1024" y="450" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" font-weight="700" fill="#F8FAFC">Persona 回复</text>
+    <text x="1013.88" y="451.446" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" font-weight="700" fill="#F8FAFC">Persona 回复</text>
     <text x="1024" y="488" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">只影响么</text>
     <path d="M1015 354V398" stroke="#8B5CF6" stroke-width="2" fill="none" marker-end="url(#arrowHead)" />
   </g>

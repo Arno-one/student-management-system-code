@@ -14,7 +14,7 @@
   </g>
   <g id="title-block">
     <text x="74" y="138" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#7DD3FC" letter-spacing="2">AGENT SYSTEM BLUEPRINT · v1.0 MVP -&gt; v2.3</text>
-    <text fill="#F8FAFC" font-size="82" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-weight="800" x="72" y="250">学生管理系统</text><text fill="#F8FAFC" font-size="82" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-weight="800" x="72" y="342">Agent 子系</text><text fill="#7DD3FC" font-size="82" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-weight="800" x="72" y="434">工程化蓝</text><text x="76" y="545" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="34" fill="#B6C2D2">从系统里加一个聊天框”到“落地一套可运营?Agent 工程体系</text>
+    <text font-size="82" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" fill="#F8FAFC" font-weight="800" x="72" y="250">学生管理系统</text><text font-size="82" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" fill="#F8FAFC" font-weight="800" x="72" y="342">Agent 子系</text><text font-size="82" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" fill="#7DD3FC" font-weight="800" x="72" y="434">工程化蓝</text><text x="76" y="545" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="34" fill="#B6C2D2">从系统里加一个聊天框”到“落地一套可运营?Agent 工程体系</text>
   </g>
   <g id="proof-tags">
     <path fill="#111827" stroke="#2A3A52" d="M80,596 H238 A6,6 0 0 1 244,602 V636 A6,6 0 0 1 238,642 H80 A6,6 0 0 1 74,636 V602 A6,6 0 0 1 80,596 Z" />

@@ -17,10 +17,10 @@
     <text x="78" y="158" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">后续优化不应只横向加功能，应提升能力治理、冷启动、观测和回归效率</text>
   </g>
   <g id="governance-formula">
-    <text x="82" y="284" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="34" font-weight="800" fill="#7DD3FC">G_agent = Catalog + Startup + Observe + Regression</text>
+    <text x="82" y="284" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="34" font-weight="800" fill="#7DD3FC" id="_edit_10" data-edit-target="true" data-edit-annotation="调整大小：文本超出范围">G_agent = Catalog + Startup + Observe + Regression</text>
     <path d="M84 316H958" stroke="#7DD3FC" stroke-width="2" stroke-dasharray="8,4" />
     <text x="84" y="374" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="34" font-weight="800" fill="#F59E0B">治理的目标不是让功能更多，是让复杂度可被管理</text>
-    <text fill="#B6C2D2" font-size="22" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" x="84" y="426">当前系统已经把能力协议体验和观测收口</text><text fill="#B6C2D2" font-size="22" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" x="84" y="462">下一步要让能力目录卡片协议测试数据和监控面板继续沉淀成长期资产</text></g>
+    <text font-size="22" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" fill="#B6C2D2" x="84" y="426">当前系统已经把能力协议体验和观测收口</text><text font-size="22" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" fill="#B6C2D2" x="84" y="462">下一步要让能力目录卡片协议测试数据和监控面板继续沉淀成长期资产</text></g>
   <g id="next-roadmap">
     <path d="M94 548H1066" stroke="#2A3A52" stroke-width="3" />
     <circle cx="142" cy="548" r="16" fill="#7DD3FC" />

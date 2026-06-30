@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <g id="background">
+    <rect width="1280" height="720" fill="#05070D" />
+    <path d="M56 150H1224 M56 270H1224 M56 390H1224 M56 510H1224 M56 630H1224" stroke="#1C2A3D" stroke-width="1" stroke-dasharray="8,4" />
+    <path d="M80 44V676 M320 44V676 M560 44V676 M800 44V676 M1040 44V676 M1200 44V676" stroke="#1C2A3D" stroke-width="1" stroke-opacity="0.45" />
+  </g>
+  <g id="header">
+    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">非功能验收证明它不是丢次?Demo</text>
+    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">稳定性可维护性可扩展性安全和用户体验都有对应工程抓手</text>
+  </g>
+  <g id="pillar-stability">
+    <rect x="58" y="160" width="214" height="418" rx="6" fill="#111827" stroke="#2A3A52" />
+    <rect x="58" y="160" width="214" height="12" fill="#7DD3FC" />
+    <use data-icon="chunk-filled/server" x="82" y="194" width="46" height="46" fill="#7DD3FC" />
+    <text x="82" y="278" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="800" fill="#F8FAFC">稳定</text>
+    <text x="82" y="326" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">
+      <tspan x="82" dy="0">独立子系统边</tspan>
+      <tspan x="82" dy="34">MCP 不可用回逢</tspan>
+      <tspan x="82" dy="34">输入异常前置拦截</tspan>
+      <tspan x="82" dy="34">工具链降级策</tspan>
+    </text>
+    <text x="82" y="528" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#7DD3FC">NFR-01 PASS</text>
+  </g>
+  <g id="pillar-maintainability">
+    <rect x="296" y="160" width="214" height="418" rx="6" fill="#111827" stroke="#2A3A52" />
+    <rect x="296" y="160" width="214" height="12" fill="#8B5CF6" />
+    <use data-icon="chunk-filled/layers" x="320" y="194" width="46" height="46" fill="#8B5CF6" />
+    <text x="320" y="278" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="800" fill="#F8FAFC">可维护</text>
+    <text x="320" y="326" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">
+      <tspan x="320" dy="0">分层目录结构</tspan>
+      <tspan x="320" dy="34">独立数据模型</tspan>
+      <tspan x="320" dy="34">工具逻辑收敛</tspan>
+      <tspan x="320" dy="34">协议单独沉淀</tspan>
+    </text>
+    <text x="320" y="528" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#8B5CF6">NFR-02 PASS</text>
+  </g>
+  <g id="pillar-extensibility">
+    <rect x="534" y="160" width="214" height="418" rx="6" fill="#111827" stroke="#2A3A52" />
+    <rect x="534" y="160" width="214" height="12" fill="#F59E0B" />
+    <use data-icon="chunk-filled/code-block" x="558" y="194" width="46" height="46" fill="#F59E0B" />
+    <text x="558" y="278" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="800" fill="#F8FAFC">可扩展</text>
+    <text x="558" y="326" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">
+      <tspan x="558" dy="0">BaseTool 契约</tspan>
+      <tspan x="558" dy="34">Persona 注册</tspan>
+      <tspan x="558" dy="34">卡片协议版本</tspan>
+      <tspan x="558" dy="34">知识库可扩域</tspan>
+    </text>
+    <text x="558" y="528" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#F59E0B">NFR-03 PASS</text>
+  </g>
+  <g id="pillar-security">
+    <rect x="772" y="160" width="214" height="418" rx="6" fill="#111827" stroke="#2A3A52" />
+    <rect x="772" y="160" width="214" height="12" fill="#22C55E" />
+    <use data-icon="chunk-filled/shield-check" x="796" y="194" width="46" height="46" fill="#22C55E" />
+    <text x="796" y="278" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="800" fill="#F8FAFC">安全</text>
+    <text x="796" y="326" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">
+      <tspan x="796" dy="0">权限映射约束</tspan>
+      <tspan x="796" dy="34">输入安全棢</tspan>
+      <tspan x="796" dy="34">邮件白名</tspan>
+      <tspan x="796" dy="34">HITL 人工确认</tspan>
+    </text>
+    <text x="796" y="528" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#22C55E">NFR-04 PASS</text>
+  </g>
+  <g id="pillar-experience">
+    <rect x="1010" y="160" width="214" height="418" rx="6" fill="#111827" stroke="#2A3A52" />
+    <rect x="1010" y="160" width="214" height="12" fill="#7DD3FC" />
+    <use data-icon="chunk-filled/users" x="1034" y="194" width="46" height="46" fill="#7DD3FC" />
+    <text x="1034" y="278" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="800" fill="#F8FAFC">用户体验</text>
+    <text x="1034" y="326" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">
+      <tspan x="1034" dy="0">SSE 流式回复</tspan>
+      <tspan x="1034" dy="34">全局 Agent 入口</tspan>
+      <tspan x="1034" dy="34">结构化卡</tspan>
+      <tspan x="1034" dy="34">反馈与历史摘</tspan>
+    </text>
+    <text x="1034" y="528" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#7DD3FC">NFR-05 PASS</text>
+  </g>
+  <g id="takeaway">
+    <rect x="156" y="608" width="968" height="54" rx="6" fill="#111827" stroke="#2A3A52" />
+    <text x="640" y="643" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="800" fill="#F59E0B" id="_edit_56" data-edit-target="true" data-edit-annotation="调整大小：文本超出范围">非功能验收的意义：证明系统可以长期运行持续扩展被治理和被回归</text>
+  </g>
+  <g id="footer">
+    <text x="56" y="676" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="16" fill="#7F8EA3">P10 ?vertical pillars adaptation ?Source: Agent 系统验收说明文档</text>
+  </g>
+</svg>
