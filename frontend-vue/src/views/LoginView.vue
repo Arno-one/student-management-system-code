@@ -1,9 +1,45 @@
 <template>
   <section class="login-page">
-    <!-- 登录页左侧品牌文案，对应草图中的两行文字，并跟随深浅主题自动换色。 -->
+    <!-- Aurora 背景装饰只负责视觉氛围，不参与登录交互。 -->
+    <div class="login-aurora-field" aria-hidden="true">
+      <span class="login-aurora-band login-aurora-band-a"></span>
+      <span class="login-aurora-band login-aurora-band-b"></span>
+      <span class="login-aurora-orbit"></span>
+      <span class="login-aurora-stream"></span>
+    </div>
+
+    <!-- 登录页左侧品牌文案，颜色跟随深浅主题自动换色。 -->
     <div class="login-hero-copy">
       <strong class="login-hero-title">学生智能管理系统</strong>
       <span class="login-hero-subtitle">让AI与你一起</span>
+    </div>
+
+    <!-- 左侧洞察面板用于填充登录页留白，展示系统的数据工作台气质。 -->
+    <div class="login-left-console" aria-hidden="true">
+      <div class="login-console-head">
+        <span>AI STUDENT GRAPH</span>
+        <i></i>
+      </div>
+      <div class="login-console-map">
+        <span class="login-node login-node-a"></span>
+        <span class="login-node login-node-b"></span>
+        <span class="login-node login-node-c"></span>
+        <span class="login-node login-node-d"></span>
+      </div>
+      <div class="login-console-metrics">
+        <div>
+          <span>学情同步</span>
+          <strong>24h</strong>
+        </div>
+        <div>
+          <span>智能预警</span>
+          <strong>18</strong>
+        </div>
+        <div>
+          <span>画像完整</span>
+          <strong>96%</strong>
+        </div>
+      </div>
     </div>
 
     <div class="login-shell card">

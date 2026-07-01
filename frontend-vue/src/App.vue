@@ -40,7 +40,7 @@
       :aria-label="theme === 'light' ? '切换到深色主题' : '切换到浅色主题'"
       @click="toggleTheme"
     >
-      <span class="public-theme-switch__icon" aria-hidden="true">{{ theme === 'light' ? '☀' : '☾' }}</span>
+      <span class="public-theme-switch__icon" aria-hidden="true">{{ theme === 'light' ? '🌞' : '🌙' }}</span>
       <span class="public-theme-switch__text">{{ theme === 'light' ? '浅色主题' : '深色主题' }}</span>
     </button>
 
@@ -49,7 +49,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import Sidebar from './components/Sidebar.vue'
 import TopBar from './components/TopBar.vue'
@@ -68,6 +68,83 @@ const currentPage = computed(() => route.name || 'student')
 const pageTitle = computed(() => route.meta?.title || '学生信息管理系统')
 const themeClass = computed(() => `theme-${theme.value}`)
 const isPublicPage = computed(() => !!route.meta?.public)
+let spotlightObserver = null
+let spotlightFrame = 0
+let activeSpotlightWindow = null
+
+const SPOTLIGHT_WINDOW_SELECTOR = [
+  '.sidebar',
+  '.topbar',
+  '.sub-bar',
+  '.content-shell',
+  '.card',
+  '.login-shell',
+  '.login-left-console',
+  '.table-panel',
+  '.result',
+  '.float-agent-panel',
+  '.talk-layout',
+  '.talk-session-list',
+  '.agent-shell',
+  '.agent-panel',
+  '.agent-hitl-card',
+  '.float-agent-hitl',
+  '.quick-tool-panel',
+  '.image-card'
+].join(', ')
+
+function ensureWindowSpotlights(root = document) {
+  root.querySelectorAll?.(SPOTLIGHT_WINDOW_SELECTOR).forEach(el => {
+    if (!(el instanceof HTMLElement) || el.dataset.spotlightWindow === '1') return
+    el.dataset.spotlightWindow = '1'
+    if (window.getComputedStyle(el).position === 'static') {
+      el.dataset.spotlightPosition = 'static'
+    }
+    el.classList.add('window-spotlight-host')
+
+    const layer = document.createElement('span')
+    layer.className = 'window-spotlight'
+    layer.setAttribute('aria-hidden', 'true')
+    el.appendChild(layer)
+  })
+}
+
+function setActiveSpotlightWindow(el) {
+  if (activeSpotlightWindow === el) return
+  activeSpotlightWindow?.classList.remove('window-spotlight-active')
+  activeSpotlightWindow = el
+  activeSpotlightWindow?.classList.add('window-spotlight-active')
+}
+
+function clearActiveSpotlightWindow() {
+  activeSpotlightWindow?.classList.remove('window-spotlight-active')
+  activeSpotlightWindow = null
+}
+
+function syncSpotlightPointer(event) {
+  const target = event.target instanceof Element
+    ? event.target.closest('[data-spotlight-window="1"]')
+    : null
+
+  if (!(target instanceof HTMLElement)) {
+    clearActiveSpotlightWindow()
+    return
+  }
+
+  setActiveSpotlightWindow(target)
+  if (spotlightFrame) cancelAnimationFrame(spotlightFrame)
+
+  // 只更新当前窗口的局部坐标，避免鼠标移动时触发整页窗口一起重绘。
+  spotlightFrame = requestAnimationFrame(() => {
+    const rect = target.getBoundingClientRect()
+    const localX = Math.max(0, Math.min(event.clientX - rect.left, rect.width))
+    const localY = Math.max(0, Math.min(event.clientY - rect.top, rect.height))
+    target.style.setProperty('--spotlight-x', localX.toFixed(2))
+    target.style.setProperty('--spotlight-y', localY.toFixed(2))
+    target.style.setProperty('--spotlight-xp', rect.width ? (localX / rect.width).toFixed(3) : '0')
+    spotlightFrame = 0
+  })
+}
 
 function navigate(page) {
   const target = typeof page === 'string' ? { page } : page
@@ -86,4 +163,29 @@ function toggleTheme() {
   theme.value = theme.value === 'light' ? 'dark' : 'light'
   localStorage.setItem('workspace-theme', theme.value)
 }
+
+onMounted(() => {
+  if (typeof document === 'undefined') return
+  ensureWindowSpotlights()
+  spotlightObserver = new MutationObserver(mutations => {
+    mutations.forEach(mutation => {
+      mutation.addedNodes.forEach(node => {
+        if (node instanceof HTMLElement) {
+          ensureWindowSpotlights(node.matches?.(SPOTLIGHT_WINDOW_SELECTOR) ? node.parentElement || document : node)
+        }
+      })
+    })
+  })
+  spotlightObserver.observe(document.body, { childList: true, subtree: true })
+  window.addEventListener('pointermove', syncSpotlightPointer, { passive: true })
+  window.addEventListener('pointerleave', clearActiveSpotlightWindow, { passive: true })
+})
+
+onUnmounted(() => {
+  spotlightObserver?.disconnect()
+  window.removeEventListener('pointermove', syncSpotlightPointer)
+  window.removeEventListener('pointerleave', clearActiveSpotlightWindow)
+  if (spotlightFrame) cancelAnimationFrame(spotlightFrame)
+  clearActiveSpotlightWindow()
+})
 </script>

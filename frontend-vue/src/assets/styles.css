@@ -938,8 +938,8 @@ input[type='file']::file-selector-button:hover {
   position: sticky;
   top: 16px;
   z-index: 3;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(510px, 572px);
   align-items: center;
   gap: 18px;
   padding: 14px 18px;
@@ -1043,10 +1043,13 @@ input[type='file']::file-selector-button:hover {
 }
 
 .topbar-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: 136px 42px 42px minmax(280px, 1fr);
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
+  width: 100%;
+  min-width: 0;
 }
 
 .topbar-user {
@@ -1054,17 +1057,27 @@ input[type='file']::file-selector-button:hover {
   flex-direction: column;
   align-items: flex-end;
   gap: 2px;
-  min-width: 110px;
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
 }
 
 .topbar-user strong {
+  max-width: 100%;
+  overflow: hidden;
   color: var(--text);
   font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .topbar-user small {
+  max-width: 100%;
+  overflow: hidden;
   color: var(--text-muted);
   font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .theme-toggle {
@@ -1093,6 +1106,8 @@ input[type='file']::file-selector-button:hover {
 
 .theme-toggle-icon {
   display: block;
+  font-size: 20px;
+  line-height: 1;
   transform: translateY(-1px);
 }
 
@@ -1100,7 +1115,8 @@ input[type='file']::file-selector-button:hover {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  min-width: 280px;
+  min-width: 0;
+  width: 100%;
 }
 
 .api-box span {
@@ -1262,14 +1278,15 @@ input[type='file']::file-selector-button:hover {
 }
 
 .public-theme-switch__icon {
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background: currentColor;
-  color: var(--gold-2);
-  font-size: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 20px;
+  line-height: 1;
 }
 
 .public-theme-switch__text {
@@ -2718,13 +2735,14 @@ tbody tr:last-child td { border-bottom: 0; }
   }
 
   .topbar {
-    flex-direction: column;
+    grid-template-columns: 1fr;
     align-items: stretch;
     padding: 14px 16px;
   }
 
   .topbar-actions {
     width: 100%;
+    grid-template-columns: minmax(96px, 1fr) 42px 42px minmax(180px, 1.4fr);
     align-items: stretch;
   }
 
@@ -3792,25 +3810,19 @@ tbody tr:last-child td { border-bottom: 0; }
 .app-layout.theme-dark .topbar {
   position: sticky;
   overflow: hidden;
+  background:
+    linear-gradient(105deg, transparent 0 15%, #ff5f1f 16% 78%, #ffb000 100%) top right / min(420px, 38vw) 44px no-repeat,
+    linear-gradient(135deg, rgba(255, 122, 0, 0.08), transparent 30%),
+    linear-gradient(180deg, rgba(20, 20, 20, 0.88), rgba(8, 8, 8, 0.78));
 }
 
-.app-layout.theme-dark .topbar > * {
+.app-layout.theme-dark .topbar > :not(.window-spotlight) {
   position: relative;
   z-index: 1;
 }
 
 .app-layout.theme-dark .topbar::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: -42px;
-  width: min(420px, 38vw);
-  height: 44px;
-  clip-path: polygon(12% 0, 100% 0, 86% 100%, 0 100%);
-  background: linear-gradient(90deg, #ff5f1f, #ffb000);
-  opacity: 0.92;
-  pointer-events: none;
-  z-index: 0;
+  content: none;
 }
 
 .app-layout.theme-dark .title-kicker,
@@ -4411,8 +4423,8 @@ tbody tr:last-child td { border-bottom: 0; }
 }
 
 .app-layout.theme-light .public-theme-switch__icon {
-  background: currentColor;
-  color: var(--blue-2);
+  background: transparent;
+  color: inherit;
 }
 
 .app-layout.theme-light .login-page {
@@ -4500,5 +4512,844 @@ tbody tr:last-child td { border-bottom: 0; }
     z-index: 1;
     width: 9px;
     transform: rotate(12deg);
+  }
+}
+
+/* ===== 登录页 Aurora 重构：参考极光背景，并接入项目深浅主题 ===== */
+
+.login-page {
+  min-height: calc(100vh - 32px);
+  align-items: center;
+  justify-content: flex-end;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--login-aurora-bg);
+}
+
+.login-page::before,
+.login-page::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* 参考 AuroraBackground 的重复斜向光带，用 CSS 实现，避免引入 React/Tailwind 依赖。 */
+.login-page::before {
+  z-index: 0;
+  inset: -18%;
+  background-image:
+    repeating-linear-gradient(
+      100deg,
+      var(--login-aurora-wash) 0%,
+      var(--login-aurora-wash) 7%,
+      transparent 10%,
+      transparent 12%,
+      var(--login-aurora-wash) 16%
+    ),
+    var(--login-aurora-ribbon);
+  background-size: 320% 220%, 220% 160%;
+  background-position: 50% 50%, 50% 50%;
+  filter: blur(12px) saturate(1.16);
+  opacity: var(--login-aurora-opacity);
+  transform: translateZ(0);
+  animation: loginAuroraDrift 46s linear infinite;
+  mask-image: radial-gradient(ellipse at 78% 16%, #000 10%, transparent 72%);
+}
+
+.app-layout.theme-light .login-page::before,
+.app-layout.theme-dark .login-page::before {
+  inset: -18%;
+  width: auto;
+  height: auto;
+  clip-path: none;
+  background-image:
+    repeating-linear-gradient(
+      100deg,
+      var(--login-aurora-wash) 0%,
+      var(--login-aurora-wash) 7%,
+      transparent 10%,
+      transparent 12%,
+      var(--login-aurora-wash) 16%
+    ),
+    var(--login-aurora-ribbon);
+  background-size: 320% 220%, 220% 160%;
+  background-position: 50% 50%, 50% 50%;
+  filter: blur(12px) saturate(1.16);
+  opacity: var(--login-aurora-opacity);
+  transform: translateZ(0);
+  animation: loginAuroraDrift 46s linear infinite;
+  mask-image: radial-gradient(ellipse at 78% 16%, #000 10%, transparent 72%);
+  box-shadow: none;
+}
+
+/* 网格、点阵云和数据流线统一放在背景层，形成项目自己的科技云图气质。 */
+.login-page::after {
+  z-index: 1;
+  background-image:
+    radial-gradient(circle at 16% 24%, var(--login-dot-strong) 0 1px, transparent 2px),
+    radial-gradient(circle at 72% 20%, var(--login-dot-soft) 0 1px, transparent 2px),
+    radial-gradient(circle at 44% 72%, var(--login-dot-soft) 0 1px, transparent 2px),
+    linear-gradient(var(--login-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--login-grid-line) 1px, transparent 1px),
+    linear-gradient(105deg, transparent 0 46%, var(--login-stream-line) 47%, transparent 49% 100%);
+  background-size: 92px 92px, 138px 138px, 72px 72px, 44px 44px, 44px 44px, 100% 100%;
+  opacity: 0.92;
+}
+
+.login-aurora-field {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.login-aurora-band,
+.login-aurora-orbit,
+.login-aurora-stream {
+  position: absolute;
+  pointer-events: none;
+}
+
+.login-aurora-band {
+  height: 92px;
+  border-radius: 999px;
+  background: var(--login-band-gradient);
+  filter: blur(1px);
+  opacity: 0.72;
+  transform-origin: center;
+  box-shadow: var(--login-band-shadow);
+}
+
+.login-aurora-band-a {
+  top: 8%;
+  right: -7%;
+  width: 44vw;
+  transform: rotate(8deg);
+}
+
+.login-aurora-band-b {
+  left: -10%;
+  bottom: 11%;
+  width: 48vw;
+  transform: rotate(-11deg);
+  opacity: 0.42;
+}
+
+.login-aurora-orbit {
+  right: clamp(38px, 7vw, 116px);
+  bottom: clamp(34px, 8vh, 92px);
+  width: min(420px, 34vw);
+  aspect-ratio: 1;
+  border: 1px solid var(--login-orbit-line);
+  border-radius: 50%;
+  background:
+    conic-gradient(from 150deg, transparent 0 18%, var(--login-orbit-arc) 18% 24%, transparent 24% 54%, var(--login-orbit-arc) 54% 60%, transparent 60%),
+    radial-gradient(circle, transparent 0 58%, var(--login-orbit-core) 59%, transparent 61%);
+  opacity: 0.58;
+}
+
+.login-aurora-stream {
+  left: 8%;
+  top: 43%;
+  width: 62vw;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--login-stream-line), transparent);
+  transform: rotate(-7deg);
+  opacity: 0.72;
+}
+
+.login-hero-copy {
+  z-index: 3;
+  top: clamp(116px, 19vh, 172px);
+  max-width: min(660px, 50vw);
+}
+
+.login-shell {
+  z-index: 3;
+  width: min(492px, 100%);
+  min-height: clamp(440px, 57vh, 560px);
+  padding: clamp(28px, 4vw, 40px);
+  border-radius: 32px;
+  backdrop-filter: blur(26px) saturate(1.35);
+}
+
+.login-kicker {
+  color: var(--login-accent);
+}
+
+.login-hint {
+  color: var(--login-muted);
+}
+
+.login-tips {
+  color: var(--login-muted);
+}
+
+.public-theme-switch {
+  z-index: 6;
+  border-width: 3px;
+  background: var(--login-switch-bg);
+  box-shadow: var(--login-switch-shadow);
+}
+
+.public-theme-switch__icon {
+  color: var(--login-accent);
+}
+
+.app-layout.theme-light .login-page {
+  --login-aurora-bg:
+    radial-gradient(circle at 82% 20%, rgba(61, 149, 232, 0.18) 0, transparent 34%),
+    radial-gradient(circle at 12% 70%, rgba(99, 202, 255, 0.12) 0, transparent 36%),
+    linear-gradient(180deg, #ffffff 0%, #f5fbff 44%, #eaf6ff 100%);
+  --login-aurora-wash: rgba(255, 255, 255, 0.88);
+  --login-aurora-ribbon: repeating-linear-gradient(100deg, rgba(22, 119, 210, 0.66) 10%, rgba(99, 202, 255, 0.44) 15%, rgba(197, 236, 255, 0.56) 20%, rgba(61, 149, 232, 0.48) 30%);
+  --login-aurora-opacity: 0.62;
+  --login-dot-strong: rgba(22, 119, 210, 0.22);
+  --login-dot-soft: rgba(93, 196, 255, 0.18);
+  --login-grid-line: rgba(34, 116, 190, 0.06);
+  --login-stream-line: rgba(61, 149, 232, 0.32);
+  --login-band-gradient: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(61, 149, 232, 0.24), rgba(180, 231, 255, 0.46), rgba(255, 255, 255, 0));
+  --login-band-shadow: 0 22px 72px rgba(61, 149, 232, 0.18);
+  --login-orbit-line: rgba(22, 119, 210, 0.16);
+  --login-orbit-arc: rgba(61, 149, 232, 0.18);
+  --login-orbit-core: rgba(255, 255, 255, 0.52);
+  --login-accent: #1677d2;
+  --login-muted: rgba(58, 88, 118, 0.78);
+  --login-copy-kicker: rgba(22, 119, 210, 0.76);
+  --login-copy-title: rgba(15, 45, 79, 0.96);
+  --login-copy-glow: 0 20px 58px rgba(61, 149, 232, 0.18);
+  --login-switch-bg: rgba(255, 255, 255, 0.76);
+  --login-switch-shadow: 0 18px 42px rgba(65, 122, 176, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.86);
+}
+
+.app-layout.theme-light .login-shell {
+  border: 1px solid rgba(22, 119, 210, 0.2);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(235, 248, 255, 0.78)),
+    rgba(255, 255, 255, 0.78);
+  box-shadow:
+    0 34px 92px rgba(65, 122, 176, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+.app-layout.theme-dark .login-page {
+  --login-aurora-bg:
+    radial-gradient(circle at 82% 18%, rgba(255, 122, 0, 0.18) 0, transparent 32%),
+    radial-gradient(circle at 14% 74%, rgba(255, 176, 0, 0.1) 0, transparent 38%),
+    linear-gradient(180deg, #050505 0%, #0b0b0b 46%, #11100d 100%);
+  --login-aurora-wash: rgba(5, 5, 5, 0.9);
+  --login-aurora-ribbon: repeating-linear-gradient(100deg, rgba(255, 95, 31, 0.72) 10%, rgba(255, 176, 0, 0.48) 15%, rgba(255, 122, 0, 0.58) 20%, rgba(255, 222, 138, 0.34) 30%);
+  --login-aurora-opacity: 0.74;
+  --login-dot-strong: rgba(255, 176, 0, 0.2);
+  --login-dot-soft: rgba(255, 122, 0, 0.16);
+  --login-grid-line: rgba(255, 122, 0, 0.08);
+  --login-stream-line: rgba(255, 122, 0, 0.34);
+  --login-band-gradient: linear-gradient(90deg, rgba(0, 0, 0, 0), rgba(255, 95, 31, 0.32), rgba(255, 176, 0, 0.52), rgba(0, 0, 0, 0));
+  --login-band-shadow: 0 22px 72px rgba(255, 122, 0, 0.2);
+  --login-orbit-line: rgba(255, 122, 0, 0.2);
+  --login-orbit-arc: rgba(255, 122, 0, 0.22);
+  --login-orbit-core: rgba(255, 122, 0, 0.1);
+  --login-accent: #ff9f1c;
+  --login-muted: rgba(244, 220, 190, 0.72);
+  --login-copy-kicker: rgba(255, 176, 0, 0.78);
+  --login-copy-title: rgba(255, 248, 235, 0.96);
+  --login-copy-glow: 0 22px 60px rgba(255, 122, 0, 0.24);
+  --login-switch-bg: rgba(8, 8, 8, 0.8);
+  --login-switch-shadow: 0 18px 44px rgba(255, 122, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.app-layout.theme-dark .login-shell {
+  border: 1px solid rgba(255, 122, 0, 0.28);
+  background:
+    linear-gradient(145deg, rgba(255, 122, 0, 0.14), rgba(255, 255, 255, 0.035) 36%, rgba(0, 0, 0, 0.18)),
+    rgba(8, 8, 8, 0.76);
+  box-shadow:
+    0 36px 96px rgba(0, 0, 0, 0.46),
+    0 0 0 1px rgba(255, 176, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+@keyframes loginAuroraDrift {
+  from { background-position: 50% 50%, 50% 50%; }
+  to { background-position: 350% 50%, 350% 50%; }
+}
+
+@media (max-width: 960px) {
+  .login-page {
+    justify-content: center;
+    padding: 112px 18px 32px;
+  }
+
+  .login-hero-copy {
+    top: 74px;
+    left: 24px;
+    max-width: calc(100% - 96px);
+  }
+
+  .login-shell {
+    width: min(440px, 100%);
+    min-height: 450px;
+    margin: 0 auto;
+    transform: none;
+  }
+
+  .login-aurora-band-a {
+    right: -24%;
+    width: 86vw;
+  }
+
+  .login-aurora-band-b {
+    left: -28%;
+    width: 90vw;
+  }
+}
+
+@media (max-width: 720px) {
+  .login-page {
+    padding-top: 154px;
+  }
+
+  .login-hero-title {
+    font-size: clamp(26px, 8vw, 32px);
+  }
+
+  .login-hero-subtitle {
+    font-size: clamp(18px, 5.4vw, 22px);
+  }
+
+  .login-shell {
+    padding: 24px 20px;
+    border-radius: 28px;
+  }
+
+  .login-page::before {
+    mask-image: radial-gradient(ellipse at 70% 10%, #000 8%, transparent 76%);
+  }
+}
+
+/* 左侧 AI 洞察控制台：填充标题下方留白，同时保持登录页的轻量感。 */
+.login-left-console {
+  position: absolute;
+  left: clamp(36px, 7vw, 118px);
+  top: clamp(300px, 42vh, 380px);
+  z-index: 3;
+  width: min(470px, 42vw);
+  min-height: 250px;
+  padding: 18px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 16px;
+  border: 1px solid var(--login-console-border);
+  border-radius: 28px;
+  background:
+    linear-gradient(135deg, var(--login-console-panel), transparent 62%),
+    var(--login-console-glass);
+  box-shadow: var(--login-console-shadow);
+  backdrop-filter: blur(18px) saturate(1.25);
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.login-left-console::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent, var(--login-console-scan), transparent),
+    linear-gradient(var(--login-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--login-grid-line) 1px, transparent 1px);
+  background-size: 220px 100%, 34px 34px, 34px 34px;
+  animation: loginConsoleScan 5.6s ease-in-out infinite;
+  opacity: 0.58;
+}
+
+.login-console-head,
+.login-console-map,
+.login-console-metrics {
+  position: relative;
+  z-index: 1;
+}
+
+.login-console-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--login-accent);
+  font-size: 12px;
+  font-weight: 780;
+  letter-spacing: 0.18em;
+}
+
+.login-console-head i {
+  width: 74px;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--login-accent), transparent);
+  opacity: 0.72;
+}
+
+.login-console-map {
+  min-height: 126px;
+  border-radius: 22px;
+  border: 1px solid var(--login-console-border);
+  background:
+    radial-gradient(circle at 26% 28%, var(--login-console-dot) 0 2px, transparent 3px),
+    radial-gradient(circle at 58% 48%, var(--login-console-dot) 0 2px, transparent 3px),
+    radial-gradient(circle at 78% 24%, var(--login-console-dot) 0 2px, transparent 3px),
+    radial-gradient(circle at 36% 76%, var(--login-console-dot) 0 2px, transparent 3px),
+    linear-gradient(24deg, transparent 0 27%, var(--login-stream-line) 28%, transparent 29%),
+    linear-gradient(147deg, transparent 0 40%, var(--login-stream-line) 41%, transparent 42%);
+}
+
+.login-console-map::before,
+.login-console-map::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid var(--login-orbit-line);
+}
+
+.login-console-map::before {
+  right: 24px;
+  top: 18px;
+  width: 82px;
+  height: 82px;
+}
+
+.login-console-map::after {
+  left: 36px;
+  bottom: 18px;
+  width: 54px;
+  height: 54px;
+}
+
+.login-node {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--login-accent);
+  box-shadow: 0 0 0 8px var(--login-node-halo), 0 0 24px var(--login-node-glow);
+}
+
+.login-node-a { left: 24%; top: 26%; }
+.login-node-b { left: 56%; top: 47%; }
+.login-node-c { right: 18%; top: 22%; }
+.login-node-d { left: 34%; bottom: 20%; }
+
+.login-console-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.login-console-metrics div {
+  min-height: 70px;
+  padding: 12px;
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  border: 1px solid var(--login-console-border);
+  border-radius: 18px;
+  background: var(--login-metric-bg);
+}
+
+.login-console-metrics span {
+  color: var(--login-muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.login-console-metrics strong {
+  color: var(--login-copy-title);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.app-layout.theme-light .login-page {
+  --login-console-border: rgba(22, 119, 210, 0.16);
+  --login-console-panel: rgba(255, 255, 255, 0.78);
+  --login-console-glass: rgba(235, 248, 255, 0.36);
+  --login-console-shadow: 0 26px 70px rgba(65, 122, 176, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.78);
+  --login-console-scan: rgba(61, 149, 232, 0.16);
+  --login-console-dot: rgba(22, 119, 210, 0.48);
+  --login-node-halo: rgba(61, 149, 232, 0.12);
+  --login-node-glow: rgba(61, 149, 232, 0.28);
+  --login-metric-bg: rgba(255, 255, 255, 0.46);
+}
+
+.app-layout.theme-dark .login-page {
+  --login-console-border: rgba(255, 122, 0, 0.2);
+  --login-console-panel: rgba(24, 12, 4, 0.68);
+  --login-console-glass: rgba(255, 122, 0, 0.055);
+  --login-console-shadow: 0 30px 82px rgba(0, 0, 0, 0.3), 0 0 36px rgba(255, 122, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --login-console-scan: rgba(255, 122, 0, 0.18);
+  --login-console-dot: rgba(255, 176, 0, 0.48);
+  --login-node-halo: rgba(255, 122, 0, 0.14);
+  --login-node-glow: rgba(255, 122, 0, 0.32);
+  --login-metric-bg: rgba(255, 122, 0, 0.055);
+}
+
+@keyframes loginConsoleScan {
+  from { background-position: -240px 0, 0 0, 0 0; }
+  50% { background-position: 180px 0, 0 0, 0 0; }
+  to { background-position: 520px 0, 0 0, 0 0; }
+}
+
+@media (max-width: 1180px) {
+  .login-left-console {
+    width: min(410px, 40vw);
+  }
+
+  .login-console-metrics strong {
+    font-size: 21px;
+  }
+}
+
+@media (max-width: 960px) {
+  .login-left-console {
+    display: none;
+  }
+}
+
+/* ===== 登录后工作台 Aurora 动态背景：与登录页保持同一套视觉语言 ===== */
+
+.app-layout:not(.app-layout--public) {
+  background: var(--workspace-aurora-bg);
+}
+
+.app-layout.theme-light:not(.app-layout--public) {
+  --workspace-aurora-bg:
+    radial-gradient(circle at 18% 12%, rgba(61, 149, 232, 0.18) 0, transparent 28%),
+    radial-gradient(circle at 86% 8%, rgba(99, 202, 255, 0.2) 0, transparent 28%),
+    linear-gradient(180deg, #ffffff 0%, #f5fbff 45%, #eaf6ff 100%);
+  --workspace-aurora-wash: rgba(255, 255, 255, 0.9);
+  --workspace-aurora-ribbon: repeating-linear-gradient(100deg, rgba(22, 119, 210, 0.56) 10%, rgba(99, 202, 255, 0.38) 15%, rgba(197, 236, 255, 0.52) 20%, rgba(61, 149, 232, 0.42) 30%);
+  --workspace-aurora-opacity: 0.48;
+  --workspace-grid-line: rgba(34, 116, 190, 0.055);
+  --workspace-dot-strong: rgba(22, 119, 210, 0.18);
+  --workspace-dot-soft: rgba(93, 196, 255, 0.15);
+  --workspace-stream: rgba(61, 149, 232, 0.28);
+  --workspace-band-gradient: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(61, 149, 232, 0.2), rgba(180, 231, 255, 0.4), rgba(255, 255, 255, 0));
+  --workspace-band-shadow: 0 24px 70px rgba(61, 149, 232, 0.16);
+  --workspace-orbit-line: rgba(22, 119, 210, 0.14);
+  --workspace-orbit-arc: rgba(61, 149, 232, 0.18);
+}
+
+.app-layout.theme-dark:not(.app-layout--public) {
+  --workspace-aurora-bg:
+    radial-gradient(circle at 82% 13%, rgba(255, 122, 0, 0.16) 0, transparent 32%),
+    radial-gradient(circle at 14% 78%, rgba(255, 176, 0, 0.1) 0, transparent 36%),
+    linear-gradient(180deg, #050505 0%, #0b0b0b 48%, #11100d 100%);
+  --workspace-aurora-wash: rgba(5, 5, 5, 0.9);
+  --workspace-aurora-ribbon: repeating-linear-gradient(100deg, rgba(255, 95, 31, 0.64) 10%, rgba(255, 176, 0, 0.42) 15%, rgba(255, 122, 0, 0.5) 20%, rgba(255, 222, 138, 0.28) 30%);
+  --workspace-aurora-opacity: 0.56;
+  --workspace-grid-line: rgba(255, 122, 0, 0.075);
+  --workspace-dot-strong: rgba(255, 176, 0, 0.18);
+  --workspace-dot-soft: rgba(255, 122, 0, 0.14);
+  --workspace-stream: rgba(255, 122, 0, 0.3);
+  --workspace-band-gradient: linear-gradient(90deg, rgba(0, 0, 0, 0), rgba(255, 95, 31, 0.3), rgba(255, 176, 0, 0.46), rgba(0, 0, 0, 0));
+  --workspace-band-shadow: 0 24px 74px rgba(255, 122, 0, 0.18);
+  --workspace-orbit-line: rgba(255, 122, 0, 0.18);
+  --workspace-orbit-arc: rgba(255, 122, 0, 0.2);
+}
+
+.app-layout:not(.app-layout--public) .app-backdrop::before,
+.app-layout:not(.app-layout--public) .app-backdrop::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+
+.app-layout:not(.app-layout--public) .app-backdrop::before {
+  inset: -18%;
+  background-image:
+    repeating-linear-gradient(
+      100deg,
+      var(--workspace-aurora-wash) 0%,
+      var(--workspace-aurora-wash) 7%,
+      transparent 10%,
+      transparent 12%,
+      var(--workspace-aurora-wash) 16%
+    ),
+    var(--workspace-aurora-ribbon);
+  background-size: 320% 220%, 220% 160%;
+  background-position: 50% 50%, 50% 50%;
+  filter: blur(12px) saturate(1.14);
+  opacity: var(--workspace-aurora-opacity);
+  animation: loginAuroraDrift 52s linear infinite;
+  mask-image: radial-gradient(ellipse at 82% 10%, #000 8%, transparent 74%);
+}
+
+.app-layout:not(.app-layout--public) .app-backdrop::after {
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 18% 24%, var(--workspace-dot-strong) 0 1px, transparent 2px),
+    radial-gradient(circle at 76% 22%, var(--workspace-dot-soft) 0 1px, transparent 2px),
+    radial-gradient(circle at 44% 74%, var(--workspace-dot-soft) 0 1px, transparent 2px),
+    linear-gradient(var(--workspace-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--workspace-grid-line) 1px, transparent 1px),
+    linear-gradient(105deg, transparent 0 44%, var(--workspace-stream) 45%, transparent 47% 100%);
+  background-size: 92px 92px, 138px 138px, 72px 72px, 44px 44px, 44px 44px, 100% 100%;
+  opacity: 0.86;
+}
+
+.app-layout:not(.app-layout--public) .glow-a,
+.app-layout:not(.app-layout--public) .glow-b {
+  filter: blur(24px);
+  opacity: 0.42;
+  animation: workspaceGlowFloat 12s ease-in-out infinite alternate;
+}
+
+.app-layout:not(.app-layout--public) .glow-a {
+  width: 460px;
+  height: 260px;
+  left: -110px;
+  top: 16%;
+}
+
+.app-layout:not(.app-layout--public) .glow-b {
+  width: 560px;
+  height: 280px;
+  right: -150px;
+  top: 4%;
+  animation-delay: -4s;
+}
+
+.app-layout:not(.app-layout--public) .ai-ribbon {
+  display: block;
+  height: 92px;
+  border-radius: 999px;
+  clip-path: none;
+  background: var(--workspace-band-gradient);
+  border: 1px solid var(--workspace-orbit-line);
+  box-shadow: var(--workspace-band-shadow);
+  opacity: 0.64;
+}
+
+.app-layout:not(.app-layout--public) .ai-ribbon-a {
+  top: 3%;
+  right: -9%;
+  width: 44vw;
+  transform: rotate(8deg);
+}
+
+.app-layout:not(.app-layout--public) .ai-ribbon-b {
+  left: -12%;
+  bottom: 8%;
+  width: 46vw;
+  transform: rotate(-11deg);
+  opacity: 0.36;
+}
+
+.app-layout:not(.app-layout--public) .ai-signal-line {
+  top: 36%;
+  left: -5%;
+  width: 110%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--workspace-stream), transparent);
+  box-shadow: 0 0 24px var(--workspace-stream);
+  transform: rotate(-6deg);
+  opacity: 0.64;
+}
+
+.app-layout:not(.app-layout--public) .ai-particle-field {
+  left: 36%;
+  top: 16%;
+  width: 320px;
+  height: 320px;
+  background-image: radial-gradient(circle, var(--workspace-dot-strong) 0 1.5px, transparent 2px);
+  background-size: 16px 16px;
+  mask-image: radial-gradient(circle at 50% 50%, #000 0 42%, transparent 70%);
+  opacity: 0.3;
+  transform: rotate(-8deg);
+}
+
+.app-layout:not(.app-layout--public) .grid-fade {
+  inset: auto 5% 3% auto;
+  width: min(420px, 32vw);
+  aspect-ratio: 1;
+  height: auto;
+  border-color: var(--workspace-orbit-line);
+  border-radius: 50%;
+  background:
+    conic-gradient(from 150deg, transparent 0 18%, var(--workspace-orbit-arc) 18% 24%, transparent 24% 54%, var(--workspace-orbit-arc) 54% 60%, transparent 60%),
+    radial-gradient(circle, transparent 0 58%, var(--workspace-orbit-line) 59%, transparent 61%);
+  transform: none;
+  opacity: 0.48;
+}
+
+@keyframes workspaceGlowFloat {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(24px, -16px, 0) scale(1.06); }
+}
+
+@media (max-width: 960px) {
+  .app-layout:not(.app-layout--public) .ai-ribbon-a { width: 72vw; right: -24%; }
+  .app-layout:not(.app-layout--public) .ai-ribbon-b { width: 70vw; left: -28%; }
+  .app-layout:not(.app-layout--public) .ai-particle-field { left: 42%; top: 12%; opacity: 0.2; }
+  .app-layout:not(.app-layout--public) .grid-fade { width: min(320px, 48vw); opacity: 0.32; }
+}
+
+@media (max-width: 720px) {
+  .app-layout:not(.app-layout--public) .app-backdrop::before {
+    opacity: calc(var(--workspace-aurora-opacity) * 0.72);
+  }
+
+  .app-layout:not(.app-layout--public) .app-backdrop::after,
+  .app-layout:not(.app-layout--public) .ai-signal-line,
+  .app-layout:not(.app-layout--public) .ai-particle-field {
+    opacity: 0.18;
+  }
+}
+
+/* ===== 全局窗口聚光灯：参考 GlowCard，用当前 Vue 应用的指针变量驱动 ===== */
+
+.window-spotlight-host,
+[data-spotlight-window='1'] {
+  overflow: hidden;
+  isolation: isolate;
+  contain: paint;
+  --window-spotlight-size: 280px;
+  --window-border-spot-size: 210px;
+  --window-spotlight-bg: var(--theme-window-spotlight-bg, rgba(61, 149, 232, 0.12));
+  --window-border-spot: var(--theme-window-border-spot, rgba(61, 149, 232, 0.62));
+  --window-border-flash: var(--theme-window-border-flash, rgba(255, 255, 255, 0.7));
+}
+
+.window-spotlight-host[data-spotlight-position='static'],
+[data-spotlight-position='static'] {
+  position: relative;
+}
+
+.window-spotlight-host > :not(.window-spotlight),
+[data-spotlight-window='1'] > :not(.window-spotlight) {
+  position: relative;
+  z-index: 1;
+}
+
+.window-spotlight {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-image:
+    radial-gradient(
+      var(--window-spotlight-size) var(--window-spotlight-size) at
+      calc(var(--spotlight-x, -9999) * 1px)
+      calc(var(--spotlight-y, -9999) * 1px),
+      var(--window-spotlight-bg),
+      transparent 72%
+    );
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+  will-change: opacity;
+  transform: translateZ(0);
+}
+
+.window-spotlight-active > .window-spotlight,
+[data-spotlight-window='1']:hover > .window-spotlight {
+  opacity: 0.95;
+}
+
+.window-spotlight::before,
+.window-spotlight::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  opacity: 0.92;
+}
+
+.window-spotlight::before {
+  padding: 1px;
+  background-image:
+    radial-gradient(
+      var(--window-border-spot-size) var(--window-border-spot-size) at
+      calc(var(--spotlight-x, -9999) * 1px)
+      calc(var(--spotlight-y, -9999) * 1px),
+      var(--window-border-spot),
+      transparent 76%
+    );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.window-spotlight::after {
+  padding: 1px;
+  background-image:
+    radial-gradient(
+      calc(var(--window-border-spot-size) * 0.52) calc(var(--window-border-spot-size) * 0.52) at
+      calc(var(--spotlight-x, -9999) * 1px)
+      calc(var(--spotlight-y, -9999) * 1px),
+      var(--window-border-flash),
+      transparent 78%
+    );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0.62;
+}
+
+.app-layout.theme-light {
+  --theme-window-spotlight-bg: rgba(61, 149, 232, 0.13);
+  --theme-window-border-spot: rgba(22, 119, 210, 0.58);
+  --theme-window-border-flash: rgba(255, 255, 255, 0.82);
+}
+
+.app-layout.theme-dark {
+  --theme-window-spotlight-bg: rgba(255, 122, 0, 0.13);
+  --theme-window-border-spot: rgba(255, 122, 0, 0.68);
+  --theme-window-border-flash: rgba(255, 232, 190, 0.66);
+}
+
+.login-shell.window-spotlight-host,
+.login-shell[data-spotlight-window='1'],
+.float-agent-panel.window-spotlight-host,
+.float-agent-panel[data-spotlight-window='1'] {
+  --window-spotlight-size: 360px;
+  --window-border-spot-size: 280px;
+}
+
+.sidebar.window-spotlight-host,
+.sidebar[data-spotlight-window='1'],
+.topbar.window-spotlight-host,
+.topbar[data-spotlight-window='1'],
+.content-shell.window-spotlight-host,
+.content-shell[data-spotlight-window='1'] {
+  --window-spotlight-size: 420px;
+  --window-border-spot-size: 300px;
+}
+
+.table-panel.window-spotlight-host,
+.table-panel[data-spotlight-window='1'],
+.result.window-spotlight-host,
+.result[data-spotlight-window='1'] {
+  --window-spotlight-size: 240px;
+  --window-border-spot-size: 180px;
+}
+
+@media (max-width: 720px) {
+  .window-spotlight-host,
+  [data-spotlight-window='1'] {
+    --window-spotlight-size: 220px;
+    --window-border-spot-size: 170px;
   }
 }

@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <defs>
+    <marker id="arrowHead" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#7DD3FC" />
+    </marker>
+  </defs>
+  <g id="background">
+    <rect width="1280" height="720" fill="#05070D" />
+    <path d="M50 140H1230 M50 630H1230" stroke="#1C2A3D" stroke-width="1" stroke-dasharray="8,4" />
+  </g>
+  <g id="header">
+    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">Planner 驱动把工具调用风险收敛到确定性链路</text>
+    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">LLM 负责理解和计划，真正执行的是结构化步骤和确定性工具链</text>
+  </g>
+  <g id="step-intent">
+    <rect x="62" y="198" width="190" height="156" rx="6" fill="#111827" stroke="#2A3A52" />
+    <text x="86" y="238" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#7DD3FC">01</text>
+    <text x="86" y="282" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="700" fill="#F8FAFC">意图分类</text>
+    <text x="86" y="322" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">只判断任务本身</text>
+  </g>
+  <g id="step-plan">
+    <line x1="262" y1="276" x2="336" y2="276" stroke="#7DD3FC" stroke-width="2" marker-end="url(#arrowHead)" />
+    <rect x="348" y="198" width="190" height="156" rx="6" fill="#111827" stroke="#2A3A52" />
+    <text x="372" y="238" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#7DD3FC">02</text>
+    <text x="372" y="282" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="700" fill="#F8FAFC">计划生成</text>
+    <text x="372" y="322" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">输出结构化步骤</text>
+  </g>
+  <g id="step-executor">
+    <line x1="548" y1="276" x2="622" y2="276" stroke="#7DD3FC" stroke-width="2" marker-end="url(#arrowHead)" />
+    <rect x="634" y="198" width="190" height="156" rx="6" fill="#111827" stroke="#F59E0B" />
+    <text x="658" y="238" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#F59E0B">03</text>
+    <text x="658" y="282" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="700" fill="#F8FAFC">Executor</text>
+    <text x="658" y="322" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">按计划执行</text>
+  </g>
+  <g id="step-tools">
+    <line x1="834" y1="276" x2="908" y2="276" stroke="#7DD3FC" stroke-width="2" marker-end="url(#arrowHead)" />
+    <rect x="920" y="198" width="190" height="156" rx="6" fill="#111827" stroke="#2A3A52" />
+    <text x="944" y="238" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#7DD3FC">04</text>
+    <text x="944" y="282" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="700" fill="#F8FAFC">工具</text>
+    <text x="944" y="322" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">统一 BaseTool</text>
+  </g>
+  <g id="step-persona">
+    <rect x="1000" y="410" width="190" height="118" rx="6" fill="#111827" stroke="#8B5CF6" />
+    <text x="1013.88" y="451.446" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" font-weight="700" fill="#F8FAFC">Persona 回复</text>
+    <text x="1024" y="488" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">只影响怎么说</text>
+    <path d="M1015 354V398" stroke="#8B5CF6" stroke-width="2" fill="none" marker-end="url(#arrowHead)" />
+  </g>
+  <g id="formula">
+    <rect x="74" y="430" width="790" height="96" rx="6" fill="#111827" stroke="#2A3A52" />
+    <image href="../images/formula_tool_risk.png" x="112" y="459" width="682" height="42" preserveAspectRatio="xMidYMid meet" />
+    <text x="74" y="574" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="700" fill="#F59E0B">系统要降低的不是“AI 不会说话”，而是“不调、调错、重复调”</text>
+  </g>
+</svg>

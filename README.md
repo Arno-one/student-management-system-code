@@ -1,13 +1,13 @@
 <p align="center">
-  <h1 align="center">🎓 学生信息管理系统</h1>
-  <p align="center">基于 FastAPI + SQLAlchemy 的 MVC 架构学生管理系统，集成 AI 大模型能力</p>
+  <h1 align="center">学生信息管理系统 + AI 智能平台</h1>
+  <p align="center">FastAPI 全栈项目：MVC 学生管理 + RAG 知识库 + Agent 智能体 + NL2SQL 智能问数</p>
 </p>
 
 ---
 
 ## 📋 项目简介
 
-学生信息管理系统是一个功能完善的学生信息管理平台，涵盖学生基本信息、考核成绩、就业信息、班级管理、教师管理和统计分析等核心模块。当前版本已内置 **JWT + RBAC** 登录认证体系，提供登录态持久化、菜单/接口权限控制、系统用户/角色/权限管理；同时集成 **DeepSeek 大模型**和**阿里云通义万相**，提供 AI 智能评价、多轮对话、文生图、天气/地址解析、智能邮件助手以及 NL2SQL 智能问数等能力，并配套完整的 **Vue 3 前端工作台**。
+学生信息管理系统是一个功能完善的学生管理平台，涵盖学生基本信息、考核成绩、就业信息、班级管理、教师管理和统计分析等核心模块。当前版本已内置 **JWT + RBAC** 登录认证体系，提供登录态持久化、菜单/接口权限控制、系统用户/角色/权限管理；同时集成 **DeepSeek 大模型**和**阿里云通义万相**，提供 AI 智能评价、多轮对话、文生图、天气/地址解析、智能邮件助手以及 NL2SQL 智能问数等能力；并在此基础上构建了**多知识库 RAG 检索增强生成系统**（Milvus 混合检索 + CrossEncoder 精排）和**智能 Agent 系统**（意图识别 → 计划编排 → 工具调用 → 人工兜底），配套完整的 **Vue 3 前端工作台**。
 
 ### 技术栈
 
@@ -22,6 +22,9 @@
 | 服务器 | Uvicorn |
 | AI / LLM | DeepSeek V4 Flash、阿里云通义万相 (DashScope) |
 | AI SDK | OpenAI SDK、DashScope SDK |
+| 向量数据库 | Milvus 2.4+（RAG 混合检索） |
+| RAG | Milvus hybrid_search + BM25 Function + RRF 融合 + CrossEncoder 精排 |
+| Agent | LangGraph 编排 + 意图分类 + 多工具调用 + 人工兜底 (HITL) |
 | 第三方接口 | 腾讯地图（天气查询 / 地理编码）、QQ 邮箱 SMTP |
 | 文件处理 | openpyxl（Excel 读写）、python-multipart（文件上传） |
 | SQL 工具 | sqlparse（NL2SQL 生成 SQL 格式化） |
@@ -93,7 +96,8 @@
 │   ├── teacher_information_CRUD.py
 │   ├── statistical.py
 │   ├── talk_dao.py                         # 多轮对话会话/消息持久化
-│   └── nl2sql_dao.py                       # NL2SQL 会话、消息与缓存记录持久化
+│   ├── nl2sql_dao.py                       # NL2SQL 会话、消息与缓存记录持久化
+│   └── agent_dao.py                        # Agent 任务/反馈持久化 + 管理端统计查询
 ├── model/               # Model 层 — SQLAlchemy ORM 定义
 │   ├── Auth.py                             # sys_user / sys_role / sys_permission 等 RBAC 模型
 │   ├── Student.py
@@ -102,7 +106,9 @@
 │   ├── Employment.py
 │   ├── Teacher.py
 │   ├── Talk.py                             # 会话表 + 消息表
-│   └── NL2SQL.py                           # NL2SQL 会话、消息与缓存表
+│   ├── NL2SQL.py                           # NL2SQL 会话、消息与缓存表
+│   ├── AgentTask.py                        # Agent 任务记录表（含评分、耗时、工具结果）
+│   └── AgentFeedback.py                    # Agent 用户反馈评分表
 ├── scheme/              # View 层 — Pydantic 校验 & 统一响应
 │   ├── response_scheme.py                 # 统一 API 响应格式
 │   ├── auth_scheme.py                     # 登录 / 系统用户 / 角色相关请求模型
@@ -120,6 +126,35 @@
 ├── LLM/                 # AI 大模型集成
 │   ├── ds_llm.py                          # DeepSeek 调用示例
 │   └── ds_llm.ipynb                       # Jupyter Notebook 交互示例
+├── RAG/                 # RAG 知识库系统（多知识库 + 混合检索 + 精排）
+│   ├── config.py                            # 多知识库配置、RagConfig 统一参数管理
+│   ├── schemas.py                           # Milvus Collection Schema（双向量 + BM25 Function）
+│   ├── clients.py                           # Milvus / Embedding / LLM / CrossEncoder 客户端
+│   ├── ingestion.py                         # 离线入库：多格式解析 → 切片 → Embedding → 写入
+│   ├── retrieval.py                         # 在线检索：Query Rewrite + 双路 hybrid_search + RRF 融合
+│   ├── retrieval_service.py                 # 检索服务编排：查询准备 + 多阶段检索
+│   ├── rerank.py                            # CrossEncoder 精排（bge-reranker-v2-m3）
+│   ├── prompt_builder.py                    # 上下文组装：邻居扩展 + 去重 + Token 预算 + 来源标记
+│   ├── generation.py                        # LLM 答案生成 + 降级兜底
+│   ├── ask_service.py                       # 主问答编排：QA 优先路由 + 置信度拒答 + 领域分数修正
+│   ├── evaluation.py                        # 结构化评估（Recall@K / 关键词 / 来源类型）
+│   ├── controller.py                        # FastAPI 接口层（/rag/ask / /rag/ingest / 多 KB）
+│   ├── main_rag.py                          # CLI 入口（ingest / ask / interactive / eval / health）
+│   ├── docs/                                # 知识库文档（四大名著 TXT / 工程 PDF / QA Markdown）
+│   ├── RAG高级架构流程总结.md                 # 架构审查 + 六阶段优化方案 + 任务拆解
+│   └── RAG检索精度提升全链路指南.md            # 检索前中后全链路精度优化方法
+├── agent_system/        # 智能 Agent 系统（意图 → 计划 → 执行 → 兜底）
+│   ├── api/agent_api.py                     # Agent 对话 API + 任务反馈 + 监控统计
+│   ├── service/agent_service.py             # 服务编排：中间件 → 意图分类 → 计划 → 执行 → 记忆
+│   ├── planner/                             # 意图分类器 + 任务计划生成器
+│   ├── supervisor/                          # Supervisor-Planner 决策编排
+│   ├── executor/agent_executor.py           # 计划执行器（串行/并行工具调用）
+│   ├── middleware/                          # LangGraph 中间件管线（输入守卫 + 通勤解析 + 查询改写）
+│   ├── memory/                              # 三层记忆（会话记忆 + 摘要记忆 + 工作记忆）
+│   ├── hitl/                                # 人工兜底（升级规则 + 暂停/恢复状态机）
+│   ├── tools/                               # 工具集（学生/成绩/邮件/天气/通勤/NL2SQL/RAG/生图）
+│   ├── schemas/                             # Agent 请求/响应 + 任务状态 Pydantic 模型
+│   └── prompts/                             # 意图分类 / 计划生成 / 人设 Prompt
 ├── frontend/            # 纯静态调试页（无登录态 / 不含 RBAC）
 │   ├── index.html
 │   ├── styles.css
@@ -288,6 +323,8 @@ docker run -d -p 8088:8088 \
 | AI 作业模块 | `/work` | 作业模块 | AI 智能评价、文生图、多轮记忆对话、天气查询、地址解析 |
 | 邮件管理 | `/email` | 邮件管理 | 大模型生成邮件内容、确认后发送 |
 | NL2SQL 智能问数 | `/nl2sql` | NL2SQL智能问数 | 自然语言转 SQL、表结构概览、查询历史记录 |
+| RAG 知识库 | `/rag` | RAG 知识库 | 知识库问答、文档入库、多 KB 管理、组件健康检查 |
+| 智能 Agent | `/agent` | 智能Agent | 智能对话、计划编排 → 工具调用、任务反馈评价、管理端监控 |
 
 ---
 
@@ -338,6 +375,152 @@ docker run -d -p 8088:8088 \
 - `POST /nl2sql/query` — 提交自然语言问题，自动生成 SQL 并执行查询
 - `GET /nl2sql/schema` — 获取可查询数据库表结构、字段说明、JOIN 关系与聚合口径
 - `GET /nl2sql/sessions` — 获取指定用户的历史查询会话和消息记录
+
+---
+
+## 📚 RAG 知识库系统
+
+基于 **Milvus 2.4+** 向量数据库构建的多知识库检索增强生成（RAG）系统，覆盖从文档入库到智能问答的全链路。
+
+### 架构概览
+
+```
+用户问题 → Query Rewrite(LLM改写) → Embedding(1024d) 
+  → 混合检索(稠密COSINE + 稀疏BM25) → RRF融合(k=60) 
+  → [CrossEncoder精排,可选] → 邻居扩展 → 去重 → Token预算 
+  → Prompt组装 → LLM生成 → 带来源引用答案
+```
+
+### 核心能力
+
+**多知识库管理**：内置两套知识库，支持按 `kb_id` 切换，可通过 `RagConfig` 扩展更多 KB：
+
+| 知识库 | 文档类型 | 特点 |
+|--------|---------|------|
+| `novels` | 四大名著 TXT | 按章节切分，结构化检索 |
+| `production` | 工程 PDF / DOCX / Markdown | QA 优先路由 + 置信度拒答 + 领域分数修正 |
+
+**检索精度优化全链路**（详见 `RAG/RAG检索精度提升全链路指南.md`）：
+
+| 阶段 | 策略 | 作用 |
+|------|------|------|
+| 检索前 | 递归文档切片 (500/50) + Query Rewrite (LLM) | 语义聚焦 + 口语化改写 |
+| 检索中 | 稠密 + BM25 双路混合检索 + RRF 融合 | 语义 + 关键词互补 |
+| 检索中 | QA 优先智能路由 | 高频问题零 LLM 成本直接返回 |
+| 检索后 | CrossEncoder 精排 (bge-reranker-v2-m3) | 模型级相关性重排，P@3 +5-15% |
+| 检索后 | Small-to-Big 邻居扩展 + 两重去重 | 补全上下文、去除冗余 |
+| 检索后 | Token 预算控制 (2000 tokens) | 防止上下文溢出 |
+| 检索后 | 领域关键词分数修正 | 行话适配、语境纠偏 |
+| 兜底 | 全链路降级 + 置信度拒答 (< 0.15) | 不胡说 |
+
+### API 接口
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/rag/ask` | POST | 默认知识库问答（兼容旧接口） |
+| `/rag/kbs/{kb_id}/ask` | POST | 指定知识库问答，支持 `enable_rerank` / `top_k` 参数 |
+| `/rag/ingest` | POST | 默认知识库文档入库 |
+| `/rag/kbs/{kb_id}/ingest` | POST | 指定知识库入库，支持 `drop_existing` / `max_chapters` |
+| `/rag/status` | GET | 获取默认知识库状态（文档数、最近入库时间） |
+| `/rag/kbs/{kb_id}/status` | GET | 获取指定知识库状态 |
+| `/rag/health` | GET | 组件健康检查（Milvus / Embedding / LLM / CrossEncoder） |
+
+### CLI 使用
+
+```bash
+# 入库
+python -m RAG.main_rag ingest --kb production
+
+# 单次问答
+python -m RAG.main_rag ask --kb production "风机基础采用什么结构形式？"
+
+# 交互式问答
+python -m RAG.main_rag interactive --kb novels
+
+# 健康检查
+python -m RAG.main_rag health
+
+# 批量评估
+python -m RAG.main_rag eval --kb production
+
+# 重建并评估
+python -m RAG.main_rag rebuild-and-eval --kb production
+```
+
+---
+
+## 🤖 智能 Agent 系统
+
+基于 **LangGraph** 状态图编排的智能 Agent，串联"意图识别 → 计划生成 → 工具调用 → 人工兜底"的完整决策链路。
+
+### 架构分层
+
+```
+┌─────────────────────────────────────────────────────┐
+│                   supervisor/                        │
+│           Supervisor-Planner 决策编排                 │
+├──────────┬──────────┬──────────┬────────────────────┤
+│ planner/ │ executor/│  tools/  │     hitl/           │
+│ 意图分类 │ 计划执行  │ 工具调用  │  人工兜底（审批/确认） │
+│ 计划生成 │ (串/并行) │ (12工具) │                     │
+├──────────┴──────────┴──────────┴────────────────────┤
+│                 middleware/                          │
+│    LangGraph 中间件管线（输入守卫 + 通勤/周边解析）      │
+├─────────────────────────────────────────────────────┤
+│                  memory/                             │
+│     三层记忆（会话记忆 + 摘要记忆 + 工作记忆）          │
+└─────────────────────────────────────────────────────┘
+```
+
+### 核心模块
+
+| 模块 | 目录 | 职责 |
+|------|------|------|
+| **Planner** | `planner/` | 意图分类（查询/操作/通勤/周边/邮件/生图）+ 任务计划 JSON 生成 |
+| **Executor** | `executor/` | 按计划顺序/并行执行工具调用，收集结果并上报 |
+| **Tools** | `tools/` | 12 个可调用工具：学生/成绩/邮件/天气/通勤规划/周边服务/NL2SQL/RAG/生图等 |
+| **Middleware** | `middleware/` | LangGraph 预处理管线：输入守卫（敏感词/越狱检测）→ 通勤解析 → 周边解析 → 政策检查 → Query Rewrite |
+| **Memory** | `memory/` | 三层记忆架构：`conversation_memory`（会话历史）+ `summary_memory`（摘要压缩）+ `working_memory`（当前任务状态） |
+| **HITL** | `hitl/` | Human-in-the-Loop 人工兜底：敏感操作审批、关键信息确认、暂停/恢复状态机 |
+| **Supervisor** | `supervisor/` | Supervisor-Planner 模式：根据中间件结果决策是否跳过 Planner 直走工具 |
+
+### API 接口
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/agent/chat` | POST | 智能对话（支持流式 `stream=true`），返回任务计划 + 工具调用结果 |
+| `/agent/hitl/confirm` | POST | 人工确认/拒绝暂停任务，继续执行 |
+| `/agent/sessions/{session_id}/history` | GET | 获取会话历史消息 |
+| `/agent/feedback` | POST | 用户对任务/工具结果的评分反馈（1-5 分） |
+| `/agent/email/whitelist` | GET | 获取邮件工具允许的收件人白名单 |
+| `/agent/admin/tasks` | GET | 管理端：查看近期任务列表（支持时间窗口筛选） |
+| `/agent/admin/stats` | GET | 管理端：任务统计（总数/成功率/平均耗时/P95 耗时/工具分布） |
+
+### 使用示例
+
+```python
+# 智能对话——Agent 自动判断意图并执行
+POST /agent/chat
+{
+  "message": "帮我查一下张三的成绩，然后给他发一封邮件告知成绩",
+  "persona": "teacher_assistant",
+  "session_id": 1,
+  "stream": false
+}
+
+# 响应
+{
+  "reply": "已查询到张三的成绩：数学 92 分、语文 88 分。邮件已发送至 zhangsan@example.com。",
+  "task_id": 42,
+  "intent": "composite",
+  "plan": [
+    {"tool": "query_student", "args": {"name": "张三"}},
+    {"tool": "query_score", "args": {"student_id": 3}},
+    {"tool": "send_email", "args": {"to": "zhangsan@example.com", ...}}
+  ],
+  "tool_results": [...]
+}
+```
 
 ---
 
@@ -463,6 +646,12 @@ DB_READONLY_PASSWORD=你的只读用户密码
 AUTH_SECRET_KEY=请改成一个长度足够且随机的密钥
 AUTH_TOKEN_EXPIRE_MINUTES=720
 AUTH_PBKDF2_ITERATIONS=600000
+
+# RAG 知识库（Milvus 向量数据库 + Embedding）
+ALIYUN_API_KEY=你的阿里云百炼密钥
+MILVUS_URI=http://localhost:19530
+MILVUS_DB_NAME=default
+RAG_DEFAULT_KB=novels
 ```
 
 > `.env` 已被 `.gitignore` 忽略，不会提交到仓库；团队协作时只需共享 `.env.example` 模板。
@@ -480,6 +669,8 @@ AUTH_PBKDF2_ITERATIONS=600000
 - `frontend-vue` 通过 `src/api/index.js` 统一管理 API base URL 与 Bearer Token；如需改成完全相对路径部署，可再按需完善 `vite.config.js` 代理
 - 多轮对话的会话与消息已持久化到 MySQL，不会因服务重启丢失；历史上下文按会话 ID 自动加载
 - NL2SQL 智能问数的查询会话、消息和缓存记录已持久化到 MySQL，前端可查看历史记录并高亮展示生成 SQL
+- RAG 知识库支持多 KB 切换，检索链路包含 Query Rewrite → 混合检索 → RRF 融合 → CrossEncoder 精排 → 去重 → Token 预算，详见 `RAG/` 目录
+- Agent 系统基于 LangGraph 编排，中间件管线负责输入预处理，Planner + Executor + HITL 完成决策到执行再到人工兜底的闭环
 - 教师批量导入采用「逐行校验、部分成功」策略：合格数据入库，失败数据跳过并返回原因，不会因个别行出错而整体失败
 - 日志由 `util/log.py` 统一管理，应用日志写入 `logs/app.log`、错误日志写入 `logs/error.log`，并接管 uvicorn 日志与请求访问日志
 - 前端提供两套实现：`frontend-vue/`（Vue 3，推荐，支持登录鉴权、RBAC 菜单控制、系统管理、浅色/深色主题与 NL2SQL SQL 高亮）和 `frontend/`（纯静态调试页，不含登录态 / RBAC / 系统管理 / NL2SQL 页面）

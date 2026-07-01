@@ -32,7 +32,7 @@
         :aria-label="theme === 'light' ? '切换到深色主题' : '切换到浅色主题'"
         @click="$emit('toggle-theme')"
       >
-        <span class="theme-toggle-icon" aria-hidden="true">{{ theme === 'light' ? '☀' : '☾' }}</span>
+        <span class="theme-toggle-icon" aria-hidden="true">{{ theme === 'light' ? '🌞' : '🌙' }}</span>
       </button>
 
       <button type="button" class="theme-toggle" aria-label="退出登录" @click="logout">⎋</button>

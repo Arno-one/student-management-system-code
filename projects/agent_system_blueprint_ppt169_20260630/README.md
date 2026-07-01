@@ -3,6 +3,10 @@
 - Canvas format: ppt169
 - Created: 20260630
 
+# PPT Project Blueprint
+
+# 以PPT-MASTER的skill生成的项目PPT
+
 ## Directories
 
 - `svg_output/`: raw SVG output
