@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "slides": {
+    "01_封面": {
+      "groups": {
+        "title-block": { "effect": "fade", "order": 1, "duration": 0.5 },
+        "proof-tags": { "effect": "fly", "order": 2, "delay": 0.1 }
+      }
+    },
+    "02_交付总览": {
+      "groups": {
+        "kpi-intents": { "effect": "zoom", "order": 1 },
+        "kpi-tools": { "effect": "zoom", "order": 2 },
+        "kpi-persona": { "effect": "zoom", "order": 3 },
+        "kpi-cards": { "effect": "zoom", "order": 4 },
+        "proof-row": { "effect": "wipe", "order": 5 }
+      }
+    },
+    "03_工程价值公式": {
+      "groups": {
+        "formula": { "effect": "fade", "order": 1 },
+        "dimensions": { "effect": "wheel", "order": 2 },
+        "takeaway": { "effect": "fade", "order": 3 }
+      }
+    },
+    "04_架构蓝图": {
+      "groups": {
+        "layers": { "effect": "wipe", "order": 1 },
+        "boundary": { "effect": "fade", "order": 2 }
+      }
+    },
+    "05_受控执行链": {
+      "groups": {
+        "step-intent": { "effect": "fly", "order": 1 },
+        "step-plan": { "effect": "fly", "order": 2 },
+        "step-executor": { "effect": "fly", "order": 3 },
+        "step-tools": { "effect": "fly", "order": 4 },
+        "step-persona": { "effect": "fly", "order": 5 },
+        "formula": { "effect": "fade", "order": 6 }
+      }
+    },
+    "06_RAG工程链": {
+      "groups": {
+        "stage-ingest": { "effect": "wipe", "order": 1 },
+        "stage-recall": { "effect": "wipe", "order": 2 },
+        "stage-rerank": { "effect": "wipe", "order": 3 },
+        "stage-context": { "effect": "wipe", "order": 4 },
+        "takeaway": { "effect": "fade", "order": 5 }
+      }
+    },
+    "07_统一底座": {
+      "groups": {
+        "pillar-basetool": { "effect": "fly", "order": 1 },
+        "pillar-context": { "effect": "fly", "order": 2 },
+        "pillar-registry": { "effect": "fly", "order": 3 },
+        "pillar-planstep": { "effect": "fly", "order": 4 },
+        "takeaway": { "effect": "fade", "order": 5 }
+      }
+    },
+    "08_版本演进": {
+      "groups": {
+        "milestone-v10": { "effect": "fade", "order": 1 },
+        "milestone-v20": { "effect": "fade", "order": 2 },
+        "milestone-v21": { "effect": "fade", "order": 3 },
+        "milestone-v22": { "effect": "fade", "order": 4 },
+        "milestone-v23": { "effect": "fade", "order": 5 },
+        "takeaway": { "effect": "wipe", "order": 6 }
+      }
+    },
+    "09_验收结论": {
+      "groups": {
+        "summary-kpi": { "effect": "zoom", "order": 1 },
+        "acceptance-table": { "effect": "wipe", "order": 2 },
+        "formula-proof": { "effect": "fade", "order": 3 }
+      }
+    },
+    "10_非功能验收": {
+      "groups": {
+        "pillar-stability": { "effect": "fly", "order": 1 },
+        "pillar-maintainability": { "effect": "fly", "order": 2 },
+        "pillar-extensibility": { "effect": "fly", "order": 3 },
+        "pillar-security": { "effect": "fly", "order": 4 },
+        "pillar-experience": { "effect": "fly", "order": 5 },
+        "takeaway": { "effect": "fade", "order": 6 }
+      }
+    },
+    "11_运营闭环": {
+      "groups": {
+        "hub-panel": { "effect": "zoom", "order": 1 },
+        "spoke-connectors": { "effect": "wipe", "order": 2 },
+        "spoke-task": { "effect": "fade", "order": 3 },
+        "spoke-feedback": { "effect": "fade", "order": 4 },
+        "spoke-intent": { "effect": "fade", "order": 5 },
+        "spoke-provider": { "effect": "fade", "order": 6 },
+        "spoke-mcp": { "effect": "fade", "order": 7 },
+        "spoke-detail": { "effect": "fade", "order": 8 }
+      }
+    },
+    "12_Supervisor协作": {
+      "groups": {
+        "client-request": { "effect": "fade", "order": 1 },
+        "supervisor-core": { "effect": "zoom", "order": 2 },
+        "map-agent": { "effect": "fly", "order": 3 },
+        "communication-agent": { "effect": "fly", "order": 4 },
+        "external-tools": { "effect": "fade", "order": 5 },
+        "flow-lines": { "effect": "wipe", "order": 6 },
+        "hitl-note": { "effect": "fade", "order": 7 }
+      }
+    },
+    "13_交付文档": {
+      "groups": {
+        "delivery-table": { "effect": "wipe", "order": 1 },
+        "row-requirements": { "effect": "fade", "order": 2 },
+        "row-models": { "effect": "fade", "order": 3 },
+        "row-apis": { "effect": "fade", "order": 4 },
+        "row-tests": { "effect": "fade", "order": 5 },
+        "row-protocols": { "effect": "fade", "order": 6 },
+        "row-build": { "effect": "fade", "order": 7 },
+        "takeaway": { "effect": "fade", "order": 8 }
+      }
+    },
+    "14_演示路径": {
+      "groups": {
+        "roadmap-step-1": { "effect": "fly", "order": 1 },
+        "roadmap-step-2": { "effect": "fly", "order": 2 },
+        "roadmap-step-3": { "effect": "fly", "order": 3 },
+        "roadmap-step-4": { "effect": "fly", "order": 4 }
+      }
+    },
+    "15_下一步治理": {
+      "groups": {
+        "main-title": { "effect": "fade", "order": 1 },
+        "governance-formula": { "effect": "wipe", "order": 2 },
+        "next-roadmap": { "effect": "wipe", "order": 3 },
+        "right-callout": { "effect": "fade", "order": 4 }
+      }
+    },
+    "16_结尾": {
+      "groups": {
+        "closing-title": { "effect": "fade", "order": 1 },
+        "closing-proof-line": { "effect": "wipe", "order": 2 },
+        "closing-message": { "effect": "fade", "order": 3 },
+        "closing-icon": { "effect": "zoom", "order": 4 }
+      }
+    }
+  }
+}

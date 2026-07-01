@@ -34,3 +34,14 @@ class EmploymentResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
+class EmploymentExtract(BaseModel):
+    """LLM 自然语言提取就业信息 — 所有字段 Optional，LLM 不编造缺失信息"""
+    student_no: Optional[str] = Field(None, description="学号，如 S2024001")
+    student_name: Optional[str] = Field(None, description="学生姓名")
+    class_id: Optional[int] = Field(None, description="班级ID")
+    job_open_time: Optional[date] = Field(None, description="就业开放时间")
+    offer_send_time: Optional[date] = Field(None, description="offer下发时间")
+    company_name: Optional[str] = Field(None, description="公司名称")
+    salary: Optional[int] = Field(None, description="薪资（元）")
+

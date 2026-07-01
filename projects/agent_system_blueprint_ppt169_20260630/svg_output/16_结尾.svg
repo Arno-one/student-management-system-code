@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <defs>
+    <linearGradient id="closingScrim" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#05070D" stop-opacity="0.92"/>
+      <stop offset="54%" stop-color="#05070D" stop-opacity="0.62"/>
+      <stop offset="100%" stop-color="#05070D" stop-opacity="0.18"/>
+    </linearGradient>
+  </defs>
+  <g id="background">
+    <rect width="1280" height="720" fill="#05070D"/>
+    <image href="../images/closing_blueprint_bg.png" x="0" y="0" width="1280" height="720" preserveAspectRatio="xMidYMid slice"/>
+    <rect width="1280" height="720" fill="url(#closingScrim)"/>
+    <path d="M60 86H1210 M60 636H1210 M98 48V672 M1182 48V672" stroke="#1C2A3D" stroke-width="1" stroke-dasharray="8,4"/>
+  </g>
+  <g id="closing-title">
+    <text x="80" y="156" font-family='Consolas, "Microsoft YaHei", "Courier New", monospace' font-size="18" fill="#7DD3FC" letter-spacing="2">FINAL TAKEAWAY · FROM DEMO TO ENGINEERING SYSTEM</text>
+    <text x="78" y="278" font-family='"Microsoft YaHei", Arial, sans-serif' font-size="60" font-weight="800" fill="#F8FAFC">
+      <tspan x="78" dy="0">我们做的不是一个会聊天的功能，</tspan>
+      <tspan x="78" dy="76" fill="#7DD3FC">而是一套能长期运行的 Agent 子系统</tspan>
+    </text>
+  </g>
+  <g id="closing-proof-line">
+    <path d="M84 430H1000" stroke="#7DD3FC" stroke-width="2"/>
+    <circle cx="124" cy="430" r="10" fill="#22C55E"/>
+    <circle cx="340" cy="430" r="10" fill="#F59E0B"/>
+    <circle cx="556" cy="430" r="10" fill="#8B5CF6"/>
+    <circle cx="772" cy="430" r="10" fill="#7DD3FC"/>
+    <text x="124" y="480" text-anchor="middle" font-family='"Microsoft YaHei", Arial, sans-serif' font-size="22" font-weight="800" fill="#F8FAFC">长期运行</text>
+    <text x="340" y="480" text-anchor="middle" font-family='"Microsoft YaHei", Arial, sans-serif' font-size="22" font-weight="800" fill="#F8FAFC">持续扩展</text>
+    <text x="556" y="480" text-anchor="middle" font-family='"Microsoft YaHei", Arial, sans-serif' font-size="22" font-weight="800" fill="#F8FAFC">风险治理</text>
+    <text x="772" y="480" text-anchor="middle" font-family='"Microsoft YaHei", Arial, sans-serif' font-size="22" font-weight="800" fill="#F8FAFC">回归验证</text>
+  </g>
+  <g id="closing-message">
+    <rect x="82" y="530" width="780" height="84" rx="6" fill="#111827" stroke="#2A3A52"/>
+    <text x="112" y="566" font-family='"Microsoft YaHei", Arial, sans-serif' font-size="26" font-weight="800" fill="#F59E0B">验收结论</text>
+    <text x="112" y="600" font-family='"Microsoft YaHei", Arial, sans-serif' font-size="22" fill="#B6C2D2">v1.0 - v2.3 已形成可控、可维护、可扩展、可观测、可回归的工程化落地能力</text>
+  </g>
+  <g id="closing-icon">
+    <rect x="1020" y="516" width="122" height="122" rx="6" fill="#111827" stroke="#2A3A52"/>
+    <use data-icon="chunk-filled/circle-checkmark" x="1048" y="544" width="66" height="66" fill="#22C55E"/>
+    <text x="1081" y="626" text-anchor="middle" font-family='Consolas, "Microsoft YaHei", "Courier New", monospace' font-size="18" fill="#22C55E">ACCEPTED</text>
+  </g>
+  <g id="footer">
+    <text x="80" y="680" font-family='"Microsoft YaHei", Arial, sans-serif' font-size="16" fill="#7F8EA3">Source: Agent 系统介绍演讲稿 + Agent 系统验收说明文档</text>
+  </g>
+</svg>
+
+

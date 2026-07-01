@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <defs>
+    <linearGradient id="coverScrim" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#05070D" stop-opacity="0.96"/>
+      <stop offset="55%" stop-color="#05070D" stop-opacity="0.64"/>
+      <stop offset="100%" stop-color="#05070D" stop-opacity="0.18"/>
+    </linearGradient>
+  </defs>
+  <g id="background">
+    <rect x="0" y="0" width="1280" height="720" fill="#05070D"/>
+    <image href="../images/cover_blueprint_bg.png" x="0" y="0" width="1280" height="720" preserveAspectRatio="xMidYMid slice"/>
+    <rect x="0" y="0" width="1280" height="720" fill="url(#coverScrim)"/>
+    <path d="M56 80H1180 M56 640H1180 M96 40V680 M1200 40V680" stroke="#1C2A3D" stroke-width="1" fill="none" stroke-dasharray="8,4"/>
+  </g>
+  <g id="title-block">
+    <text x="74" y="138" font-family='Consolas, "Microsoft YaHei", "Courier New", monospace' font-size="18" fill="#7DD3FC" letter-spacing="2">AGENT SYSTEM BLUEPRINT · v1.0 MVP -> v2.3</text>
+    <text x="72" y="250" font-family='"Microsoft YaHei", Arial, sans-serif' font-size="82" font-weight="800" fill="#F8FAFC">
+      <tspan x="72" dy="0">学生管理系统</tspan>
+      <tspan x="72" dy="92">Agent 子系统</tspan>
+      <tspan x="72" dy="92" fill="#7DD3FC">工程化蓝图</tspan>
+    </text>
+    <text x="76" y="545" font-family='"Microsoft YaHei", Arial, sans-serif' font-size="34" fill="#B6C2D2">从“系统里加一个聊天框”到“落地一套可运营的 Agent 工程体系”</text>
+  </g>
+  <g id="proof-tags">
+    <rect x="74" y="596" width="170" height="46" rx="6" fill="#111827" stroke="#2A3A52"/>
+    <use data-icon="chunk-filled/circle-checkmark" x="92" y="607" width="24" height="24" fill="#22C55E"/>
+    <text x="126" y="626" font-family='"Microsoft YaHei", Arial, sans-serif' font-size="18" fill="#F8FAFC">21项全通过</text>
+    <rect x="264" y="596" width="170" height="46" rx="6" fill="#111827" stroke="#2A3A52"/>
+    <use data-icon="chunk-filled/robot" x="282" y="607" width="24" height="24" fill="#7DD3FC"/>
+    <text x="316" y="626" font-family='"Microsoft YaHei", Arial, sans-serif' font-size="18" fill="#F8FAFC">8个业务工具</text>
+    <rect x="454" y="596" width="190" height="46" rx="6" fill="#111827" stroke="#2A3A52"/>
+    <use data-icon="chunk-filled/chart-line" x="472" y="607" width="24" height="24" fill="#F59E0B"/>
+    <text x="506" y="626" font-family='"Microsoft YaHei", Arial, sans-serif' font-size="18" fill="#F8FAFC">可观测运营</text>
+  </g>
+  <g id="footer">
+    <text x="74" y="684" font-family='"Microsoft YaHei", Arial, sans-serif' font-size="16" fill="#7F8EA3">Source: Agent系统介绍演讲稿.html.md + Agent系统验收说明文档.md</text>
+  </g>
+</svg>
+
+

@@ -1,0 +1,66 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <g id="background">
+    <rect width="1280" height="720" fill="#05070D" />
+    <path d="M64 144H1216 M64 264H1216 M64 384H1216 M64 504H1216 M64 624H1216" stroke="#1C2A3D" stroke-width="1" stroke-dasharray="8,4" />
+    <path d="M160 44V676 M320 44V676 M480 44V676 M640 44V676 M800 44V676 M960 44V676 M1120 44V676" stroke="#1C2A3D" stroke-width="1" stroke-opacity="0.42" />
+  </g>
+  <g id="header">
+    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">可运营来自任务、反馈、监控和健康状态的闭环</text>
+    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">系统好不好用不靠主观判断，由 AgentTask、AgentFeedback、Provider 与 MCP 健康状态支撑</text>
+  </g>
+  <g id="hub-panel">
+    <circle cx="640" cy="372" r="126" fill="#111827" stroke="#7DD3FC" stroke-width="2" />
+    <circle cx="640" cy="372" r="92" fill="#111827" stroke="#2A3A52" stroke-dasharray="8,4" />
+    <use data-icon="chunk-filled/chart-line" x="604" y="296" width="72" height="72" fill="#F59E0B" />
+    <text x="632.152" y="409.417" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="34" font-weight="800" fill="#F8FAFC" id="_edit_8" data-edit-target="true" data-edit-annotation="调整大小：文本超出范围">Agent 运营面板</text>
+    <text x="640" y="448" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#7DD3FC">dashboard + tasks</text>
+  </g>
+  <g id="spoke-connectors">
+    <line x1="535" y1="300" x2="300" y2="214" stroke="#2A3A52" stroke-width="2" />
+    <line x1="640" y1="246" x2="640" y2="174" stroke="#2A3A52" stroke-width="2" />
+    <line x1="745" y1="300" x2="980" y2="214" stroke="#2A3A52" stroke-width="2" />
+    <line x1="514" y1="390" x2="278" y2="418" stroke="#2A3A52" stroke-width="2" />
+    <line x1="766" y1="390" x2="1002" y2="418" stroke="#2A3A52" stroke-width="2" />
+    <line x1="640" y1="498" x2="640" y2="586" stroke="#2A3A52" stroke-width="2" />
+  </g>
+  <g id="spoke-task">
+    <rect x="104" y="158" width="250" height="112" rx="6" fill="#111827" stroke="#2A3A52" />
+    <use data-icon="chunk-filled/database" x="126" y="186" width="36" height="36" fill="#7DD3FC" />
+    <text x="176" y="210" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">任务记录</text>
+    <text x="126" y="248" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#B6C2D2">AgentTask / 最近任务</text>
+  </g>
+  <g id="spoke-feedback">
+    <rect x="515" y="128" width="250" height="112" rx="6" fill="#111827" stroke="#2A3A52" />
+    <use data-icon="chunk-filled/users" x="537" y="156" width="36" height="36" fill="#8B5CF6" />
+    <text x="587" y="180" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">用户反馈</text>
+    <text x="523.988" y="218" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#B6C2D2">AgentFeedback / 原因聚合</text>
+  </g>
+  <g id="spoke-intent">
+    <rect x="926" y="158" width="250" height="112" rx="6" fill="#111827" stroke="#2A3A52" />
+    <use data-icon="chunk-filled/route" x="948" y="186" width="36" height="36" fill="#F59E0B" />
+    <text x="998" y="210" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">意图与工具</text>
+    <text x="948" y="248" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#B6C2D2">intent / tool metrics</text>
+  </g>
+  <g id="spoke-provider">
+    <rect x="111.229" y="386" width="250" height="112" rx="6" fill="#111827" stroke="#2A3A52" />
+    <use data-icon="chunk-filled/server" x="126" y="414" width="36" height="36" fill="#22C55E" />
+    <text x="176" y="438" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">Provider 分布</text>
+    <text x="126" y="476" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#B6C2D2">模型调用与路由状态</text>
+  </g>
+  <g id="spoke-mcp">
+    <rect x="926" y="386" width="250" height="112" rx="6" fill="#111827" stroke="#2A3A52" />
+    <use data-icon="chunk-filled/map" x="948" y="414" width="36" height="36" fill="#7DD3FC" />
+    <text x="998" y="438" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">MCP 健康</text>
+    <text x="948" y="476" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="18" fill="#B6C2D2">Tencent Map health</text>
+  </g>
+  <g id="spoke-detail">
+    <rect x="490" y="572" width="300" height="86" rx="6" fill="#111827" stroke="#2A3A52" />
+    <use data-icon="chunk-filled/files" x="514" y="594" width="34" height="34" fill="#F59E0B" />
+    <text x="562" y="618" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#F8FAFC">任务详情可复盘</text>
+    <text x="496.941" y="649.446" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="18" fill="#B6C2D2">从指标回到具体链路，形成定位闭环</text>
+  </g>
+  <g id="footer">
+    <text x="56" y="676" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="16" fill="#7F8EA3">P11 · hub-spoke adaptation · Source: Agent 系统验收说明文档</text>
+  </g>
+</svg>

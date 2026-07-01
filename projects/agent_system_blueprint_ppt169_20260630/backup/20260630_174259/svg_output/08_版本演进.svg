@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <g id="background">
+    <rect width="1280" height="720" fill="#05070D" />
+    <path d="M80 360H1200" stroke="#2A3A52" stroke-width="3" />
+    <path d="M80 160H1200 M80 560H1200" stroke="#1C2A3D" stroke-width="1" stroke-dasharray="8,4" />
+  </g>
+  <g id="header">
+    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">四轮演进让系统从“可运行”走向可运营</text>
+    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">每一版不是单纯加功能，是在补丢块长期运行所霢的工程底座</text>
+  </g>
+  <g id="milestone-v10">
+    <circle cx="120" cy="360" r="22" fill="#7DD3FC" />
+    <text x="120" y="300" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="26" font-weight="700" fill="#7DD3FC">v1.0</text>
+    <text x="120" y="430" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" font-weight="700" fill="#F8FAFC">朢小闭</text>
+    <text x="120" y="468" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">RAG / 多轮 / SSE</text>
+  </g>
+  <g id="milestone-v20">
+    <circle cx="380" cy="360" r="22" fill="#8B5CF6" />
+    <text x="380" y="300" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="26" font-weight="700" fill="#8B5CF6">v2.0</text>
+    <text x="380" y="430" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" font-weight="700" fill="#F8FAFC">统一底座</text>
+    <text x="380" y="468" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">BaseTool / HITL</text>
+  </g>
+  <g id="milestone-v21">
+    <circle cx="640" cy="360" r="22" fill="#F59E0B" />
+    <text x="640" y="300" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="26" font-weight="700" fill="#F59E0B">v2.1</text>
+    <text x="640" y="430" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" font-weight="700" fill="#F8FAFC">可观测运</text>
+    <text x="640" y="468" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">反馈 / 监控 / MCP</text>
+  </g>
+  <g id="milestone-v22">
+    <circle cx="900" cy="360" r="22" fill="#22C55E" />
+    <text x="900" y="300" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="26" font-weight="700" fill="#22C55E">v2.2</text>
+    <text x="900" y="430" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" font-weight="700" fill="#F8FAFC">长期可用</text>
+    <text x="900" y="468" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">记忆压缩 / UI 回归</text>
+  </g>
+  <g id="milestone-v23">
+    <circle cx="1160" cy="360" r="22" fill="#7DD3FC" />
+    <text x="1160" y="300" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="26" font-weight="700" fill="#7DD3FC">v2.3</text>
+    <text x="1160" y="430" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" font-weight="700" fill="#F8FAFC">系统收口</text>
+    <text x="1160" y="468" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="20" fill="#B6C2D2">周边 / Supervisor</text>
+  </g>
+  <g id="takeaway">
+    <rect x="250" y="585" width="780" height="64" rx="6" fill="#111827" stroke="#2A3A52" />
+    <text x="640" y="626" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="700" fill="#F59E0B" id="_edit_26" data-edit-target="true" data-edit-annotation="调整大小：文本超出范围">主线：先跑闭环，再统丢底座，最后把能力收口为可运营系统</text>
+  </g>
+</svg>

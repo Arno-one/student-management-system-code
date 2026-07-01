@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <g id="background">
+    <rect width="1280" height="720" fill="#05070D" />
+    <path d="M80 155H1200 M80 600H1200" stroke="#1C2A3D" stroke-width="1" stroke-dasharray="8,4" />
+  </g>
+  <g id="header">
+    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">v2.0 的真正转折是统一底座，不是堆新工</text>
+    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">扩展新工具不再改 Executor 主干，是进入同一套工具契约</text>
+  </g>
+  <g id="pillar-basetool">
+    <rect x="70" y="180" width="260" height="390" rx="6" fill="#111827" stroke="#7DD3FC" />
+    <use data-icon="chunk-filled/code-block" x="96" y="210" width="38" height="38" fill="#7DD3FC" />
+    <text x="96" y="292" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="28" font-weight="700" fill="#7DD3FC">BaseTool</text>
+    <text x="96" y="348" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" fill="#F8FAFC">统一入口</text>
+    <text x="96" y="392" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">run(ctx, params)</text>
+    <text x="96" y="430" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">统一 success/error</text>
+    <text x="75.759" y="498.554" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#F59E0B" id="_edit_10" data-edit-target="true" data-edit-annotation="调整大小：文本超出范围">收益：工具接口零散度下降</text>
+  </g>
+  <g id="pillar-context">
+    <rect x="362" y="180" width="260" height="390" rx="6" fill="#111827" stroke="#8B5CF6" />
+    <use data-icon="chunk-filled/server" x="388" y="210" width="38" height="38" fill="#8B5CF6" />
+    <text x="388" y="292" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="28" font-weight="700" fill="#8B5CF6">ToolContext</text>
+    <text x="388" y="348" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" fill="#F8FAFC">运行时封</text>
+    <text x="388" y="392" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">db session</text>
+    <text x="388" y="430" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">user / role / session</text>
+    <text x="377.88" y="497.108" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#F59E0B">收益：依赖传递标准化</text>
+  </g>
+  <g id="pillar-registry">
+    <rect x="654" y="180" width="260" height="390" rx="6" fill="#111827" stroke="#F59E0B" />
+    <use data-icon="chunk-filled/layers" x="680" y="210" width="38" height="38" fill="#F59E0B" />
+    <text x="680" y="292" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="28" font-weight="700" fill="#F59E0B">Registry</text>
+    <text x="680" y="348" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" fill="#F8FAFC">查表分发</text>
+    <text x="680" y="392" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">替代 if / elif</text>
+    <text x="680" y="430" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">新增工具低改</text>
+    <text x="659.759" y="500" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#F59E0B">收益：Executor 不膨胢</text>
+  </g>
+  <g id="pillar-planstep">
+    <rect x="946" y="180" width="260" height="390" rx="6" fill="#111827" stroke="#22C55E" />
+    <use data-icon="chunk-filled/route" x="972" y="210" width="38" height="38" fill="#22C55E" />
+    <text x="972" y="292" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="28" font-weight="700" fill="#22C55E">PlanStep</text>
+    <text x="972" y="348" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="26" fill="#F8FAFC">链式传</text>
+    <text x="972" y="392" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">params</text>
+    <text x="972" y="430" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">inputs_from</text>
+    <text x="961.88" y="500" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#F59E0B">收益：跨工具协作可控</text>
+  </g>
+  <g id="takeaway">
+    <text x="640" y="646" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="34" font-weight="700" fill="#F59E0B">统一底座让加工具”变成注册新能力，不是重写执行器</text>
+  </g>
+</svg>

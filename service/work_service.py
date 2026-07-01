@@ -1,5 +1,6 @@
 from openai import OpenAI
 import json
+import time
 import requests
 from urllib.parse import quote
 import dashscope
@@ -34,6 +35,7 @@ def evaluation_stu(stu_name,sex,stu_score,style):
 
     elif style == style.criticism:
         messages.append({"role": "user", "content": f"请批判的评价{stu_name},性别{sex},他的成绩是{stu_score}"})
+    t0 = time.time()
     response = client.chat.completions.create(
         model="deepseek-v4-flash",
         messages=messages,
@@ -41,6 +43,8 @@ def evaluation_stu(stu_name,sex,stu_score,style):
         reasoning_effort="high",  # 思考强度
         extra_body={"thinking": {"type": "enabled"}}  # 是否思考
     )
+    cost_ms = int((time.time() - t0) * 1000)
+    logger.info("学生评价 LLM 调用完成：student=%s, style=%s, 耗时=%sms", stu_name, style, cost_ms)
     return response.choices[0].message.content
 
 def generate_image(prompt: str):
@@ -87,55 +91,215 @@ def generate_image(prompt: str):
         return {"error": response.message, "code": response.code}
 
 # ============ 多轮记忆对话相关 ============
-# 用一个全局字典在内存中保存每个会话的历史消息
-# key 是 session_id（会话标识），value 是这个会话的消息列表
-# 注意：存在内存里，服务一重启就清空；生产环境建议换成 Redis 等持久化存储
-conversation_store: dict[str, list[dict]] = {}
+# 两层记忆架构：
+#   内存短期记忆 — 当前活跃会话的消息缓存，服务重启后清空，保证响应速度
+#   数据库长期记忆 — 持久化到 MySQL，用于历史会话回溯和跨重启恢复
+#
+# 工作流程：
+#   1. 首次对话 → 从 DB 加载历史消息到内存缓存 → 对话期间读写内存
+#   2. 每轮对话后 → 同时写入内存缓存 + 持久化到 DB
+#   3. 下次再打开同一会话 → 优先从内存取，内存没有再从 DB 加载
+
+SYSTEM_PROMPT = "你是一个经验丰富的工作助手，会帮助我完成一些任务"
+
+# 内存短期记忆：key=session_id, value={"summary","style","messages":[...]}
+# messages 列表中的元素是 {"role":"...", "content":"..."} 的 dict
+_session_cache: dict[int, dict] = {}
 
 
-def talks(session_id: str, prompt: str):
+def _load_session_to_cache(session_id: int, db):
+    """将指定会话从数据库加载到内存缓存（如已缓存则跳过）"""
+    if session_id in _session_cache:
+        return
+
+    from DAO.talk_dao import get_session_by_id, get_messages_by_session
+
+    session = get_session_by_id(session_id, db)
+    if not session:
+        return
+
+    history = get_messages_by_session(session_id, db)
+    cache = {
+        "summary": session.summary or "",
+        "style": session.style or "",
+        "messages": [],
+    }
+
+    # 分离 system 消息和对话消息（user/assistant），system 消息不放进缓存消息列表
+    for m in history:
+        if m.role == "user":
+            cache["messages"].append({"role": "user", "content": m.user_content or ""})
+        elif m.role == "assistant":
+            cache["messages"].append({"role": "assistant", "content": m.ai_content or ""})
+
+    _session_cache[session_id] = cache
+    logger.info("会话 %s 已从数据库加载到内存缓存，共 %s 条对话消息", session_id, len(cache["messages"]))
+
+
+def _build_background(session_id: int) -> str:
+    """构建背景板：摘要 + 风格，注入 system prompt 发给大模型"""
+    cache = _session_cache.get(session_id, {})
+    summary = cache.get("summary", "")
+    style = cache.get("style", "")
+    if not summary and not style:
+        return SYSTEM_PROMPT
+    parts = [SYSTEM_PROMPT]
+    if summary:
+        parts.append(f"【对话背景】{summary}")
+    if style:
+        parts.append(f"【用户偏好】{style}")
+    return "\n".join(parts)
+
+
+def _summarize_turn(session_id: int, user_msg: str, ai_reply: str, db):
+    """每轮对话后调用 DeepSeek 更新会话摘要和用户风格偏好（同时更新内存缓存和数据库）"""
+    from DAO.talk_dao import update_session_summary
+
+    prev = _session_cache.get(session_id, {})
+    prev_summary = prev.get("summary", "")
+
+    summary_hint = f"当前已归纳的摘要：{prev_summary}" if prev_summary else "这是第一轮对话，请从零开始归纳。"
+
+    summarize_prompt = [
+        {"role": "system", "content": (
+            "你是一个对话分析助手。根据用户和大模型的最新一轮对话，更新对话主题摘要和用户沟通风格偏好。\n"
+            "输出一个 JSON，格式固定为：\n"
+            '{"summary": "简短的主题摘要（≤50字）", "style": "偏好的沟通风格关键词（如：简洁/详细/幽默/严肃/技术型等，≤20字）"}\n'
+            "只输出 JSON，不要多余内容。"
+        )},
+        {"role": "user", "content": (
+            f"{summary_hint}\n"
+            f"用户最新发言：{user_msg}\n"
+            f"大模型最新回复：{ai_reply}\n"
+            "请输出 JSON。"
+        )},
+    ]
+
+    try:
+        response = client.chat.completions.create(
+            model="deepseek-v4-flash",
+            messages=summarize_prompt,
+            stream=False,
+            max_tokens=200,
+        )
+        raw = response.choices[0].message.content.strip()
+        import re
+        match = re.search(r'\{.*\}', raw, re.DOTALL)
+        if match:
+            data = json.loads(match.group())
+            summary = data.get("summary", prev_summary or "")
+            style = data.get("style", "")
+
+            # 更新内存缓存
+            if session_id in _session_cache:
+                _session_cache[session_id]["summary"] = summary
+                _session_cache[session_id]["style"] = style
+
+            # 持久化到数据库
+            update_session_summary(session_id, summary, style, db)
+            logger.info("会话 %s 摘要已更新：summary=%s, style=%s", session_id, summary, style)
+    except Exception as e:
+        logger.warning("会话 %s 摘要更新失败：%s", session_id, e)
+
+
+def talks(session_id: int, user_id: str, prompt: str, db):
     """
-    多轮记忆对话：根据 session_id 区分不同的对话，自动带上历史上下文调用 deepseek
-    :param session_id: 会话标识，同一个标识就是同一段连续对话
-    :param prompt: 用户这一轮说的话
-    :return: 大模型这一轮的回复内容
+    多轮记忆对话：
+    - 内存短期记忆：活跃会话的消息缓存在内存中，保证响应速度
+    - 数据库长期记忆：每轮对话同步写入 DB，历史会话可回溯
+    - 背景板：每次对话将 summary 和 style 注入 system prompt
+    :param session_id: 会话主键 ID
+    :param user_id: 用户标识（校验归属）
+    :param prompt: 用户本轮输入
+    :param db: 数据库会话
+    :return: 大模型回复
     """
-    # 如果是新会话，先初始化一条 system 消息，设定大模型的人设
-    if session_id not in conversation_store:
-        conversation_store[session_id] = [
-            {"role": "system", "content": "你是一个经验丰富的工作助手，会帮助我完成一些任务"},
-        ]
+    from DAO.talk_dao import (
+        get_session_by_id, add_message, touch_session, update_session_title,
+    )
 
-    # 取出这个会话的历史消息，并把用户这一轮的输入追加进去
-    messages = conversation_store[session_id]
+    session = get_session_by_id(session_id, db)
+    if not session:
+        return {"error": f"会话 {session_id} 不存在或已删除"}
+    if session.user_id != user_id:
+        return {"error": "无权访问该会话"}
+
+    # 确保会话已加载到内存缓存
+    _load_session_to_cache(session_id, db)
+
+    cache = _session_cache[session_id]
+    is_new = len(cache["messages"]) == 0
+
+    # 拼接背景板（summary + style 作为 system prompt 的一部分）
+    system_content = _build_background(session_id)
+
+    # 从内存缓存取对话消息：≤10 条全发，>10 条只取最新 10 条 + 摘要已在背景板中
+    dialog_msgs = cache["messages"]
+    if len(dialog_msgs) <= 10:
+        recent = dialog_msgs
+    else:
+        recent = dialog_msgs[-10:]
+
+    messages = [{"role": "system", "content": system_content}] + list(recent)
+
+    # 追加本轮用户输入
     messages.append({"role": "user", "content": prompt})
 
-    # 把完整的历史消息（含上下文）一起发给 deepseek，模型据此实现"记忆"
+    # 调用大模型
+    t0 = time.time()
     response = client.chat.completions.create(
         model="deepseek-v4-flash",
         messages=messages,
-        stream=False,  # 是否流式返回
-        reasoning_effort="high",  # 思考强度
-        extra_body={"thinking": {"type": "enabled"}}  # 是否思考
+        stream=False,
+        reasoning_effort="high",
+        extra_body={"thinking": {"type": "enabled"}},
     )
 
-    # 拿到模型回复，并把回复也存进历史，作为下一轮对话的上下文
     reply = response.choices[0].message.content
-    messages.append({"role": "assistant", "content": reply})
+    cost_ms = int((time.time() - t0) * 1000)
+    logger.info("多轮对话 LLM 调用完成：session_id=%s, 耗时=%sms", session_id, cost_ms)
+
+    # 更新内存短期记忆
+    cache["messages"].append({"role": "user", "content": prompt})
+    cache["messages"].append({"role": "assistant", "content": reply})
+
+    # 持久化到数据库长期记忆
+    add_message(session_id, "user", user_content=prompt, db=db)
+    add_message(session_id, "assistant", ai_content=reply, db=db)
+    touch_session(session_id, db)
+
+    # 首次对话后自动用第一句话的前30字作为标题
+    if is_new:
+        title = prompt[:30] + ("..." if len(prompt) > 30 else "")
+        update_session_title(session_id, title, db)
+
+    # 更新摘要和风格（内存 + 数据库）
+    _summarize_turn(session_id, prompt, reply, db)
 
     return reply
 
 
-def clear_talks(session_id: str):
+def clear_talks(session_id: int, user_id: str, db):
     """
-    清空指定会话的历史记忆，相当于重新开始一段全新对话
-    :param session_id: 要清空的会话标识
+    清空指定会话的历史消息（物理删除消息，保留会话壳）
+    :param session_id: 会话主键 ID
+    :param user_id: 用户标识（用于校验会话归属）
+    :param db: 数据库会话
     :return: 操作结果
     """
-    if session_id in conversation_store:
-        del conversation_store[session_id]
-        return {"success": True, "message": f"会话 {session_id} 的记忆已清空"}
-    return {"success": False, "message": f"未找到会话 {session_id}"}
+    from DAO.talk_dao import get_session_by_id, delete_messages_by_session
+
+    session = get_session_by_id(session_id, db)
+    if not session:
+        logger.warning("清空对话失败：会话 %s 不存在或已删除", session_id)
+        return {"success": False, "message": f"会话 {session_id} 不存在或已删除"}
+    if session.user_id != user_id:
+        logger.warning("清空对话失败：user_id=%s 无权操作会话 %s", user_id, session_id)
+        return {"success": False, "message": "无权操作该会话"}
+
+    count = delete_messages_by_session(session_id, db)
+    logger.info("清空对话消息：session_id=%s, 删除 %s 条消息", session_id, count)
+    return {"success": True, "message": f"会话 {session_id} 的消息已清空"}
 
 
 # ============ 腾讯地图：天气查询 + 地址转经纬度 ============
@@ -158,6 +322,7 @@ def query_weather(location: str = None, adcode: str = None, weather_type: str = 
     """
     # location 和 adcode 必须至少传一个，否则腾讯接口会报错，这里提前拦截
     if not location and not adcode:
+        logger.warning("天气查询参数缺失：location 和 adcode 均为空")
         return {"error": "location（经纬度）和 adcode（行政区划编码）必须二选一传入"}
 
     # 组装请求参数，key 是必填项
@@ -178,15 +343,20 @@ def query_weather(location: str = None, adcode: str = None, weather_type: str = 
 
     try:
         # requests 会自动对 params 里的参数做 URL 编码，无需手动处理
+        t0 = time.time()
         response = requests.get(WEATHER_URL, params=params, timeout=10)
         data = response.json()
+        cost_ms = int((time.time() - t0) * 1000)
     except Exception as e:
         # 网络异常或返回的不是合法 JSON 时，统一返回错误信息
+        logger.error("天气查询接口调用异常：%s", e)
         return {"error": f"调用天气接口失败：{e}"}
 
     # status=0 表示成功，非 0 把腾讯返回的错误信息透传出去
     if data.get("status") != 0:
+        logger.warning("天气查询接口返回错误：status=%s, message=%s", data.get("status"), data.get("message"))
         return {"error": data.get("message", "天气查询失败"), "raw_response": data}
+    logger.info("天气查询成功：location=%s, adcode=%s, type=%s, 耗时=%sms", location, adcode, weather_type, cost_ms)
     return data
 
 
@@ -198,6 +368,7 @@ def address_to_location(address: str, policy: int = 0):
     :return: 包含经纬度、结构化地址、行政区划编码等信息的 dict
     """
     if not address:
+        logger.warning("地址解析参数缺失：address 为空")
         return {"error": "address（地址）不能为空"}
 
     # 文档强调：只对 address 单独做 URL 编码，key/policy 等参数不编码
@@ -206,17 +377,22 @@ def address_to_location(address: str, policy: int = 0):
     url = f"{GEOCODER_URL}?address={encoded_address}&key={TENCENT_MAP_KEY}&policy={policy}"
 
     try:
+        t0 = time.time()
         response = requests.get(url, timeout=10)
         data = response.json()
+        cost_ms = int((time.time() - t0) * 1000)
     except Exception as e:
+        logger.error("地理编码接口调用异常：%s", e)
         return {"error": f"调用地理编码接口失败：{e}"}
 
     if data.get("status") != 0:
+        logger.warning("地理编码接口返回错误：status=%s, message=%s", data.get("status"), data.get("message"))
         return {"error": data.get("message", "地址解析失败"), "raw_response": data}
 
     # 解析成功后，把最常用的经纬度单独提取出来，方便前端直接使用
     result = data.get("result", {})
     loc = result.get("location", {})
+    logger.info("地址解析成功：address=%s, lat=%s, lng=%s, 耗时=%sms", address, loc.get("lat"), loc.get("lng"), cost_ms)
     return {
         "success": True,
         "lat": loc.get("lat"),                       # 纬度

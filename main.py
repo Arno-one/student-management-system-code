@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import os
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware  # 跨域中间件，前端页面调用接口需要
 from fastapi.exceptions import RequestValidationError  # 参数校验异常
@@ -6,6 +7,7 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from starlette.exceptions import HTTPException as StarletteHTTPException  # 兜底所有 HTTP 异常
 import uvicorn
+from config import TENCENT_MAP_MCP_STARTUP_MODE
 from database import init_db
 from API.statistical import sta_router
 from API.score_api import router_score
@@ -14,6 +16,12 @@ from API.student_api import student_router
 from API.employment_api import employment_router
 from API.teacher_information_API_Router import teacher_information_router
 from API.work_api import woker, email_router
+from API.nl2sql_api import nl2sql_router
+from API.auth_api import auth_router
+from API.system_api import system_router
+from RAG.controller import rag_router
+from agent_system.api import agent_router
+from agent_system.tools.mcp_client import tencent_map_mcp_client
 from util.log import setup_logging, get_logger, register_request_logging, takeover_uvicorn_loggers
 
 # ===== 初始化日志系统 =====
@@ -33,9 +41,19 @@ async def lifespan(app: FastAPI):
     takeover_uvicorn_loggers()
     logger.info("应用启动中：开始初始化数据库……")
     init_db()
+    # MCP 是增强能力，初始化失败也不能影响主应用启动，业务工具会自动回退原有 REST 链路。
+    if TENCENT_MAP_MCP_STARTUP_MODE == "eager":
+        await tencent_map_mcp_client.startup()
+    elif TENCENT_MAP_MCP_STARTUP_MODE == "lazy":
+        logger.info("腾讯地图 MCP 已启用延迟初始化：首次调用相关工具时再连接")
+    else:
+        logger.info("腾讯地图 MCP 已关闭：TENCENT_MAP_MCP_STARTUP_MODE=disabled")
     logger.info("数据库初始化完成，应用已就绪")
-    yield
-    logger.info("应用正在关闭")
+    try:
+        yield
+    finally:
+        await tencent_map_mcp_client.shutdown()
+        logger.info("应用正在关闭")
 
 
 app = FastAPI(title='学生信息管理系统',
@@ -50,8 +68,6 @@ register_request_logging(app)
 
 # ===== 配置 CORS 跨域 =====
 # 前端 index.html 不管是用文件方式打开还是用本地静态服务器打开，
-# 都属于"跨域"请求，必须在后端放开跨域限制，浏览器才允许 fetch 调用接口。
-# 开发阶段直接放开所有来源；正式上线建议把 allow_origins 改成具体的前端域名。
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],      # 允许的来源，* 表示全部
@@ -62,12 +78,6 @@ app.add_middleware(
 
 
 # ===== 全局异常处理：让"报错"也返回统一结构 {code, msg, data, total} =====
-# 这样不管接口成功还是失败，前端拿到的 JSON 结构都一致，处理起来更省心。
-#
-# 注意一个坑：兜底的 Exception 处理器运行在最外层的 ServerErrorMiddleware 里，
-# 它在 CORSMiddleware 的"外面"，所以它返回的 500 响应默认不会带 CORS 头，
-# 浏览器就会把它当成跨域失败，前端只能看到 "Failed to fetch"，看不到真正的错误信息。
-# 解决办法：在所有异常处理器里手动补上 Access-Control-Allow-Origin 头，保证错误也能被前端读到。
 CORS_HEADERS = {"Access-Control-Allow-Origin": "*"}
 
 
@@ -124,6 +134,10 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # 学生基本信息管理模块
 app.include_router(student_router, prefix='/student', tags=['学生基本信息管理'])
+# 登录认证模块
+app.include_router(auth_router, prefix='/auth', tags=['登录认证'])
+# 系统管理模块（用户 / 角色 / 权限）
+app.include_router(system_router, prefix='/system', tags=['系统管理'])
 # 学生考核成绩管理模块
 app.include_router(router_score, prefix='/score', tags=['学生考核成绩管理'])
 # 学生就业管理模块
@@ -131,13 +145,34 @@ app.include_router(employment_router, prefix="/Employment", tags=["学生就业�
 # 班级管理模块
 app.include_router(class_router, prefix="/class", tags=["班级管理"])
 # 老师管理模块
-app.include_router(teacher_information_router, prefix="", tags=["教师管理"])
+app.include_router(teacher_information_router, prefix="/teacher", tags=["教师管理"])
 # 统计分析模块
 app.include_router(sta_router, prefix='/statistics', tags=['统计分析模块'])
 # 作业模块
 app.include_router(woker, prefix='/work', tags=['作业模块'])
 # 邮件模块（调用大模型生成内容并发送邮件）
 app.include_router(email_router, prefix='/email', tags=['邮件管理'])
+# NL2SQL 智能问数模块
+app.include_router(nl2sql_router, prefix='/nl2sql', tags=['NL2SQL智能问数'])
+# RAG 四大名著知识库
+app.include_router(rag_router,prefix='/rag', tags=['RAG 四大名著知识库'])
+# 智能 Agent 助手
+app.include_router(agent_router, prefix='/agent', tags=['智能Agent'])
+
+def _is_reload_enabled() -> bool:
+    """是否开启热重载：默认关闭，避免前端依赖和构建产物频繁改动把后端反复刷重启。"""
+    value = str(os.getenv('UVICORN_RELOAD', '')).strip().lower()
+    return value in {'1', 'true', 'yes', 'on'}
+
 
 if __name__ == '__main__':
-    uvicorn.run('main:app', host='localhost', port=8088, reload=True)
+    reload_enabled = _is_reload_enabled()
+    uvicorn.run(
+        'main:app',
+        host='0.0.0.0',
+        port=8088,
+        reload=reload_enabled,
+        # 只有在显式开启热重载时，才限制监控目录，避免监控到 node_modules、日志和构建产物。
+        reload_dirs=['API', 'agent_system', 'DAO', 'model', 'service', 'util', 'RAG'] if reload_enabled else None,
+        reload_excludes=['frontend-vue/node_modules/*', 'frontend-vue/dist/*', 'logs/*', '.git/*', '.codegraph/*'] if reload_enabled else None,
+    )

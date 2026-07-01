@@ -1,0 +1,62 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <g id="background">
+    <rect width="1280" height="720" fill="#05070D" />
+    <path d="M56 132H1224 M56 228H1224 M56 324H1224 M56 420H1224 M56 516H1224 M56 612H1224" stroke="#1C2A3D" stroke-width="1" stroke-dasharray="8,4" />
+    <path d="M110 44V676 M310 44V676 M510 44V676 M710 44V676 M910 44V676 M1110 44V676" stroke="#1C2A3D" stroke-width="1" stroke-opacity="0.48" />
+  </g>
+  <g id="header">
+    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">21 项验收条目全部通过，结论可以先给出</text>
+    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">功能需求、扩展需求与非功能需求均已达成，验收通过率为百分之百</text>
+  </g>
+  <g id="summary-kpi">
+    <rect x="58" y="148" width="318" height="132" rx="6" fill="#111827" stroke="#2A3A52" />
+    <use data-icon="chunk-filled/circle-checkmark" x="82" y="174" width="44" height="44" fill="#22C55E" />
+    <text x="146" y="202" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="76" font-weight="800" fill="#F59E0B">100%</text>
+    <text x="84" y="250" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="700" fill="#F8FAFC">验收通过</text>
+    <text x="236" y="250" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">21 / 21</text>
+  </g>
+  <g id="acceptance-table">
+    <rect x="58" y="316" width="742" height="274" rx="6" fill="#111827" stroke="#2A3A52" />
+    <rect x="58" y="316" width="742" height="54" rx="6" fill="#111827" stroke="#2A3A52" />
+    <text x="84" y="351" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" font-weight="800" fill="#7DD3FC">验收维度</text>
+    <text x="344" y="351" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" font-weight="800" fill="#7DD3FC">条目</text>
+    <text x="494" y="351" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" font-weight="800" fill="#7DD3FC">达成版本</text>
+    <text x="696" y="351" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" font-weight="800" fill="#7DD3FC">状态</text>
+    <line x1="320" y1="316" x2="320" y2="590" stroke="#2A3A52" />
+    <line x1="460" y1="316" x2="460" y2="590" stroke="#2A3A52" />
+    <line x1="630" y1="316" x2="630" y2="590" stroke="#2A3A52" />
+    <path d="M58 424H800 M58 478H800 M58 532H800" stroke="#2A3A52" />
+    <text x="84" y="407" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="700" fill="#F8FAFC">必须完成</text>
+    <text x="360" y="407" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="30" fill="#F8FAFC">5 / 5</text>
+    <text x="494" y="407" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">v1.0 MVP</text>
+    <text x="696" y="407" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#22C55E">通过</text>
+    <text x="84" y="461" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="700" fill="#F8FAFC">推荐完成</text>
+    <text x="360" y="461" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="30" fill="#F8FAFC">5 / 5</text>
+    <text x="494" y="461" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">v1.0 - v2.3</text>
+    <text x="696" y="461" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#22C55E">通过</text>
+    <text x="84" y="515" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="700" fill="#F8FAFC">可选扩展</text>
+    <text x="360" y="515" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="30" fill="#F8FAFC">6 / 6</text>
+    <text x="494" y="515" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">v2.0 - v2.3</text>
+    <text x="696" y="515" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#22C55E">通过</text>
+    <text x="84" y="569" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="700" fill="#F8FAFC">非功能需求</text>
+    <text x="360" y="569" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="30" fill="#F8FAFC">5 / 5</text>
+    <text x="494" y="569" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">全版本支持</text>
+    <text x="696" y="569" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" font-weight="800" fill="#22C55E">通过</text>
+  </g>
+  <g id="formula-proof">
+    <rect x="842" y="148" width="382" height="442" rx="6" fill="#111827" stroke="#2A3A52" />
+    <text x="872" y="196" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="34" font-weight="800" fill="#F8FAFC">结论公式</text>
+    <text x="872" y="235" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2" id="_edit_38" data-edit-target="true" data-edit-annotation="调整大小：文本超出范围">所有条目进入同一条证据链，不按演示印象主观判断</text>
+    <image href="../images/formula_acceptance_rate.png" x="890" y="282" width="286" height="57" preserveAspectRatio="xMidYMid meet" />
+    <path d="M890 384H1176" stroke="#7DD3FC" stroke-width="2" stroke-dasharray="8,4" />
+    <use data-icon="chunk-filled/table" x="892" y="420" width="42" height="42" fill="#7DD3FC" />
+    <text x="954" y="448" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="700" fill="#F8FAFC">需求对照</text>
+    <use data-icon="chunk-filled/files" x="892" y="486" width="42" height="42" fill="#F59E0B" />
+    <text x="954" y="514" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="700" fill="#F8FAFC">测试沉淀</text>
+    <text x="872" y="566" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2" id="_edit_45" data-edit-target="true" data-edit-annotation="调整大小：文本超出范围">验收结论：功能、治理、观测、回归四条证据同时闭合</text>
+  </g>
+  <g id="footer">
+    <text x="56" y="676" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="16" fill="#7F8EA3">P09 · consulting table adaptation · Source: Agent 系统验收说明文档</text>
+  </g>
+</svg>

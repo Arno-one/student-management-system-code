@@ -7,6 +7,7 @@ from database import get_db
 from scheme.response_scheme import success_page, success
 from service import statistical_service
 from util.log import get_logger
+from util.rbac import require_permission
 
 # 本模块专用 logger，来源标记为 API.statistical
 logger = get_logger(__name__)
@@ -14,7 +15,7 @@ logger = get_logger(__name__)
 sta_router = APIRouter()
 
 
-@sta_router.get('/ge_stu/plus', summary='查询年龄大于xx的学生')
+@sta_router.get('/ge_stu/plus', summary='查询年龄大于xx的学生', dependencies=[Depends(require_permission('statistics:view'))])
 def get_student_age(
     skip: int = Query(ge=0, default=0),
     limit: int = Query(ge=1, default=10),
@@ -28,7 +29,7 @@ def get_student_age(
     return success_page(result, page, page_size, total)
 
 
-@sta_router.get('/stu_count', summary='统计学生人数')
+@sta_router.get('/stu_count', summary='统计学生人数', dependencies=[Depends(require_permission('statistics:view'))])
 def get_student_count(db=Depends(get_db)):
     logger.info("统计-学生总人数")
     result = statistical_service.get_student_count(db)
@@ -36,7 +37,7 @@ def get_student_count(db=Depends(get_db)):
 
 
 @sta_router.get('/score_greater/plus',
-                summary='查询每次考试都在xx分以上的学生信息')
+                summary='查询每次考试都在xx分以上的学生信息', dependencies=[Depends(require_permission('statistics:view'))])
 def get_score_grade(
     skip: int = Query(ge=0, default=0),
     limit: int = Query(ge=1, default=10),
@@ -51,7 +52,7 @@ def get_score_grade(
 
 
 @sta_router.get('/score_fails',
-                summary='查询2次以上不及格学生的信息')
+                summary='查询2次以上不及格学生的信息', dependencies=[Depends(require_permission('statistics:view'))])
 def get_score_fails(
     skip: int = Query(ge=0, default=0),
     limit: int = Query(ge=1, default=10),
@@ -65,7 +66,7 @@ def get_score_fails(
 
 
 @sta_router.get('/class_avg',
-                summary='查询每个班级的每次考试的平均分,从高到低排序')
+                summary='查询每个班级的每次考试的平均分,从高到低排序', dependencies=[Depends(require_permission('statistics:view'))])
 def get_class_avg(
     skip: int = Query(ge=0, default=0),
     limit: int = Query(ge=1, default=10),
@@ -79,7 +80,7 @@ def get_class_avg(
 
 
 @sta_router.get('/tall_sal',
-                summary='查询就业表中薪资最高的x个人的姓名，班级和就业时间，就业公司')
+                summary='查询就业表中薪资最高的x个人的姓名，班级和就业时间，就业公司', dependencies=[Depends(require_permission('statistics:view'))])
 def get_tall_sal(
     limit: int = Query(ge=5, default=5),
     db=Depends(get_db)
@@ -92,7 +93,7 @@ def get_tall_sal(
 
 
 @sta_router.get('/job_time',
-                summary='查询每个学生的就业时长（offer下发时间-就业开放时间）')
+                summary='查询每个学生的就业时长（offer下发时间-就业开放时间）', dependencies=[Depends(require_permission('statistics:view'))])
 def get_job_time(
     skip: int = Query(ge=0, default=0),
     limit: int = Query(ge=1, default=10),
@@ -106,7 +107,7 @@ def get_job_time(
 
 
 @sta_router.get('/avg_class_job_time',
-                summary='查询每个班级的平均就业时长')
+                summary='查询每个班级的平均就业时长', dependencies=[Depends(require_permission('statistics:view'))])
 def get_avg_class_job_time(
     skip: int = Query(ge=0, default=0),
     limit: int = Query(ge=1, default=10),

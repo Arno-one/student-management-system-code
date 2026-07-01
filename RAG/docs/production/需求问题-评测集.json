@@ -1,0 +1,58 @@
+[
+  {
+    "question": "本工程项目名称是什么？",
+    "expected_mode": "qa_direct",
+    "must_include": ["某海域海上风电场一期工程"],
+    "must_not_include": [],
+    "expected_source_type": "qa",
+    "note": "项目名称应优先命中标准 Q&A 直返。"
+  },
+  {
+    "question": "本项目风机的单机容量有哪些？",
+    "expected_mode": "retrieve_answer",
+    "must_include": ["8MW", "11MW"],
+    "must_not_include": ["5MW"],
+    "expected_source_type": "pdf",
+    "note": "该问法在 QA 候选里存在多条高相似答案，当前按保守策略允许回退原文回答。"
+  },
+  {
+    "question": "本项目的总装机容量是多少？",
+    "expected_mode": "qa_direct",
+    "must_include": ["500MW", "502MW"],
+    "must_not_include": [],
+    "expected_source_type": "qa",
+    "note": "Q&A 中同时包含名义口径和推荐方案口径。"
+  },
+  {
+    "question": "本项目海域的常浪向是什么？",
+    "expected_mode": "qa_direct",
+    "must_include": ["ENE"],
+    "must_not_include": [],
+    "expected_source_type": "qa",
+    "note": "应优先命中海洋水文相关 Q&A。"
+  },
+  {
+    "question": "本工程66kV配电装置的接线方式是什么？",
+    "expected_mode": "qa_direct",
+    "must_include": ["单母线分段接线"],
+    "must_not_include": [],
+    "expected_source_type": "qa",
+    "note": "电气系统标准问法应直接命中 Q&A。"
+  },
+  {
+    "question": "2019年5月、90m高度处的风速是多少？",
+    "expected_mode": "retrieve_answer",
+    "must_include": ["2019年5月", "90m", "8.32", "8.33"],
+    "must_not_include": [],
+    "expected_source_type": "pdf",
+    "note": "该题来自 PDF 表格，回答时应同时覆盖两个 90m 测点。"
+  },
+  {
+    "question": "请检查本文中有哪些上下文不一致或口径不一致的地方，并分项说明原因。",
+    "expected_mode": "refuse",
+    "must_include": ["资料不足", "无法确定"],
+    "must_not_include": [],
+    "expected_source_type": null,
+    "note": "当前阶段对开放式全局一致性检查保持保守拒答，避免证据不足时编造结论。"
+  }
+]

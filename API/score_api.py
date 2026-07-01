@@ -2,14 +2,17 @@
 成绩管理Controller层 — MVC中的Controller
 只负责HTTP请求/响应处理，不包含业务逻辑
 """
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException, UploadFile, File
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
 from database import get_db
-from scheme.schema_score import Addscore, Updatescore
+from scheme.schema_score import Addscore, Updatescore, ScoreExtract
 from scheme.response_scheme import success, success_page
-from service import score_service
+from service import score_service, extract_service
 from decimal import Decimal
 from typing import List, Optional, Literal
 from util.log import get_logger
+from util.rbac import require_permission
 
 # 本模块专用 logger，来源标记为 API.score_api
 logger = get_logger(__name__)
@@ -17,7 +20,33 @@ logger = get_logger(__name__)
 router_score = APIRouter()
 
 
-@router_score.post("/add", summary="新增单个学生成绩")
+class NLExtractRequest(BaseModel):
+    """自然语言提取请求"""
+    text: str = Field(..., description="自然语言描述", min_length=1, max_length=2000)
+
+
+_SCORE_REQUIRED_FIELDS = ["student_no", "exam_order", "score"]
+
+
+@router_score.post("/extract", summary="自然语言提取成绩信息", dependencies=[Depends(require_permission('score:create'))])
+def extract_score(body: NLExtractRequest):
+    logger.info("NL提取成绩：text=%s", body.text[:80])
+    result = extract_service.extract_fields(
+        text=body.text,
+        schema=ScoreExtract,
+        entity="score",
+        required_fields=_SCORE_REQUIRED_FIELDS,
+    )
+    if result["error"]:
+        logger.warning("NL提取成绩失败：%s", result["error"])
+    else:
+        logger.info("NL提取成绩成功：提取字段=%s, 缺失=%s",
+                    list(result["extracted"].keys()) if result["extracted"] else 0,
+                    result["missing_required"])
+    return success(result)
+
+
+@router_score.post("/add", summary="新增单个学生成绩", dependencies=[Depends(require_permission('score:create'))])
 def add_score_api(new_score: Addscore, db=Depends(get_db)):
     logger.info("新增成绩：student_no=%s, exam_order=%s, score=%s",
                 new_score.student_no, new_score.exam_order, new_score.score)
@@ -37,7 +66,39 @@ def add_score_api(new_score: Addscore, db=Depends(get_db)):
                             detail=str(e))
 
 
-@router_score.post("/batch_add", summary="批量添加学生成绩")
+@router_score.get("/import/template", summary="下载成绩导入模板", dependencies=[Depends(require_permission('score:import'))])
+def download_score_import_template():
+    logger.info("下载成绩导入模板")
+    bio = score_service.build_import_template()
+    headers = {"Content-Disposition": "attachment; filename=score_import_template.xlsx"}
+    return StreamingResponse(
+        bio,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers=headers,
+    )
+
+
+@router_score.post("/import", summary="上传 Excel/CSV 批量导入成绩", dependencies=[Depends(require_permission('score:import'))])
+async def import_scores_api(
+    file: UploadFile = File(...),
+    db=Depends(get_db)
+):
+    logger.info("批量导入成绩：文件名=%s", file.filename)
+    try:
+        content = await file.read()
+        result = score_service.import_scores_from_file(content, file.filename, db)
+        msg = f"导入完成：成功 {result['success_count']} 条，失败 {result['fail_count']} 条"
+        logger.info("批量导入成绩成功：%s", msg)
+        return success(result, msg)
+    except ValueError as e:
+        logger.warning("批量导入成绩参数错误：%s", e)
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("批量导入成绩异常：%s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router_score.post("/batch_add", summary="批量添加学生成绩", dependencies=[Depends(require_permission('score:create'))])
 def batch_add_score_api(
     score_list: List[Addscore],
     db=Depends(get_db)
@@ -59,7 +120,7 @@ def batch_add_score_api(
                             detail=str(e))
 
 
-@router_score.put("/update", summary="修改学生成绩")
+@router_score.put("/update", summary="修改学生成绩", dependencies=[Depends(require_permission('score:update'))])
 def update_score_api(new_score: Updatescore, db=Depends(get_db)):
     logger.info("修改成绩：student_no=%s, exam_order=%s",
                 new_score.student_no, new_score.exam_order)
@@ -78,7 +139,7 @@ def update_score_api(new_score: Updatescore, db=Depends(get_db)):
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router_score.post("/is_delete", summary="删除学生成绩")
+@router_score.post("/is_delete", summary="删除学生成绩", dependencies=[Depends(require_permission('score:delete'))])
 def is_delete_api(
     student_no: str = Query(...,
                             min_length=8, max_length=10,
@@ -102,7 +163,7 @@ def is_delete_api(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router_score.get("/query", summary="查询学生的成绩")
+@router_score.get("/query", summary="查询学生的成绩", dependencies=[Depends(require_permission('score:view'))])
 def query_score_api(
     db=Depends(get_db),
     page: int = Query(1, ge=1, description="页码，从1开始"),
@@ -130,7 +191,6 @@ def query_score_api(
             min_score, max_score,
             sort_no, sort_score
         )
-        # 分页查询统一用 success_page 封装，返回 data + page/page_size/total
         return success_page(
             [{"student_no": i.student_no,
               "student_name": i.student.student_name,

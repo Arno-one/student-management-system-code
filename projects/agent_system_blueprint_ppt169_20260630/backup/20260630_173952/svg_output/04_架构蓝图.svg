@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <g id="background">
+    <rect width="1280" height="720" fill="#05070D" />
+    <path d="M60 132H860 M60 252H860 M60 372H860 M60 492H860 M60 612H860" stroke="#1C2A3D" stroke-width="1" stroke-dasharray="8,4" />
+  </g>
+  <g id="header">
+    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">屢部嫁接让 Agent 演进不污染原业务主干</text>
+    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">`agent_system/` 与原?API / service / DAO 平行存在，边界清晰，风险可控</text>
+  </g>
+  <g id="layers">
+    <rect x="70" y="156" width="800" height="86" rx="6" fill="#111827" stroke="#7DD3FC" />
+    <text x="92" y="188" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="20" fill="#7DD3FC">01 · ENTRY</text>
+    <text x="92" y="222" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" fill="#F8FAFC">FloatingAgent / `/agent` / SSE Stream</text>
+    <rect x="70" y="276" width="800" height="86" rx="6" fill="#111827" stroke="#8B5CF6" />
+    <text x="92" y="308" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="20" fill="#8B5CF6">02 · ORCHESTRATION</text>
+    <text x="92" y="342" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" fill="#F8FAFC">middleware -&gt; intent -&gt; planner -&gt; executor</text>
+    <rect x="70" y="396" width="800" height="86" rx="6" fill="#111827" stroke="#F59E0B" />
+    <text x="92" y="428" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="20" fill="#F59E0B">03 · CAPABILITY</text>
+    <text x="92" y="462" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" fill="#F8FAFC">RAG / score / NL2SQL / weather / email / map</text>
+    <rect x="70" y="516" width="800" height="86" rx="6" fill="#111827" stroke="#22C55E" />
+    <text x="92" y="548" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="20" fill="#22C55E">04 · GOVERNANCE</text>
+    <text x="92" y="582" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="28" fill="#F8FAFC">memory / HITL / feedback / metrics / regression</text>
+  </g>
+  <g id="boundary">
+    <rect x="930" y="156" width="270" height="446" rx="6" fill="#111827" stroke="#2A3A52" />
+    <use data-icon="chunk-filled/layers" x="1022" y="194" width="68" height="68" fill="#7DD3FC" />
+    <text x="1065" y="318" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="34" font-weight="800" fill="#F8FAFC">原业务主</text>
+    <text x="1065" y="360" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="24" fill="#B6C2D2">学生 / 成绩 / 班级 / 就业</text>
+    <line x1="964" y1="402" x2="1166" y2="402" stroke="#2A3A52" />
+    <text x="1065" y="452" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="700" fill="#F59E0B">零次拖入大重</text>
+    <text x="1065" y="500" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2" id="_edit_22" data-edit-target="true" data-edit-annotation="调整大小：文档超出范围">Agent 迭代在独立边界内完成</text>
+  </g>
+  <g id="footer">
+    <text x="56" y="676" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="16" fill="#7F8EA3">P04 · layered architecture adaptation</text>
+  </g>
+</svg>

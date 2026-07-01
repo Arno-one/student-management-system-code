@@ -1,13 +1,13 @@
 <p align="center">
-  <h1 align="center">🎓 学生信息管理系统</h1>
-  <p align="center">基于 FastAPI + SQLAlchemy 的 MVC 架构学生管理系统，集成 AI 大模型能力</p>
+  <h1 align="center">学生信息管理系统 + AI 智能平台</h1>
+  <p align="center">FastAPI 全栈项目：MVC 学生管理 + RAG 知识库 + Agent 智能体 + NL2SQL 智能问数</p>
 </p>
 
 ---
 
 ## 📋 项目简介
 
-学生信息管理系统是一个功能完善的学生信息管理平台，涵盖学生基本信息、考核成绩、就业信息、班级管理和教师管理等核心模块，并提供多维度统计分析功能。项目还集成了 **DeepSeek 大模型**和**阿里云通义万相**，提供 AI 智能评价、多轮对话、文生图、天气/地址解析以及智能邮件助手等能力，并配套一个开箱即用的**纯静态前端控制台**。
+学生信息管理系统是一个功能完善的学生管理平台，涵盖学生基本信息、考核成绩、就业信息、班级管理、教师管理和统计分析等核心模块。当前版本已内置 **JWT + RBAC** 登录认证体系，提供登录态持久化、菜单/接口权限控制、系统用户/角色/权限管理；同时集成 **DeepSeek 大模型**和**阿里云通义万相**，提供 AI 智能评价、多轮对话、文生图、天气/地址解析、智能邮件助手以及 NL2SQL 智能问数等能力；并在此基础上构建了**多知识库 RAG 检索增强生成系统**（Milvus 混合检索 + CrossEncoder 精排）和**智能 Agent 系统**（意图识别 → 计划编排 → 工具调用 → 人工兜底），配套完整的 **Vue 3 前端工作台**。
 
 ### 技术栈
 
@@ -16,14 +16,20 @@
 | Web 框架 | FastAPI 0.x |
 | ORM | SQLAlchemy |
 | 数据校验 | Pydantic |
+| 认证鉴权 | JWT（Bearer Token）+ RBAC |
 | 数据库 | MySQL 5.7+ / 8.0 |
 | 数据库驱动 | PyMySQL |
 | 服务器 | Uvicorn |
 | AI / LLM | DeepSeek V4 Flash、阿里云通义万相 (DashScope) |
 | AI SDK | OpenAI SDK、DashScope SDK |
+| 向量数据库 | Milvus 2.4+（RAG 混合检索） |
+| RAG | Milvus hybrid_search + BM25 Function + RRF 融合 + CrossEncoder 精排 |
+| Agent | LangGraph 编排 + 意图分类 + 多工具调用 + 人工兜底 (HITL) |
 | 第三方接口 | 腾讯地图（天气查询 / 地理编码）、QQ 邮箱 SMTP |
 | 文件处理 | openpyxl（Excel 读写）、python-multipart（文件上传） |
-| 前端 | 原生 HTML + CSS + JavaScript（单页控制台，无需构建） |
+| SQL 工具 | sqlparse（NL2SQL 生成 SQL 格式化） |
+| 前端 | Vue 3 + Vite + Vue Router + highlight.js（推荐） |
+| 前端（静态版） | 原生 HTML + CSS + JavaScript（轻量调试面板） |
 | 语言 | Python 3.10+ |
 
 ---
@@ -47,10 +53,10 @@
 ├──────────────────────┴──────────────────────────┤
 │                database.py                      │
 │           数据库连接 & 会话管理                    │
-├─────────────────────────────────────────────────┤
-│                 frontend/                       │
-│      纯静态前端控制台 (HTML + CSS + JS)           │
-└─────────────────────────────────────────────────┘
+├──────────────────────┬──────────────────────────┤
+│     frontend-vue/    │       frontend/          │
+│   Vue 3 SPA (推荐)   │  纯静态调试页（无鉴权）   │
+└──────────────────────┴──────────────────────────┘
 ```
 
 ### 目录结构
@@ -61,36 +67,51 @@
 ├── config.py            # 集中加载 .env 配置（数据库 / 各类密钥）
 ├── requirements.txt     # Python 依赖清单
 ├── API/                 # Controller 层 — HTTP 请求/响应处理
+│   ├── auth_api.py                        # 登录 / 当前用户 / 修改密码
+│   ├── system_api.py                      # 系统用户 / 角色 / 权限管理（仅 admin 可访问）
 │   ├── student_api.py                     # 学生管理接口
 │   ├── score_api.py                       # 成绩管理接口
 │   ├── class_api.py                       # 班级管理接口
 │   ├── employment_api.py                  # 就业管理接口
 │   ├── teacher_information_API_Router.py  # 教师管理接口（含单个新增 / Excel 导入）
 │   ├── statistical.py                     # 统计分析接口
-│   └── work_api.py                        # AI 作业模块 + 邮件模块接口
+│   ├── work_api.py                        # AI 作业 + 多轮对话 + 邮件模块接口
+│   └── nl2sql_api.py                      # NL2SQL 智能问数接口
 ├── service/             # Service 层 — 业务逻辑
+│   ├── auth_service.py                     # 登录、改密、用户/角色/权限管理
 │   ├── student_service.py
-│   ├── score_service.py
+│   ├── score_service.py                    # 含成绩批量导入/模板构建
 │   ├── class_service.py
 │   ├── employment_service.py
 │   ├── teacher_service.py                 # 含 Excel/CSV 解析导入、模板生成
 │   ├── statistical_service.py
-│   └── work_service.py                    # AI 服务（评价/对话/文生图/天气/地址）
+│   ├── work_service.py                    # AI 服务（评价/对话/文生图/天气/地址）
+│   └── nl2sql_service.py                  # 自然语言转 SQL、Schema 管理与查询执行
 ├── DAO/                 # 数据访问层 — 纯数据库操作
+│   ├── auth_dao.py                         # RBAC 用户/角色/权限读写
 │   ├── student_dao.py
 │   ├── score_dao.py
 │   ├── class_dao.py
 │   ├── employment_dao.py
 │   ├── teacher_information_CRUD.py
-│   └── statistical.py
+│   ├── statistical.py
+│   ├── talk_dao.py                         # 多轮对话会话/消息持久化
+│   ├── nl2sql_dao.py                       # NL2SQL 会话、消息与缓存记录持久化
+│   └── agent_dao.py                        # Agent 任务/反馈持久化 + 管理端统计查询
 ├── model/               # Model 层 — SQLAlchemy ORM 定义
+│   ├── Auth.py                             # sys_user / sys_role / sys_permission 等 RBAC 模型
 │   ├── Student.py
 │   ├── Score.py
 │   ├── Class.py
 │   ├── Employment.py
-│   └── Teacher.py
+│   ├── Teacher.py
+│   ├── Talk.py                             # 会话表 + 消息表
+│   ├── NL2SQL.py                           # NL2SQL 会话、消息与缓存表
+│   ├── AgentTask.py                        # Agent 任务记录表（含评分、耗时、工具结果）
+│   └── AgentFeedback.py                    # Agent 用户反馈评分表
 ├── scheme/              # View 层 — Pydantic 校验 & 统一响应
 │   ├── response_scheme.py                 # 统一 API 响应格式
+│   ├── auth_scheme.py                     # 登录 / 系统用户 / 角色相关请求模型
 │   ├── student_scheme.py
 │   ├── schema_score.py
 │   ├── class_scheme.py
@@ -98,15 +119,74 @@
 │   ├── teacher_scheme.py
 │   └── statistical_request.py
 ├── util/                # 工具层 — 跨模块通用能力
+│   ├── auth.py                            # 密码哈希、JWT 生成与校验
+│   ├── rbac.py                            # 当前用户解析、角色/权限校验依赖
 │   ├── log.py                             # 日志系统（应用日志 + 请求访问日志）
 │   └── email.py                           # 邮件内容生成（大模型）与 SMTP 发送
 ├── LLM/                 # AI 大模型集成
 │   ├── ds_llm.py                          # DeepSeek 调用示例
 │   └── ds_llm.ipynb                       # Jupyter Notebook 交互示例
-├── frontend/            # 纯静态前端控制台（无需构建，直接打开）
-│   ├── index.html                         # 页面结构
-│   ├── styles.css                         # 样式（白 + 蓝主题）
-│   └── app.js                             # 交互逻辑（接口调用 / 表单校验等）
+├── RAG/                 # RAG 知识库系统（多知识库 + 混合检索 + 精排）
+│   ├── config.py                            # 多知识库配置、RagConfig 统一参数管理
+│   ├── schemas.py                           # Milvus Collection Schema（双向量 + BM25 Function）
+│   ├── clients.py                           # Milvus / Embedding / LLM / CrossEncoder 客户端
+│   ├── ingestion.py                         # 离线入库：多格式解析 → 切片 → Embedding → 写入
+│   ├── retrieval.py                         # 在线检索：Query Rewrite + 双路 hybrid_search + RRF 融合
+│   ├── retrieval_service.py                 # 检索服务编排：查询准备 + 多阶段检索
+│   ├── rerank.py                            # CrossEncoder 精排（bge-reranker-v2-m3）
+│   ├── prompt_builder.py                    # 上下文组装：邻居扩展 + 去重 + Token 预算 + 来源标记
+│   ├── generation.py                        # LLM 答案生成 + 降级兜底
+│   ├── ask_service.py                       # 主问答编排：QA 优先路由 + 置信度拒答 + 领域分数修正
+│   ├── evaluation.py                        # 结构化评估（Recall@K / 关键词 / 来源类型）
+│   ├── controller.py                        # FastAPI 接口层（/rag/ask / /rag/ingest / 多 KB）
+│   ├── main_rag.py                          # CLI 入口（ingest / ask / interactive / eval / health）
+│   ├── docs/                                # 知识库文档（四大名著 TXT / 工程 PDF / QA Markdown）
+│   ├── RAG高级架构流程总结.md                 # 架构审查 + 六阶段优化方案 + 任务拆解
+│   └── RAG检索精度提升全链路指南.md            # 检索前中后全链路精度优化方法
+├── agent_system/        # 智能 Agent 系统（意图 → 计划 → 执行 → 兜底）
+│   ├── api/agent_api.py                     # Agent 对话 API + 任务反馈 + 监控统计
+│   ├── service/agent_service.py             # 服务编排：中间件 → 意图分类 → 计划 → 执行 → 记忆
+│   ├── planner/                             # 意图分类器 + 任务计划生成器
+│   ├── supervisor/                          # Supervisor-Planner 决策编排
+│   ├── executor/agent_executor.py           # 计划执行器（串行/并行工具调用）
+│   ├── middleware/                          # LangGraph 中间件管线（输入守卫 + 通勤解析 + 查询改写）
+│   ├── memory/                              # 三层记忆（会话记忆 + 摘要记忆 + 工作记忆）
+│   ├── hitl/                                # 人工兜底（升级规则 + 暂停/恢复状态机）
+│   ├── tools/                               # 工具集（学生/成绩/邮件/天气/通勤/NL2SQL/RAG/生图）
+│   ├── schemas/                             # Agent 请求/响应 + 任务状态 Pydantic 模型
+│   └── prompts/                             # 意图分类 / 计划生成 / 人设 Prompt
+├── frontend/            # 纯静态调试页（无登录态 / 不含 RBAC）
+│   ├── index.html
+│   ├── styles.css
+│   └── app.js
+├── frontend-vue/         # Vue 3 前端（推荐，需构建运行）
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.js
+│   └── src/
+│       ├── main.js
+│       ├── App.vue
+│       ├── router/index.js
+│       ├── api/index.js
+│       ├── utils/helpers.js
+│       ├── assets/styles.css
+│       ├── components/
+│       │   ├── Sidebar.vue
+│       │   ├── TopBar.vue
+│       │   ├── ResultBadge.vue
+│       │   └── DataTable.vue
+│       └── views/
+│           ├── LoginView.vue
+│           ├── SystemView.vue
+│           ├── StudentView.vue
+│           ├── ScoreView.vue
+│           ├── EmploymentView.vue
+│           ├── ClassView.vue
+│           ├── TeacherView.vue
+│           ├── StatisticsView.vue
+│           ├── WorkView.vue
+│           ├── EmailView.vue
+│           └── NL2SQLView.vue
 └── logs/                # 运行日志（自动生成）
     ├── app.log                            # 全量应用日志
     └── error.log                          # 错误日志
@@ -169,11 +249,42 @@ python main.py
 
 ### 前端控制台
 
-`frontend/` 是一个纯静态单页控制台（HTML + CSS + 原生 JS），无需任何构建工具：
+项目提供两套前端，推荐使用 Vue 3 版本体验完整登录鉴权、RBAC 菜单控制、系统管理和 NL2SQL 等能力；纯静态版本适合作为轻量调试面板：
+
+#### Vue 3 版本（推荐）— `frontend-vue/`
+
+基于 **Vue 3 + Vite + Vue Router**，支持登录鉴权、Bearer Token 持久化、路由守卫、按权限动态显示菜单、系统管理页、SQL 高亮和全局浅色 / 深色主题切换：
+
+```bash
+cd frontend-vue
+
+# 安装依赖（仅首次）
+npm install
+
+# 启动开发服务器 → http://localhost:3000
+npm run dev
+
+# 生产构建 → dist/
+npm run build
+```
+
+- 页面默认请求 `http://localhost:8088`，右上角 `API Endpoint` 可切换到其他后端地址；
+- 左侧导航通过 Vue Router 管理，覆盖登录、学生、成绩、就业、班级、教师、统计、AI 作业、邮件、NL2SQL 和系统管理等模块；
+- 支持 Bearer Token 持久化、启动时自动调用 `/auth/me` 恢复登录态、未登录跳转 `/login`、无菜单权限自动重定向；
+- `SystemView.vue` 提供系统用户、角色、权限分配管理，且仅 `admin` 角色且拥有 `system:page` 菜单权限的账号可见；
+- 支持全局浅色 / 深色主题切换，主题状态和子功能选择使用 `localStorage` 记忆；
+- NL2SQL 页面使用 `highlight.js` 高亮生成 SQL；
+- AI 作业多轮对话与 NL2SQL 默认绑定当前登录用户，无需手动输入 user_id；
+- 组件懒加载，首屏仅加载当前模块。
+
+#### 静态版本 — `frontend/`
+
+纯 HTML + CSS + 原生 JS，无需任何构建工具，适合作为轻量调试面板：
 
 - 直接用浏览器打开 `frontend/index.html` 即可使用；
 - 页面右上角「接口地址」默认指向 `http://localhost:8088`，可随时修改；
-- 左侧按模块导航，每个模块用下拉框切换具体功能（界面会记住上次所在模块与功能）；
+- 覆盖学生、成绩、就业、班级、教师、统计、AI 作业、邮件等模块的基础调用；
+- **不包含登录页、Bearer Token 持久化、路由守卫、系统管理页和 NL2SQL 页面**，这些能力请使用 `frontend-vue/`；
 - 后端需开启 CORS（项目默认已放开），前端才能正常跨域调用接口。
 
 ### Docker 部署
@@ -201,14 +312,19 @@ docker run -d -p 8088:8088 \
 
 | 模块 | 前缀 | 标签 | 功能 |
 |------|------|------|------|
+| 登录认证 | `/auth` | 登录认证 | 账号登录、获取当前用户、当前用户修改密码 |
+| 系统管理 | `/system` | 系统管理 | 用户管理、角色管理、权限目录查询（仅 admin 可访问） |
 | 学生管理 | `/student` | 学生基本信息管理 | CRUD、逻辑删除/恢复、分页查询 |
-| 成绩管理 | `/score` | 学生考核成绩管理 | 单个/批量添加、修改、查询、删除 |
+| 成绩管理 | `/score` | 学生考核成绩管理 | 单个/批量添加、修改、查询、删除、Excel 批量导入 |
 | 就业管理 | `/Employment` | 学生就业信息管理 | CRUD、逻辑删除/恢复、物理删除 |
 | 班级管理 | `/class` | 班级管理 | 新增/修改、删除、分页查询 |
 | 教师管理 | (根路径) | 教师管理 | 单个新增、Excel/CSV 批量导入、模板下载、分页多条件搜索、更新 |
 | 统计分析 | `/statistics` | 统计分析模块 | 年龄统计、成绩分析、薪资排行、就业时长 |
 | AI 作业模块 | `/work` | 作业模块 | AI 智能评价、文生图、多轮记忆对话、天气查询、地址解析 |
 | 邮件管理 | `/email` | 邮件管理 | 大模型生成邮件内容、确认后发送 |
+| NL2SQL 智能问数 | `/nl2sql` | NL2SQL智能问数 | 自然语言转 SQL、表结构概览、查询历史记录 |
+| RAG 知识库 | `/rag` | RAG 知识库 | 知识库问答、文档入库、多 KB 管理、组件健康检查 |
+| 智能 Agent | `/agent` | 智能Agent | 智能对话、计划编排 → 工具调用、任务反馈评价、管理端监控 |
 
 ---
 
@@ -229,12 +345,16 @@ docker run -d -p 8088:8088 \
 
 调用**阿里云通义万相 (qwen-image-2.0-pro)** 模型，根据文本描述生成图片。
 
-### 多轮记忆对话 (`POST /work/talks`)
+### 多轮记忆对话
 
-基于 **DeepSeek V4 Flash** 实现的多轮对话，支持通过 `session_id` 维护会话上下文，实现连续对话记忆。
+基于 **DeepSeek V4 Flash** 实现的多轮对话，会话和消息全部持久化到 MySQL，支持多用户、多会话管理。当前后端会以**当前登录用户**作为会话归属，Vue 前端无需手动输入 user_id：
 
-- `POST /work/talks` — 发起对话（传入 `session_id` 和 `prompt`），`data` 直接为大模型回复正文
-- `POST /work/talks/clear` — 清空指定会话的对话记忆
+- `GET /work/talks/sessions` — 获取用户的所有历史会话（按更新时间倒序）
+- `POST /work/talks/sessions` — 创建新会话
+- `DELETE /work/talks/sessions/{session_id}` — 逻辑删除指定会话
+- `GET /work/talks/{session_id}/messages` — 获取指定会话的全部历史消息
+- `POST /work/talks` — 发送消息（传入 `session_id`、`user_id`、`prompt`），大模型携带历史上下文回复
+- `POST /work/talks/clear` — 清空指定会话的全部消息（保留会话本身）
 
 ### 天气查询 / 地址解析（腾讯地图）
 
@@ -248,7 +368,186 @@ docker run -d -p 8088:8088 \
 - `POST /email/generate` — 一句话需求 → 大模型生成邮件主题与正文（仅返回内容，不发送）
 - `POST /email/send` — 发送用户确认后的邮件（通过 QQ 邮箱 SMTP）
 
+### NL2SQL 智能问数（`/nl2sql`）
+
+基于 **DeepSeek V4 Flash** 将自然语言问题转换为可执行 SQL，并返回查询结果、生成 SQL、耗时与缓存状态；查询会话与历史记录持久化到 MySQL。当前查询默认绑定当前登录用户，前端无需手动输入 user_id。
+
+- `POST /nl2sql/query` — 提交自然语言问题，自动生成 SQL 并执行查询
+- `GET /nl2sql/schema` — 获取可查询数据库表结构、字段说明、JOIN 关系与聚合口径
+- `GET /nl2sql/sessions` — 获取指定用户的历史查询会话和消息记录
+
 ---
+
+## 📚 RAG 知识库系统
+
+基于 **Milvus 2.4+** 向量数据库构建的多知识库检索增强生成（RAG）系统，覆盖从文档入库到智能问答的全链路。
+
+### 架构概览
+
+```
+用户问题 → Query Rewrite(LLM改写) → Embedding(1024d) 
+  → 混合检索(稠密COSINE + 稀疏BM25) → RRF融合(k=60) 
+  → [CrossEncoder精排,可选] → 邻居扩展 → 去重 → Token预算 
+  → Prompt组装 → LLM生成 → 带来源引用答案
+```
+
+### 核心能力
+
+**多知识库管理**：内置两套知识库，支持按 `kb_id` 切换，可通过 `RagConfig` 扩展更多 KB：
+
+| 知识库 | 文档类型 | 特点 |
+|--------|---------|------|
+| `novels` | 四大名著 TXT | 按章节切分，结构化检索 |
+| `production` | 工程 PDF / DOCX / Markdown | QA 优先路由 + 置信度拒答 + 领域分数修正 |
+
+**检索精度优化全链路**（详见 `RAG/RAG检索精度提升全链路指南.md`）：
+
+| 阶段 | 策略 | 作用 |
+|------|------|------|
+| 检索前 | 递归文档切片 (500/50) + Query Rewrite (LLM) | 语义聚焦 + 口语化改写 |
+| 检索中 | 稠密 + BM25 双路混合检索 + RRF 融合 | 语义 + 关键词互补 |
+| 检索中 | QA 优先智能路由 | 高频问题零 LLM 成本直接返回 |
+| 检索后 | CrossEncoder 精排 (bge-reranker-v2-m3) | 模型级相关性重排，P@3 +5-15% |
+| 检索后 | Small-to-Big 邻居扩展 + 两重去重 | 补全上下文、去除冗余 |
+| 检索后 | Token 预算控制 (2000 tokens) | 防止上下文溢出 |
+| 检索后 | 领域关键词分数修正 | 行话适配、语境纠偏 |
+| 兜底 | 全链路降级 + 置信度拒答 (< 0.15) | 不胡说 |
+
+### API 接口
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/rag/ask` | POST | 默认知识库问答（兼容旧接口） |
+| `/rag/kbs/{kb_id}/ask` | POST | 指定知识库问答，支持 `enable_rerank` / `top_k` 参数 |
+| `/rag/ingest` | POST | 默认知识库文档入库 |
+| `/rag/kbs/{kb_id}/ingest` | POST | 指定知识库入库，支持 `drop_existing` / `max_chapters` |
+| `/rag/status` | GET | 获取默认知识库状态（文档数、最近入库时间） |
+| `/rag/kbs/{kb_id}/status` | GET | 获取指定知识库状态 |
+| `/rag/health` | GET | 组件健康检查（Milvus / Embedding / LLM / CrossEncoder） |
+
+### CLI 使用
+
+```bash
+# 入库
+python -m RAG.main_rag ingest --kb production
+
+# 单次问答
+python -m RAG.main_rag ask --kb production "风机基础采用什么结构形式？"
+
+# 交互式问答
+python -m RAG.main_rag interactive --kb novels
+
+# 健康检查
+python -m RAG.main_rag health
+
+# 批量评估
+python -m RAG.main_rag eval --kb production
+
+# 重建并评估
+python -m RAG.main_rag rebuild-and-eval --kb production
+```
+
+---
+
+## 🤖 智能 Agent 系统
+
+基于 **LangGraph** 状态图编排的智能 Agent，串联"意图识别 → 计划生成 → 工具调用 → 人工兜底"的完整决策链路。
+
+### 架构分层
+
+```
+┌─────────────────────────────────────────────────────┐
+│                   supervisor/                        │
+│           Supervisor-Planner 决策编排                 │
+├──────────┬──────────┬──────────┬────────────────────┤
+│ planner/ │ executor/│  tools/  │     hitl/           │
+│ 意图分类 │ 计划执行  │ 工具调用  │  人工兜底（审批/确认） │
+│ 计划生成 │ (串/并行) │ (12工具) │                     │
+├──────────┴──────────┴──────────┴────────────────────┤
+│                 middleware/                          │
+│    LangGraph 中间件管线（输入守卫 + 通勤/周边解析）      │
+├─────────────────────────────────────────────────────┤
+│                  memory/                             │
+│     三层记忆（会话记忆 + 摘要记忆 + 工作记忆）          │
+└─────────────────────────────────────────────────────┘
+```
+
+### 核心模块
+
+| 模块 | 目录 | 职责 |
+|------|------|------|
+| **Planner** | `planner/` | 意图分类（查询/操作/通勤/周边/邮件/生图）+ 任务计划 JSON 生成 |
+| **Executor** | `executor/` | 按计划顺序/并行执行工具调用，收集结果并上报 |
+| **Tools** | `tools/` | 12 个可调用工具：学生/成绩/邮件/天气/通勤规划/周边服务/NL2SQL/RAG/生图等 |
+| **Middleware** | `middleware/` | LangGraph 预处理管线：输入守卫（敏感词/越狱检测）→ 通勤解析 → 周边解析 → 政策检查 → Query Rewrite |
+| **Memory** | `memory/` | 三层记忆架构：`conversation_memory`（会话历史）+ `summary_memory`（摘要压缩）+ `working_memory`（当前任务状态） |
+| **HITL** | `hitl/` | Human-in-the-Loop 人工兜底：敏感操作审批、关键信息确认、暂停/恢复状态机 |
+| **Supervisor** | `supervisor/` | Supervisor-Planner 模式：根据中间件结果决策是否跳过 Planner 直走工具 |
+
+### API 接口
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/agent/chat` | POST | 智能对话（支持流式 `stream=true`），返回任务计划 + 工具调用结果 |
+| `/agent/hitl/confirm` | POST | 人工确认/拒绝暂停任务，继续执行 |
+| `/agent/sessions/{session_id}/history` | GET | 获取会话历史消息 |
+| `/agent/feedback` | POST | 用户对任务/工具结果的评分反馈（1-5 分） |
+| `/agent/email/whitelist` | GET | 获取邮件工具允许的收件人白名单 |
+| `/agent/admin/tasks` | GET | 管理端：查看近期任务列表（支持时间窗口筛选） |
+| `/agent/admin/stats` | GET | 管理端：任务统计（总数/成功率/平均耗时/P95 耗时/工具分布） |
+
+### 使用示例
+
+```python
+# 智能对话——Agent 自动判断意图并执行
+POST /agent/chat
+{
+  "message": "帮我查一下张三的成绩，然后给他发一封邮件告知成绩",
+  "persona": "teacher_assistant",
+  "session_id": 1,
+  "stream": false
+}
+
+# 响应
+{
+  "reply": "已查询到张三的成绩：数学 92 分、语文 88 分。邮件已发送至 zhangsan@example.com。",
+  "task_id": 42,
+  "intent": "composite",
+  "plan": [
+    {"tool": "query_student", "args": {"name": "张三"}},
+    {"tool": "query_score", "args": {"student_id": 3}},
+    {"tool": "send_email", "args": {"to": "zhangsan@example.com", ...}}
+  ],
+  "tool_results": [...]
+}
+```
+
+---
+
+## 🔐 认证与 RBAC
+
+当前版本已接入基于 **Bearer Token** 的登录认证与 **RBAC** 权限模型：
+
+- 后端通过 `Authorization: Bearer <token>` 识别当前用户；
+- `util/auth.py` 负责密码强度校验、PBKDF2-SHA256 密码哈希、JWT 生成与校验；
+- `util/rbac.py` 提供 `get_current_user`、角色校验、权限校验依赖；
+- `API/system_api.py` 整体要求 `admin` 角色，同时细分到用户管理、角色管理、权限分配等接口权限；
+- 业务模块接口已按 `student:*`、`score:*`、`employment:*`、`class:*`、`teacher:*`、`statistics:view`、`work:use`、`email:send`、`nl2sql:use` 等权限码接入校验；
+- Vue 前端会在启动时通过 `/auth/me` 自动恢复登录态，并基于返回的 `menus / permissions / roles` 控制路由访问与菜单显示。
+
+当前认证相关接口：
+
+- `POST /auth/login` — 账号密码登录，返回 token、过期时间和当前用户信息
+- `GET /auth/me` — 获取当前登录用户信息、角色、权限与菜单
+- `POST /auth/change-password` — 当前登录用户修改密码
+- `GET /system/users` / `POST /system/users` / `PATCH /system/users/{user_id}` — 系统用户管理
+- `POST /system/users/{user_id}/reset-password` — 重置用户密码
+- `POST /system/users/{user_id}/assign-roles` — 为用户分配角色
+- `GET /system/roles` / `POST /system/roles` / `PATCH /system/roles/{role_id}` — 系统角色管理
+- `POST /system/roles/{role_id}/assign-permissions` — 为角色分配权限
+- `GET /system/permissions` — 查询权限目录
+
+> 注意：仓库当前只保留了 RBAC 模型与接口实现，**未包含初始化 RBAC 默认数据的 SQL 文件**。如需登录与系统管理能力，需要先在数据库中准备 `sys_user / sys_role / sys_permission / sys_user_role / sys_role_permission` 数据。
 
 ## 👨‍🏫 教师批量导入
 
@@ -264,6 +563,21 @@ docker run -d -p 8088:8088 \
 | `/teachers/import/template` | GET | 下载导入模板（.xlsx） |
 | `/teachers/import` | POST | 上传 Excel/CSV 批量导入 |
 | `/teachers` | POST | （保留）JSON 数组批量创建，仅作兼容 |
+
+---
+
+## 📊 成绩批量导入
+
+成绩模块同样支持 **Excel/CSV 批量导入**，流程与教师导入一致：
+
+1. **下载模板** — `GET /score/import/template` 返回带中文表头的标准 `.xlsx` 模板；
+2. **填表** — 按列填写（学号、学生姓名、科目、成绩、考试日期等）；
+3. **上传导入** — `POST /score/import` 上传文件，逐行校验后入库，返回成功/失败条数与失败原因。
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/score/import/template` | GET | 下载导入模板（.xlsx） |
+| `/score/import` | POST | 上传 Excel/CSV 批量导入 |
 
 ---
 
@@ -325,6 +639,19 @@ DB_PASSWORD=你的数据库密码
 DB_HOST=localhost
 DB_PORT=3306
 DB_NAME=student_management_system
+DB_READONLY_USER=你的只读用户
+DB_READONLY_PASSWORD=你的只读用户密码
+
+# 登录认证 / RBAC
+AUTH_SECRET_KEY=请改成一个长度足够且随机的密钥
+AUTH_TOKEN_EXPIRE_MINUTES=720
+AUTH_PBKDF2_ITERATIONS=600000
+
+# RAG 知识库（Milvus 向量数据库 + Embedding）
+ALIYUN_API_KEY=你的阿里云百炼密钥
+MILVUS_URI=http://localhost:19530
+MILVUS_DB_NAME=default
+RAG_DEFAULT_KB=novels
 ```
 
 > `.env` 已被 `.gitignore` 忽略，不会提交到仓库；团队协作时只需共享 `.env.example` 模板。
@@ -335,12 +662,18 @@ DB_NAME=student_management_system
 
 ## 📝 开发说明
 
-- 数据表在应用启动时通过 `init_db()` 自动创建
+- 数据表在应用启动时通过 `init_db()` 自动创建；其中 RBAC 相关模型也会自动建表，但默认用户/角色/权限数据需要你自行初始化
 - 所有删除操作均为逻辑删除（`is_deleted` 字段），就业模块额外支持物理删除
-- 多轮对话记忆存储在内存中，服务重启后清空；生产环境建议替换为 Redis 等持久化存储
+- 登录认证采用 Bearer Token；密码使用 PBKDF2-SHA256 哈希，JWT 过期时间与哈希迭代次数可通过 `.env` 配置
+- Vue 前端当前已经支持登录页、登录态恢复、菜单级权限控制、系统管理页、当前用户展示与退出登录
+- `frontend-vue` 通过 `src/api/index.js` 统一管理 API base URL 与 Bearer Token；如需改成完全相对路径部署，可再按需完善 `vite.config.js` 代理
+- 多轮对话的会话与消息已持久化到 MySQL，不会因服务重启丢失；历史上下文按会话 ID 自动加载
+- NL2SQL 智能问数的查询会话、消息和缓存记录已持久化到 MySQL，前端可查看历史记录并高亮展示生成 SQL
+- RAG 知识库支持多 KB 切换，检索链路包含 Query Rewrite → 混合检索 → RRF 融合 → CrossEncoder 精排 → 去重 → Token 预算，详见 `RAG/` 目录
+- Agent 系统基于 LangGraph 编排，中间件管线负责输入预处理，Planner + Executor + HITL 完成决策到执行再到人工兜底的闭环
 - 教师批量导入采用「逐行校验、部分成功」策略：合格数据入库，失败数据跳过并返回原因，不会因个别行出错而整体失败
 - 日志由 `util/log.py` 统一管理，应用日志写入 `logs/app.log`、错误日志写入 `logs/error.log`，并接管 uvicorn 日志与请求访问日志
-- 前端 `frontend/` 为纯静态页面，直接浏览器打开即可；调用接口依赖后端已开启 CORS
+- 前端提供两套实现：`frontend-vue/`（Vue 3，推荐，支持登录鉴权、RBAC 菜单控制、系统管理、浅色/深色主题与 NL2SQL SQL 高亮）和 `frontend/`（纯静态调试页，不含登录态 / RBAC / 系统管理 / NL2SQL 页面）
 - DeepSeek、DashScope、腾讯地图等密钥请在 `.env` 中替换为自己的有效密钥
 
 ---

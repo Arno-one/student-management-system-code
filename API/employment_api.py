@@ -4,11 +4,13 @@
 """
 from fastapi import Depends, HTTPException, APIRouter, Query
 from sqlalchemy.orm import Session
+from pydantic import BaseModel, Field
 from database import get_db
 from scheme import employment_scheme as EMP
 from scheme.response_scheme import success, success_page
-from service import employment_service
+from service import employment_service, extract_service
 from util.log import get_logger
+from util.rbac import require_permission
 
 # 本模块专用 logger，来源标记为 API.employment_api
 logger = get_logger(__name__)
@@ -16,8 +18,34 @@ logger = get_logger(__name__)
 employment_router = APIRouter()
 
 
+class NLExtractRequest(BaseModel):
+    """自然语言提取请求"""
+    text: str = Field(..., description="自然语言描述", min_length=1, max_length=2000)
+
+
+_EMPLOYMENT_REQUIRED_FIELDS = ["student_no", "student_name", "class_id"]
+
+
+@employment_router.post("/employment_extract", summary="自然语言提取就业信息", dependencies=[Depends(require_permission('employment:create'))])
+def extract_employment(body: NLExtractRequest):
+    logger.info("NL提取就业信息：text=%s", body.text[:80])
+    result = extract_service.extract_fields(
+        text=body.text,
+        schema=EMP.EmploymentExtract,
+        entity="employment",
+        required_fields=_EMPLOYMENT_REQUIRED_FIELDS,
+    )
+    if result["error"]:
+        logger.warning("NL提取就业信息失败：%s", result["error"])
+    else:
+        logger.info("NL提取就业信息成功：提取字段=%s, 缺失=%s",
+                    list(result["extracted"].keys()) if result["extracted"] else 0,
+                    result["missing_required"])
+    return success(result)
+
+
 @employment_router.post("/employment_create",
-                        summary="新建学生就业信息")
+                        summary="新建学生就业信息", dependencies=[Depends(require_permission('employment:create'))])
 def employment_create(
     data: EMP.EmploymentCreate,
     db: Session = Depends(get_db)
@@ -33,7 +61,7 @@ def employment_create(
 
 
 @employment_router.get("/employment_get/{emp_id}",
-                       summary="根据id查询")
+                       summary="根据id查询", dependencies=[Depends(require_permission('employment:view'))])
 def employment_get(emp_id: int, db: Session = Depends(get_db)):
     logger.info("按id查询就业信息：emp_id=%s", emp_id)
     try:
@@ -44,7 +72,7 @@ def employment_get(emp_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@employment_router.get("/employment_list", summary="分页查询")
+@employment_router.get("/employment_list", summary="分页查询", dependencies=[Depends(require_permission('employment:view'))])
 def get_employment_list(
     page: int = Query(1, ge=1),
     size: int = Query(10, le=100, ge=1),
@@ -64,7 +92,7 @@ def get_employment_list(
 
 
 @employment_router.put("/employment_update/{emp_id}",
-                       summary="修改就业信息")
+                       summary="修改就业信息", dependencies=[Depends(require_permission('employment:update'))])
 def employment_update(
     emp_id: int,
     data: EMP.EmploymentUpdate,
@@ -81,7 +109,7 @@ def employment_update(
                             detail=str(e))
 
 
-@employment_router.delete("/employment_delete/{emp_id}", summary="逻辑删除")
+@employment_router.delete("/employment_delete/{emp_id}", summary="逻辑删除", dependencies=[Depends(require_permission('employment:delete'))])
 def employment_delete(emp_id: int, db: Session = Depends(get_db)):
     logger.info("逻辑删除就业信息：emp_id=%s", emp_id)
     try:
@@ -93,7 +121,7 @@ def employment_delete(emp_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@employment_router.put("/employment_recover/{emp_id}", summary="逻辑恢复")
+@employment_router.put("/employment_recover/{emp_id}", summary="逻辑恢复", dependencies=[Depends(require_permission('employment:update'))])
 def employment_recover(emp_id: int, db: Session = Depends(get_db)):
     logger.info("逻辑恢复就业信息：emp_id=%s", emp_id)
     try:
@@ -106,7 +134,7 @@ def employment_recover(emp_id: int, db: Session = Depends(get_db)):
                             detail=str(e))
 
 
-@employment_router.delete("/employment_hard/{emp_id}", summary="物理删除")
+@employment_router.delete("/employment_hard/{emp_id}", summary="物理删除", dependencies=[Depends(require_permission('employment:delete'))])
 def employment_hard(emp_id: int, db: Session = Depends(get_db)):
     # 物理删除不可恢复，用 warning 级别留个醒目记录
     logger.warning("物理删除就业信息（不可恢复）：emp_id=%s", emp_id)

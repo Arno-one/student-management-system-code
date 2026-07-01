@@ -1,0 +1,119 @@
+<template>
+  <section class="login-page">
+    <!-- Aurora 背景装饰只负责视觉氛围，不参与登录交互。 -->
+    <div class="login-aurora-field" aria-hidden="true">
+      <span class="login-aurora-band login-aurora-band-a"></span>
+      <span class="login-aurora-band login-aurora-band-b"></span>
+      <span class="login-aurora-orbit"></span>
+      <span class="login-aurora-stream"></span>
+    </div>
+
+    <!-- 登录页左侧品牌文案，颜色跟随深浅主题自动换色。 -->
+    <div class="login-hero-copy">
+      <strong class="login-hero-title">学生智能管理系统</strong>
+      <span class="login-hero-subtitle">让AI与你一起</span>
+    </div>
+
+    <!-- 左侧洞察面板用于填充登录页留白，展示系统的数据工作台气质。 -->
+    <div class="login-left-console" aria-hidden="true">
+      <div class="login-console-head">
+        <span>AI STUDENT GRAPH</span>
+        <i></i>
+      </div>
+      <div class="login-console-map">
+        <span class="login-node login-node-a"></span>
+        <span class="login-node login-node-b"></span>
+        <span class="login-node login-node-c"></span>
+        <span class="login-node login-node-d"></span>
+      </div>
+      <div class="login-console-metrics">
+        <div>
+          <span>学情同步</span>
+          <strong>24h</strong>
+        </div>
+        <div>
+          <span>智能预警</span>
+          <strong>18</strong>
+        </div>
+        <div>
+          <span>画像完整</span>
+          <strong>96%</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="login-shell card">
+      <div class="login-kicker">Campus Operations Suite</div>
+      <h1>欢迎登录</h1>
+      <p class="login-hint">请输入系统账号与密码进入学生信息管理工作台。</p>
+
+      <div class="field">
+        <label>登录账号</label>
+        <input v-model="form.username" placeholder="请输入账号" />
+      </div>
+
+      <div class="field">
+        <label>登录密码</label>
+        <input v-model="form.password" type="password" placeholder="请输入密码" />
+      </div>
+
+      <div class="actions login-actions">
+        <button class="btn" :disabled="loading" @click="submit">
+          {{ loading ? '登录中...' : '登录' }}
+        </button>
+      </div>
+
+      <ResultBadge :badge="result.badge" :text="result.text" />
+
+      <div class="login-tips">
+        <strong>默认管理员：</strong>
+        <span>admin / Admin@123456</span>
+      </div>
+    </div>
+  </section>
+</template>
+
+<script setup>
+import { reactive, ref } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { request, setAuth } from '../api'
+import ResultBadge from '../components/ResultBadge.vue'
+
+const router = useRouter()
+const route = useRoute()
+const loading = ref(false)
+const form = reactive({ username: 'admin', password: '' })
+const result = reactive({ badge: null, text: '' })
+
+function setResult(ok, text) {
+  result.badge = { ok, text }
+  result.text = ''
+}
+
+async function submit() {
+  if (!form.username.trim() || !form.password.trim()) {
+    setResult(false, '请输入账号和密码')
+    return
+  }
+
+  loading.value = true
+  try {
+    const r = await request('POST', '/auth/login', {
+      body: { username: form.username.trim(), password: form.password }
+    })
+    const payload = r?.data?.data
+    if (r.ok && payload?.token) {
+      setAuth(payload.token, payload.user)
+      setResult(true, '登录成功，正在进入系统')
+      const redirect = route.query.redirect || '/student'
+      router.replace(String(redirect))
+    } else {
+      setResult(false, r?.data?.msg || '登录失败')
+    }
+  } catch (e) {
+    setResult(false, `网络错误: ${e.message}`)
+  } finally {
+    loading.value = false
+  }
+}
+</script>

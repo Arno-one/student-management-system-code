@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <defs>
+    <marker id="arrowHead" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#7DD3FC" />
+    </marker>
+  </defs>
+  <g id="background">
+    <rect width="1280" height="720" fill="#05070D" />
+    <path d="M70 164H1210 M70 610H1210" stroke="#1C2A3D" stroke-width="1" stroke-dasharray="8,4" />
+  </g>
+  <g id="header">
+    <text x="56" y="72" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">RAG 不是向量库接入，而是一条问答质量工程链</text>
+    <text x="58" y="112" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">从切片、召回、精排到拒答，每一段都服务于“答得准，也知道何时不该答”</text>
+  </g>
+  <g id="stage-ingest">
+    <path fill="#111827" stroke="#2A3A52" d="M74,214 H272 A6,6 0 0 1 278,220 V458 A6,6 0 0 1 272,464 H74 A6,6 0 0 1 68,458 V220 A6,6 0 0 1 74,214 Z" />
+    
+  <g transform="translate(92, 238) scale(2.125)" fill="#7DD3FC">
+    <path d="M13.1371 6.91018C13.4184 6.7695 13.7123 6.59981 14 6.40001V8C14 9.65685 11.3137 11 8 11C4.68629 11 2 9.65685 2 8V6.40001C2.28772 6.59981 2.58158 6.7695 2.86293 6.91018C4.28096 7.61919 6.09998 8 8 8C9.90002 8 11.719 7.61919 13.1371 6.91018Z" />
+    <path d="M2 11.4V13C2 14.6569 4.68629 16 8 16C11.3137 16 14 14.6569 14 13V11.4C13.7123 11.5998 13.4184 11.7695 13.1371 11.9102C11.719 12.6192 9.90002 13 8 13C6.09998 13 4.28096 12.6192 2.86293 11.9102C2.58158 11.7695 2.28772 11.5998 2 11.4Z" />
+    <path d="M8 0C11.3137 0 14 1.34315 14 3C14 4.65685 11.3137 6 8 6C4.68629 6 2 4.65685 2 3C2 1.34315 4.68629 0 8 0Z" />
+  </g>
+    <text x="92" y="310" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="800" fill="#F8FAFC">入库治理</text>
+    <text x="92" y="354" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">标题注入</text>
+    <text x="92" y="388" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">500字 chunk</text>
+    <text x="92" y="422" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">多格式统一</text>
+  </g>
+  <g id="stage-recall">
+    <line x1="286" y1="340" x2="344" y2="340" stroke="#7DD3FC" stroke-width="2" marker-end="url(#arrowHead)" />
+    <path fill="#111827" stroke="#2A3A52" d="M362,214 H560 A6,6 0 0 1 566,220 V458 A6,6 0 0 1 560,464 H362 A6,6 0 0 1 356,458 V220 A6,6 0 0 1 362,214 Z" />
+    
+  <g transform="translate(380, 238) scale(2.125)" fill="#8B5CF6">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M11.1922 12.6064C10.0236 13.4816 8.57234 14 7 14C3.13401 14 0 10.866 0 7C0 3.13401 3.13401 0 7 0C10.866 0 14 3.13401 14 7C14 8.57234 13.4816 10.0236 12.6064 11.1922L15.7071 14.2929L14.2929 15.7071L11.1922 12.6064ZM5.58579 8.41421L4.17157 9.82843C2.60948 8.26633 2.60948 5.73367 4.17157 4.17157C5.73367 2.60948 8.26633 2.60948 9.82843 4.17157L8.41421 5.58579C7.63316 4.80474 6.36683 4.80474 5.58579 5.58579C4.80474 6.36684 4.80474 7.63316 5.58579 8.41421Z" />
+  </g>
+    <text x="380" y="310" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="800" fill="#F8FAFC">混合召回</text>
+    <text x="380" y="354" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">Dense Vector</text>
+    <text x="380" y="388" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">BM25 Sparse</text>
+    <text x="380" y="422" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">RRF 融合</text>
+  </g>
+  <g id="stage-rerank">
+    <line x1="574" y1="340" x2="632" y2="340" stroke="#7DD3FC" stroke-width="2" marker-end="url(#arrowHead)" />
+    <path fill="#111827" stroke="#2A3A52" d="M650,214 H848 A6,6 0 0 1 854,220 V458 A6,6 0 0 1 848,464 H650 A6,6 0 0 1 644,458 V220 A6,6 0 0 1 650,214 Z" />
+    
+  <g transform="translate(668, 238) scale(2.125)" fill="#F59E0B">
+    <path d="M9 7L10 0H8L2 7V9H7L6 16H8L14 9L14 7H9Z" />
+  </g>
+    <text x="668" y="310" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="800" fill="#F8FAFC">精排校准</text>
+    <text x="668" y="354" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">CrossEncoder</text>
+    <text x="668" y="388" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">QA 优先</text>
+    <text x="668" y="422" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">原文回退</text>
+  </g>
+  <g id="stage-context">
+    <line x1="862" y1="340" x2="920" y2="340" stroke="#7DD3FC" stroke-width="2" marker-end="url(#arrowHead)" />
+    <path fill="#111827" stroke="#2A3A52" d="M938,214 H1136 A6,6 0 0 1 1142,220 V458 A6,6 0 0 1 1136,464 H938 A6,6 0 0 1 932,458 V220 A6,6 0 0 1 938,214 Z" />
+    
+  <g transform="translate(956, 238) scale(2.125)" fill="#22C55E">
+    <path d="M0 2H3.58579C4.49129 2 5.35971 2.35971 6 3C6.64029 3.64029 7 4.50871 7 5.41421V11H9V5.41421C9 4.50871 9.35971 3.64029 10 3C10.6403 2.35971 11.5087 2 12.4142 2H16V13H11L9 15H7L5 13H0V2Z" />
+  </g>
+    <text x="956" y="310" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="800" fill="#F8FAFC">上下文治理</text>
+    <text x="956" y="354" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">small-to-big</text>
+    <text x="956" y="388" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">去重预算</text>
+    <text x="956" y="422" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">来源引用</text>
+  </g>
+  <g id="takeaway">
+    <path fill="#111827" stroke="#2A3A52" d="M126,540 H1154 A6,6 0 0 1 1160,546 V606 A6,6 0 0 1 1154,612 H126 A6,6 0 0 1 120,606 V546 A6,6 0 0 1 126,540 Z" />
+    <text x="640" y="586" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="30" font-weight="700" fill="#F59E0B">这套 RAG 的核心不是“搜到”，而是“带着证据回答，并能保守拒答”</text>
+  </g>
+</svg>

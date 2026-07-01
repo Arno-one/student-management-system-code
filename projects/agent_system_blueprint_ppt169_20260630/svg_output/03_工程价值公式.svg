@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
+  <defs>
+    <radialGradient id="focus" cx="50%" cy="52%" r="62%">
+      <stop offset="0%" stop-color="#111827" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="#05070D" stop-opacity="0.92" />
+    </radialGradient>
+  </defs>
+  <g id="background">
+    <rect width="1280" height="720" fill="#05070D" />
+    <image href="../images/transition_topology_bg.png" x="0" y="0" width="1280" height="720" preserveAspectRatio="xMidYMid slice" />
+    <rect width="1280" height="720" fill="url(#focus)" />
+  </g>
+  <g id="header">
+    <text x="72" y="82" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">工程价值来自四个可验证维度</text>
+    <text x="74" y="124" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#B6C2D2">功能数量只是结果；真正的价值是能力能否被控制、扩展、观测和回归</text>
+  </g>
+  <g id="formula">
+    <rect x="180" y="248" width="920" height="122" rx="8" fill="#05070D" fill-opacity="0.72" stroke="#2A3A52" stroke-width="1.5" />
+    <image href="../images/formula_engineering_value.png" x="244" y="286" width="792" height="40" preserveAspectRatio="xMidYMid meet" id="_edit_9" data-edit-target="true" data-edit-annotation="调整大小：可以适当放大，注意不要超过框的范围欸" />
+  </g>
+  <g id="dimensions">
+    <circle cx="244" cy="500" r="56" fill="#111827" stroke="#7DD3FC" stroke-width="2" />
+    <text x="244" y="491" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="24" font-weight="700" fill="#7DD3FC">C</text>
+    <text x="244" y="528" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#F8FAFC">可控</text>
+    <circle cx="508" cy="500" r="56" fill="#111827" stroke="#8B5CF6" stroke-width="2" />
+    <text x="508" y="491" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="24" font-weight="700" fill="#8B5CF6">X</text>
+    <text x="508" y="528" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#F8FAFC">可扩展</text>
+    <circle cx="772" cy="500" r="56" fill="#111827" stroke="#F59E0B" stroke-width="2" />
+    <text x="772" y="491" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="24" font-weight="700" fill="#F59E0B">O</text>
+    <text x="772" y="528" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#F8FAFC">可观测</text>
+    <circle cx="1036" cy="500" r="56" fill="#111827" stroke="#22C55E" stroke-width="2" />
+    <text x="1036" y="491" text-anchor="middle" font-family="Consolas, &quot;Microsoft YaHei&quot;, &quot;Courier New&quot;, monospace" font-size="24" font-weight="700" fill="#22C55E">R</text>
+    <text x="1036" y="528" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="22" fill="#F8FAFC">可回归</text>
+  </g>
+  <g id="takeaway">
+    <text x="640" y="628" text-anchor="middle" font-family="&quot;Microsoft YaHei&quot;, Arial, sans-serif" font-size="34" font-weight="700" fill="#F59E0B">Agent 的价值不在“会说话”，而在“能被工程化治理”</text>
+  </g>
+</svg>
